@@ -99,7 +99,7 @@ export default function AboutContent() {
                 <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-16 lg:gap-24 items-center">
 
                     {/* Left: Studio/Founder Image */}
-                    <div className="md:col-span-5 relative w-full aspect-[4/5] overflow-hidden">
+                    <div className="md:col-span-5 relative w-full aspect-4/5 overflow-hidden">
                         <div className="parallax-image absolute -inset-y-[15%] inset-x-0 w-full h-[130%]">
                             <Image src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=1200" alt="Founders Studio" fill className="object-cover" />
                         </div>

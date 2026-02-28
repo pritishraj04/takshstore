@@ -40,10 +40,10 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
                 </div>
 
                 {/* The Canvas Card */}
-                <div className="w-full max-w-md aspect-[4/5] bg-[#FBFBF9] shadow-2xl relative p-12 flex flex-col items-center justify-center text-center border border-[#E5E4DF] z-10">
+                <div className="w-full max-w-md aspect-4/5 bg-[#FBFBF9] shadow-2xl relative p-12 flex flex-col items-center justify-center text-center border border-[#E5E4DF] z-10">
 
                     <h2
-                        className="text-4xl text-[#1A1A1A] mb-8 tracking-tight break-words w-full"
+                        className="text-4xl text-[#1A1A1A] mb-8 tracking-tight wrap-break-word w-full"
                         style={{ fontFamily: 'var(--font-playfair)' }}
                     >
                         {coupleNames || "Names Here"}
@@ -57,7 +57,7 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
                     </p>
 
                     <p
-                        className="text-lg italic text-[#1A1A1A] mb-8 break-words w-full"
+                        className="text-lg italic text-[#1A1A1A] mb-8 wrap-break-word w-full"
                         style={{ fontFamily: 'var(--font-playfair)' }}
                     >
                         {venue || "Venue Here"}
@@ -66,7 +66,7 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
                     <div className="w-8 h-px bg-[#C5B39A] mb-8" />
 
                     <p
-                        className="text-xs leading-loose text-[#5A5A5A] break-words w-full px-4"
+                        className="text-xs leading-loose text-[#5A5A5A] wrap-break-word w-full px-4"
                         style={{ fontFamily: 'var(--font-inter)' }}
                     >
                         {customMessage || "Your custom message here."}
@@ -76,7 +76,7 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
             </div>
 
             {/* Right Column (The Control Panel) */}
-            <div className="col-span-1 lg:col-span-5 bg-[#FBFBF9] p-8 md:p-16 lg:px-20 border-l border-[#E5E4DF] overflow-y-auto flex flex-col relative h-[100dvh]">
+            <div className="col-span-1 lg:col-span-5 bg-[#FBFBF9] p-8 md:p-16 lg:px-20 border-l border-[#E5E4DF] overflow-y-auto flex flex-col relative h-dvh">
 
                 <h1
                     className="text-3xl text-[#1A1A1A] tracking-tight mb-12"

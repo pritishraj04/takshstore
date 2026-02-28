@@ -154,17 +154,17 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                         <section className="relative w-full min-h-[812px] flex flex-col items-center justify-center text-center p-8">
                             <div className="absolute inset-0 z-0">
                                 <Image src={inviteData.couple.image || "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800"} alt="Hero Background" fill className="object-cover opacity-60 mix-blend-multiply" />
-                                <div className="absolute inset-0 bg-gradient-to-b from-[#F2F1EC]/40 to-[#F2F1EC] z-10" />
+                                <div className="absolute inset-0 bg-linear-to-b from-[#F2F1EC]/40 to-[#F2F1EC] z-10" />
                             </div>
 
                             <div className="relative z-20 flex flex-col items-center w-full">
                                 <p className="text-[10px] uppercase tracking-[0.3em] text-[#5A5A5A] mb-8" style={{ fontFamily: 'var(--font-inter)' }}>{inviteData.couple.hashtag}</p>
 
-                                <h1 className="text-6xl text-[#1A1A1A] tracking-tight leading-none mb-4 break-words w-full px-4" style={{ fontFamily: 'var(--font-playfair)' }}>
+                                <h1 className="text-6xl text-[#1A1A1A] tracking-tight leading-none mb-4 wrap-break-word w-full px-4" style={{ fontFamily: 'var(--font-playfair)' }}>
                                     {inviteData.couple.bride.name}
                                 </h1>
                                 <span className="text-2xl italic text-[#C5B39A] mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>&</span>
-                                <h1 className="text-6xl text-[#1A1A1A] tracking-tight leading-none mb-12 break-words w-full px-4" style={{ fontFamily: 'var(--font-playfair)' }}>
+                                <h1 className="text-6xl text-[#1A1A1A] tracking-tight leading-none mb-12 wrap-break-word w-full px-4" style={{ fontFamily: 'var(--font-playfair)' }}>
                                     {inviteData.couple.groom.name}
                                 </h1>
 

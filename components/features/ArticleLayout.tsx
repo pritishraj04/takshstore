@@ -38,7 +38,7 @@ export default function ArticleLayout({ article }: ArticleProps) {
             </header>
 
             {/* Hero Image */}
-            <div className="w-full aspect-video md:aspect-[21/9] relative overflow-hidden mb-24 max-w-[1600px] mx-auto">
+            <div className="w-full aspect-video md:aspect-21/9 relative overflow-hidden mb-24 max-w-[1600px] mx-auto">
                 <Image
                     src={article.heroImage}
                     alt={article.title}

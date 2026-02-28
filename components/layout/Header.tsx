@@ -7,6 +7,7 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useCollectionStore } from "../../store/useCollectionStore";
+import { useSearchStore } from "../../store/useSearchStore";
 import { useEffect, useState } from "react";
 import { Search, ShoppingBag } from "lucide-react";
 
@@ -26,6 +27,7 @@ export default function Header() {
     // Zustand State
     const setIsOpen = useCollectionStore((state) => state.setIsOpen);
     const items = useCollectionStore((state) => state.items);
+    const setSearchOpen = useSearchStore((state) => state.setIsOpen);
 
     // Hydration sync for persisted Zustand store to avoid hydration mismatch
     const [mounted, setMounted] = useState(false);
@@ -110,7 +112,7 @@ export default function Header() {
 
             {/* Actions (Right) */}
             <div className="flex-1 flex justify-end gap-6 items-center text-xs uppercase tracking-widest text-[#1A1A1A]" style={{ fontFamily: 'var(--font-inter)' }}>
-                <button className="relative group py-1" aria-label="Search">
+                <button className="relative group py-1" aria-label="Search" onClick={() => setSearchOpen(true)}>
                     <Search size={18} strokeWidth={1.5} className="text-[#1A1A1A]" />
                 </button>
                 <button

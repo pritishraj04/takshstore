@@ -5,6 +5,7 @@ import SmoothScroll from "../components/animations/SmoothScroll";
 import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import CollectionDrawer from "../components/layout/CollectionDrawer";
+import SearchOverlay from "../components/layout/SearchOverlay";
 
 // Configure Playfair Display (Serif) with styles defined in project-bible
 const playfair = Playfair_Display({
@@ -36,6 +37,7 @@ export default function RootLayout({
         <SmoothScroll>
           <Header />
           <CollectionDrawer />
+          <SearchOverlay />
           {children}
           <Footer />
         </SmoothScroll>
