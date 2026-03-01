@@ -54,7 +54,7 @@ export default function Footer() {
     if (pathname === '/login' || pathname === '/register') return null;
 
     return (
-        <footer ref={footerRef} className="w-full flex flex-col bg-[#FBFBF9] text-[#1A1A1A]">
+        <footer ref={footerRef} className="w-full flex flex-col bg-[#FBFBF9] text-[#1A1A1A] print:hidden">
 
             {/* 
         Part 1: The Pre-Footer Segue (The Invitation)

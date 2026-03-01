@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentsService } from '../payments/payments.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -98,5 +98,32 @@ export class OrdersService {
             },
             orderBy: { createdAt: 'desc' },
         });
+    }
+
+    async findOne(orderId: string, userId: string) {
+        console.log(`[DEBUG OrdersService] Looking for orderId: ${orderId}, userId: ${userId}`);
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+            include: {
+                items: {
+                    include: {
+                        digitalInvite: true,
+                        product: true,
+                    },
+                },
+            },
+        });
+
+        console.log(`[DEBUG OrdersService] Prisma result:`, order ? `Found order ${order.id}` : `null`);
+
+        if (!order) {
+            throw new NotFoundException('Order not found');
+        }
+
+        if (order.userId !== userId) {
+            throw new ForbiddenException('Access denied to this order');
+        }
+
+        return order;
     }
 }

@@ -8,6 +8,7 @@ import CollectionDrawer from "../components/layout/CollectionDrawer";
 import SearchOverlay from "../components/layout/SearchOverlay";
 import QueryProvider from "../components/providers/QueryProvider";
 import AuthProvider from "../components/providers/AuthProvider";
+import { Toaster } from "sonner";
 
 // Configure Playfair Display (Serif) with styles defined in project-bible
 const playfair = Playfair_Display({
@@ -47,6 +48,7 @@ export default function RootLayout({
             </QueryProvider>
           </AuthProvider>
         </SmoothScroll>
+        <Toaster theme="dark" position="bottom-right" />
       </body>
     </html>
   );

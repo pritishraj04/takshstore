@@ -1,13 +1,14 @@
 import CustomizerEditor from "../../../components/features/CustomizerEditor";
 
-export default function CustomizerPage({
+export default async function CustomizerPage({
     params,
 }: {
-    params: { id: string };
+    params: Promise<{ id: string }>;
 }) {
+    const resolvedParams = await params;
     return (
         <main>
-            <CustomizerEditor inviteId={params.id} />
+            <CustomizerEditor inviteId={resolvedParams.id} />
         </main>
     );
 }

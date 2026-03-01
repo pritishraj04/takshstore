@@ -39,7 +39,7 @@ export function useCheckout() {
         },
         onError: (error) => {
             console.error('CHECKOUT MUTATION FAILED:', error);
-            alert('Checkout failed. Check the console for details.');
+            // Error is handled cleanly by the UI component invoking the hook
         }
     });
 }

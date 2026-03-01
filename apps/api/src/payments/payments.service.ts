@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException, BadRequestException, UnauthorizedException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, BadRequestException, UnauthorizedException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import axios from 'axios';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
@@ -87,9 +87,15 @@ export class PaymentsService {
         const decodedResponse = JSON.parse(Buffer.from(body.response, 'base64').toString('utf-8'));
 
         if (decodedResponse.success && decodedResponse.code === 'PAYMENT_SUCCESS') {
-            const rawTransactionId = decodedResponse.data.merchantTransactionId;
+            let rawTransactionId = decodedResponse.data.merchantTransactionId;
+
+            // Strip any retry suffix (which pushes length beyond the base 32 char un-hyphenated UUID)
+            if (rawTransactionId && rawTransactionId.length > 32) {
+                rawTransactionId = rawTransactionId.substring(0, 32);
+            }
+
             let orderId = rawTransactionId;
-            // Restore hyphens if the returned ID is 32 characters (hyphens were stripped before sending to PhonePe)
+            // Restore hyphens since Prisma requires strictly formatted 36-char UUIDs
             if (rawTransactionId && rawTransactionId.length === 32) {
                 orderId = `${rawTransactionId.slice(0, 8)}-${rawTransactionId.slice(8, 12)}-${rawTransactionId.slice(12, 16)}-${rawTransactionId.slice(16, 20)}-${rawTransactionId.slice(20)}`;
             }
@@ -114,10 +120,17 @@ export class PaymentsService {
     }
 
     async verifyLocalPayment(transactionId: string, status: string) {
-        let orderId = transactionId;
-        // Restore hyphens if the returned ID is 32 characters (hyphens were stripped before sending to PhonePe)
-        if (transactionId && transactionId.length === 32) {
-            orderId = `${transactionId.slice(0, 8)}-${transactionId.slice(8, 12)}-${transactionId.slice(12, 16)}-${transactionId.slice(16, 20)}-${transactionId.slice(20)}`;
+        // Strip any retry suffix to isolate the true database Order ID
+        // The base UUID without hyphens is guaranteed to be exactly 32 characters
+        let rawTransactionId = transactionId && transactionId.length > 32
+            ? transactionId.substring(0, 32)
+            : transactionId;
+
+        let orderId = rawTransactionId;
+
+        // Restore hyphens
+        if (rawTransactionId && rawTransactionId.length === 32) {
+            orderId = `${rawTransactionId.slice(0, 8)}-${rawTransactionId.slice(8, 12)}-${rawTransactionId.slice(12, 16)}-${rawTransactionId.slice(16, 20)}-${rawTransactionId.slice(20)}`;
         }
 
         const order = await this.prisma.order.findUnique({
@@ -129,7 +142,7 @@ export class PaymentsService {
             throw new BadRequestException('Order not found');
         }
 
-        if (order.status === 'PENDING' && status === 'PAID') {
+        if (status === 'PAYMENT_SUCCESS') {
             await this.prisma.order.update({
                 where: { id: orderId },
                 data: { status: 'PAID' },
@@ -143,8 +156,49 @@ export class PaymentsService {
                     });
                 }
             }
+        } else if (status === 'PAYMENT_ERROR' || status === 'PAYMENT_DECLINED') {
+            await this.prisma.order.update({
+                where: { id: orderId },
+                data: { status: 'FAILED' as any },
+            });
         }
+        // If status === 'PAYMENT_PENDING' or similar, we intentionally leave the DB state as PENDING
 
         return { success: true };
+    }
+
+    async retryPhonePePayment(orderId: string, userId: string) {
+        // 1. Fetch the existing order
+        const order = await this.prisma.order.findUnique({
+            where: { id: orderId },
+        });
+
+        if (!order) {
+            throw new NotFoundException('Order not found');
+        }
+
+        if (order.userId !== userId) {
+            throw new ForbiddenException('Access denied to this order');
+        }
+
+        // 2. We only allow retries on FAILED or PENDING orders, not PAID ones
+        if (order.status === 'PAID' || order.status === 'COMPLETED' || order.status === 'SHIPPED') {
+            throw new BadRequestException('Cannot retry a completed payment');
+        }
+
+        if ((order.status as string) !== 'FAILED' && order.status !== 'PENDING') {
+            throw new BadRequestException('Only failed or pending orders can be retried');
+        }
+
+        // 3. Generate a fresh Transaction ID so PhonePe doesn't block it as a duplicate
+        // PhonePe max length is 35 chars. The UUID strings minus hyphens yield 32 chars.
+        // We securely append 'R' and 2 random digits to ensure it never exceeds limits.
+        const rawUuid = order.id.replace(/-/g, '');
+        const retrySuffix = Math.floor(Math.random() * 100).toString().padStart(2, '0');
+        const retryTxId = `${rawUuid}R${retrySuffix}`; // Exactly 35 chars
+
+        // 4. Send the new request to PhonePe using the existing amount
+        // Note: createPhonePeOrder strips hyphens natively, but our string is already un-hyphenated
+        return this.createPhonePeOrder(order.totalAmount, retryTxId, userId);
     }
 }

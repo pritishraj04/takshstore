@@ -1,5 +1,7 @@
-import { Controller, Post, Body, HttpCode, HttpStatus, Headers } from '@nestjs/common';
+import { Controller, Post, Body, HttpCode, HttpStatus, Headers, Param, UseGuards, Req } from '@nestjs/common';
+import type { Request } from 'express';
 import { PaymentsService } from './payments.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
 @Controller('payments')
 export class PaymentsController {
@@ -21,5 +23,17 @@ export class PaymentsController {
         @Body('status') status: string,
     ) {
         return this.paymentsService.verifyLocalPayment(transactionId, status);
+    }
+
+    @UseGuards(JwtAuthGuard)
+    @Post('retry/:id')
+    async retryPhonePePayment(
+        @Param('id') orderId: string,
+        @Req() req: Request,
+    ) {
+        // Handle varying JWT payloads standardly
+        const user = req.user as any;
+        const userId = user?.sub || user?.userId;
+        return this.paymentsService.retryPhonePePayment(orderId, userId);
     }
 }

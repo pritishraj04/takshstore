@@ -1,12 +1,13 @@
 "use client";
 
-import { useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useRef, useEffect } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/apiClient";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { Code, Brush, ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { InviteData, ProductType } from "@taksh/types";
 
 // Types matching the Prisma backend
@@ -55,6 +56,19 @@ interface UserDashboardProps {
 
 export default function UserDashboard({ name }: UserDashboardProps) {
     const container = useRef<HTMLDivElement>(null);
+    const searchParams = useSearchParams();
+    const queryClient = useQueryClient();
+
+    // Invalidate cache if returning from a successful checkout redirect
+    useEffect(() => {
+        if (searchParams.get("payment") === "success") {
+            queryClient.invalidateQueries({ queryKey: ["orders"] });
+            queryClient.invalidateQueries({ queryKey: ["order"] });
+
+            // Clean up the URL string to prevent infinite refresh cycles
+            window.history.replaceState(null, "", "/dashboard");
+        }
+    }, [searchParams, queryClient]);
 
     // Fetch orders from the API
     const { data: orders, isLoading } = useQuery<Order[]>({
@@ -83,7 +97,7 @@ export default function UserDashboard({ name }: UserDashboardProps) {
         );
     }
 
-    const allItems = orders?.flatMap((order) => order.items.map(item => ({ ...item, orderDate: order.createdAt, orderStatus: order.status, totalAmount: order.totalAmount }))) || [];
+    const allItems = orders?.flatMap((order) => order.items.map(item => ({ ...item, orderId: order.id, orderDate: order.createdAt, orderStatus: order.status, totalAmount: order.totalAmount }))) || [];
 
     // Separate into SaaS invites vs Physical items
     const digitalItems = allItems.filter((item) => item.product.type === "DIGITAL" && item.digitalInvite !== null);
@@ -162,9 +176,10 @@ export default function UserDashboard({ name }: UserDashboardProps) {
 
                         <div className="flex flex-col w-full">
                             {physicalItems.map((item) => (
-                                <div
+                                <Link
+                                    href={`/dashboard/orders/${item.orderId}`}
                                     key={item.id}
-                                    className="border-b border-light py-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group hover:bg-secondary/30 transition-colors px-4 -mx-4 cursor-default"
+                                    className="border-b border-light py-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group hover:bg-secondary/30 transition-colors px-4 -mx-4 cursor-pointer"
                                 >
                                     <div className="flex flex-col">
                                         <span className="font-inter text-xs text-secondary mb-2 tracking-wide font-light">
@@ -183,7 +198,7 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                             ₹{item.totalAmount.toLocaleString()}
                                         </span>
                                     </div>
-                                </div>
+                                </Link>
                             ))}
                         </div>
                     </div>

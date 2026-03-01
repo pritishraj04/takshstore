@@ -15,6 +15,7 @@ export default function CheckoutFlow() {
     const router = useRouter();
     const { data: session } = useSession();
     const [mounted, setMounted] = useState(false);
+    const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
     // Prevent hydration errors with persisted state
     useEffect(() => {
@@ -93,13 +94,17 @@ export default function CheckoutFlow() {
                         }, {
                             onSuccess: (data: any) => {
                                 console.log('2. Mutation Success, Data:', data);
+                                setCheckoutError(null);
                                 // Once order is created in DB, redirect to PhonePe
                                 if (data?.redirectUrl) {
                                     window.location.href = data.redirectUrl;
                                 } else {
                                     console.error('Missing redirectUrl in response');
-                                    alert('Payment URL not received from server.');
+                                    setCheckoutError('Payment URL not received from server.');
                                 }
+                            },
+                            onError: (err: any) => {
+                                setCheckoutError(err.response?.data?.message || 'An error occurred during checkout. Please try again.');
                             }
                         });
                     }}
@@ -203,10 +208,28 @@ export default function CheckoutFlow() {
                         </div>
                     </div>
 
+                    {checkoutError && (
+                        <div className="mb-6 p-4 border border-red-800 bg-red-900/10 rounded-sm">
+                            <p className="text-red-700 text-sm mb-3 font-medium">
+                                {checkoutError}
+                            </p>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    clearCollection();
+                                    setCheckoutError(null);
+                                }}
+                                className="text-xs tracking-widest uppercase text-red-900 font-semibold hover:text-red-700 underline underline-offset-4"
+                            >
+                                Clear Invalid Items
+                            </button>
+                        </div>
+                    )}
+
                     <button
                         type="submit"
                         disabled={isCheckingOut}
-                        className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 mt-12 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
+                        className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 mt-4 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
                         style={{ fontFamily: 'var(--font-inter)' }}
                     >
                         {isCheckingOut ? (

@@ -15,6 +15,7 @@ enum ProductType {
 enum OrderStatus {
   PENDING
   PAID
+  FAILED
   PROCESSING
   SHIPPED
   COMPLETED

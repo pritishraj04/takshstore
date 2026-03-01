@@ -5,6 +5,7 @@ import {
     Body,
     UseGuards,
     Req,
+    Param,
 } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -30,5 +31,12 @@ export class OrdersController {
     async getOrders(@Req() req: any) {
         const userId = req.user?.sub || req.user?.userId;
         return this.ordersService.findAll(userId);
+    }
+
+    @Get(':id')
+    async getOrder(@Req() req: any, @Param('id') id: string) {
+        const userId = req.user?.sub || req.user?.userId;
+        console.log(`[DEBUG] getOrder called with param id: ${id}, extracted userId: ${userId}`);
+        return this.ordersService.findOne(id, userId);
     }
 }

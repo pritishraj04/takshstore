@@ -1,5 +1,6 @@
 import axios from 'axios';
-import { getSession } from 'next-auth/react';
+import { getSession, signOut } from 'next-auth/react';
+import { toast } from 'sonner';
 
 export const apiClient = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api',
@@ -21,6 +22,21 @@ apiClient.interceptors.request.use(
         return config;
     },
     (error) => {
+        return Promise.reject(error);
+    }
+);
+
+apiClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+        if (error.response?.status === 401) {
+            console.warn('Backend rejected session. Evicting user...');
+            // In a browser environment, force NextAuth to destroy the session and redirect
+            if (typeof window !== 'undefined') {
+                toast.error('Your session has expired. Please log in again.');
+                await signOut({ callbackUrl: '/login', redirect: true });
+            }
+        }
         return Promise.reject(error);
     }
 );

@@ -23,7 +23,7 @@ export default function CollectionDrawer() {
         <>
             {/* The Backdrop */}
             <div
-                className={`fixed inset-0 z-100 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ease-out ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
+                className={`fixed inset-0 z-100 bg-black/20 backdrop-blur-sm transition-opacity duration-500 ease-out print:hidden ${isOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
                     }`}
                 onClick={() => setIsOpen(false)}
                 aria-hidden="true"
@@ -31,7 +31,7 @@ export default function CollectionDrawer() {
 
             {/* The Drawer Panel */}
             <aside
-                className={`fixed top-0 right-0 h-dvh w-full md:w-[480px] bg-[#FBFBF9] shadow-2xl z-101 flex flex-col transform transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] ${isOpen ? "translate-x-0" : "translate-x-full"
+                className={`fixed top-0 right-0 h-dvh w-full md:w-[480px] bg-[#FBFBF9] shadow-2xl z-101 flex flex-col transform transition-transform duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] print:hidden ${isOpen ? "translate-x-0" : "translate-x-full"
                     }`}
             >
                 {/* Header Area */}

@@ -38,7 +38,7 @@ export default function SearchOverlay() {
     return (
         <div
             ref={overlayRef}
-            className="fixed inset-0 z-120 bg-[#FBFBF9]/95 backdrop-blur-md flex flex-col px-6 md:px-16 pt-32 pb-16 overflow-y-auto selection:bg-[#1A1A1A] selection:text-[#FBFBF9]"
+            className="fixed inset-0 z-120 bg-[#FBFBF9]/95 backdrop-blur-md flex flex-col px-6 md:px-16 pt-32 pb-16 overflow-y-auto selection:bg-[#1A1A1A] selection:text-[#FBFBF9] print:hidden"
         >
             {/* Close Button */}
             <button

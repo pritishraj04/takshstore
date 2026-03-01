@@ -11,24 +11,23 @@ export async function POST(req: Request) {
         const code = payload.code;
         console.log('Extracted -> Code:', code, 'TransactionId:', transactionId);
 
-        if (code === 'PAYMENT_SUCCESS') {
+        if (code) {
             try {
-                console.log(`Attempting to update Order ${transactionId} to PAID in NestJS...`);
+                console.log(`Attempting to sync PhonePe Status [${code}] for TxID: ${transactionId} in NestJS...`);
                 const nestResponse = await axios.post('http://localhost:4000/api/payments/verify-local', {
                     transactionId: transactionId,
-                    status: 'PAID'
+                    status: code // Send the exact PhonePe code to NestJS for parsing
                 });
-                console.log('NestJS Response:', nestResponse.data);
+                console.log('NestJS Sync Successful:', nestResponse.data);
             } catch (error: any) {
-                console.error('--- NESTJS UPDATE FAILED ---');
+                console.error('--- NESTJS SYNC FAILED ---');
                 console.error('Error Message:', error.message);
                 console.error('NestJS Data:', error.response?.data);
             }
-        } else {
-            console.log('Payment was not successful. Code received:', code);
         }
 
-        if (code === 'PAYMENT_SUCCESS') {
+        // Redirect based on the code returned
+        if (code === 'PAYMENT_SUCCESS' || code === 'PAYMENT_PENDING') {
             return NextResponse.redirect(new URL(`/dashboard?payment=success&transaction=${transactionId}`, req.url), 303);
         } else {
             return NextResponse.redirect(new URL(`/dashboard?payment=failed&transaction=${transactionId}`, req.url), 303);

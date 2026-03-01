@@ -76,7 +76,7 @@ export default function Header() {
     return (
         <header
             ref={headerRef}
-            className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 py-6 md:px-16 md:py-8"
+            className="fixed top-0 left-0 w-full z-50 flex items-center justify-between px-6 py-6 md:px-16 md:py-8 print:hidden"
         >
             {/* Frosted Glass Background */}
             <div
