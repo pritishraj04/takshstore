@@ -3,6 +3,7 @@
 import { useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -11,6 +12,7 @@ export default function Footer() {
     const footerRef = useRef<HTMLElement>(null);
     const bgImageRef = useRef<HTMLDivElement>(null);
     const segueTextRef = useRef<HTMLDivElement>(null);
+    const pathname = usePathname();
 
     useGSAP(() => {
         gsap.registerPlugin(ScrollTrigger);
@@ -48,6 +50,8 @@ export default function Footer() {
             );
         }
     }, { scope: footerRef });
+
+    if (pathname === '/login' || pathname === '/register') return null;
 
     return (
         <footer ref={footerRef} className="w-full flex flex-col bg-[#FBFBF9] text-[#1A1A1A]">

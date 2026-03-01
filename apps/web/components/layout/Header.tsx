@@ -10,6 +10,7 @@ import { useCollectionStore } from "../../store/useCollectionStore";
 import { useSearchStore } from "../../store/useSearchStore";
 import { useEffect, useState } from "react";
 import { Search, ShoppingBag } from "lucide-react";
+import { useSession, signIn, signOut } from "next-auth/react";
 
 const navLinks = [
     { name: "About", path: "/about" },
@@ -23,6 +24,7 @@ export default function Header() {
     const bgRef = useRef<HTMLDivElement>(null);
     const borderRef = useRef<HTMLDivElement>(null);
     const pathname = usePathname();
+    const { data: session, status } = useSession();
 
     // Zustand State
     const setIsOpen = useCollectionStore((state) => state.setIsOpen);
@@ -68,6 +70,8 @@ export default function Header() {
             },
         });
     }, { scope: headerRef });
+
+    if (pathname === '/login' || pathname === '/register') return null;
 
     return (
         <header
@@ -127,6 +131,27 @@ export default function Header() {
                         </span>
                     )}
                 </button>
+
+                {status === 'loading' ? (
+                    <div className="w-16 animate-pulse bg-gray-200 h-4 rounded"></div>
+                ) : !session ? (
+                    <Link href="/login" className="text-xs tracking-widest uppercase hover:text-gray-500 transition-colors py-1">
+                        LOG IN
+                    </Link>
+                ) : (
+                    <>
+                        <Link href="/dashboard" className="relative group py-1 overflow-hidden">
+                            <span className="transition-colors duration-500 group-hover:text-[#1A1A1A]">DASHBOARD</span>
+                            <span className="absolute left-0 bottom-0 w-full h-px bg-[#1A1A1A] transform origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100" />
+                        </Link>
+                        <button
+                            onClick={() => signOut({ callbackUrl: '/' })}
+                            className="text-xs tracking-widest uppercase hover:text-gray-500 transition-colors py-1"
+                        >
+                            LOG OUT
+                        </button>
+                    </>
+                )}
             </div>
         </header>
     );

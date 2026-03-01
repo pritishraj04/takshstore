@@ -2,9 +2,10 @@ export type ProductType = 'PHYSICAL' | 'DIGITAL';
 
 export interface Product {
     id: string;
-    name: string;
+    title: string;
     type: ProductType;
     price: number;
+    imageUrl?: string;
 }
 
 export interface Couple {

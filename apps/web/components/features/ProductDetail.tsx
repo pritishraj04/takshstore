@@ -87,7 +87,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                     {/* Main View */}
                     <div className="relative w-full aspect-4/5 overflow-hidden bg-[#F2F1EC] invisible">
                         <Image
-                            src={product.image_url}
+                            src={product.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f"}
                             alt={`${product.title} - Main View`}
                             fill
                             sizes="(max-width: 1024px) 100vw, 60vw"
@@ -140,7 +140,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                             className="text-lg text-[#1A1A1A] font-light"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            ${product.price.toLocaleString()}
+                            ₹{product.price.toLocaleString()}
                         </p>
 
                         <p

@@ -106,7 +106,7 @@ export default function CollectionGrid({ products }: CollectionGridProps) {
                         {/* Image Wrapper (Link to Detail Page) */}
                         <Link href={`/collection/${product.id}`} className="relative w-full aspect-4/5 overflow-hidden bg-[#F2F1EC] block">
                             <Image
-                                src={product.image_url}
+                                src={product.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f"}
                                 alt={product.title}
                                 fill
                                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -127,7 +127,7 @@ export default function CollectionGrid({ products }: CollectionGridProps) {
                                 className="text-xs uppercase tracking-widest text-[#5A5A5A]"
                                 style={{ fontFamily: 'var(--font-inter)' }}
                             >
-                                {product.type === 'PHYSICAL' ? 'Physical Canvas' : 'Digital Suite'} — ${product.price.toLocaleString()}
+                                {product.type === 'PHYSICAL' ? 'Physical Canvas' : 'Digital Suite'} — ₹{product.price.toLocaleString()}
                             </p>
 
                             {/* Action Button */}

@@ -1,0 +1,102 @@
+import { Injectable, BadRequestException } from '@nestjs/common';
+import { PrismaService } from '../prisma/prisma.service';
+import { PaymentsService } from '../payments/payments.service';
+import { CreateOrderDto } from './dto/create-order.dto';
+import { ProductType } from '@prisma/client';
+
+@Injectable()
+export class OrdersService {
+    constructor(
+        private readonly prisma: PrismaService,
+        private readonly paymentsService: PaymentsService
+    ) { }
+
+    async createOrder(userId: string, dto: CreateOrderDto) {
+        // Pre-flight check: Ensure all products in the cart actually exist in the database
+        // This prevents 500 Foreign Key constraint errors when users have stale localStorage carts
+        const uniqueProductIds = [...new Set(dto.items.map(item => item.productId))];
+        const existingProducts = await this.prisma.product.findMany({
+            where: { id: { in: uniqueProductIds } }
+        });
+
+        if (existingProducts.length !== uniqueProductIds.length) {
+            throw new BadRequestException('One or more products in your cart no longer exist. Please clear your cart and try again.');
+        }
+
+        // Step 1: Create the transaction
+        const orderRecord = await this.prisma.$transaction(async (tx) => {
+            // Step A: Create the Order record
+            const order = await tx.order.create({
+                data: {
+                    userId,
+                    totalAmount: dto.totalAmount,
+                    shippingAddress: dto.shippingAddress ?? null,
+                    developerNotes: dto.developerNotes ?? null,
+                },
+            });
+
+            // Step B: Loop through the dto.items
+            for (const item of dto.items) {
+                // Step C: Create OrderItem linked to Order
+                const orderItem = await tx.orderItem.create({
+                    data: {
+                        orderId: order.id,
+                        productId: item.productId,
+                        quantity: item.quantity,
+                        priceAtPurchase: item.priceAtPurchase,
+                    },
+                });
+
+                // Step D: Create DigitalInvite if type is DIGITAL
+                if (item.type === ProductType.DIGITAL && item.inviteData) {
+                    await tx.digitalInvite.create({
+                        data: {
+                            orderItemId: orderItem.id,
+                            inviteData: item.inviteData,
+                        },
+                    });
+                }
+            }
+
+            // Return fully nested Order
+            return tx.order.findUnique({
+                where: { id: order.id },
+                include: {
+                    items: {
+                        include: {
+                            digitalInvite: true,
+                            product: true,
+                        },
+                    },
+                },
+            });
+        });
+
+        // Step 2: Initialize PhonePe Order
+        const phonePeResponse = await this.paymentsService.createPhonePeOrder(
+            orderRecord!.totalAmount,
+            orderRecord!.id,
+            userId
+        );
+
+        return {
+            order: orderRecord,
+            redirectUrl: phonePeResponse.redirectUrl,
+        };
+    }
+
+    async findAll(userId: string) {
+        return this.prisma.order.findMany({
+            where: { userId },
+            include: {
+                items: {
+                    include: {
+                        digitalInvite: true,
+                        product: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: 'desc' },
+        });
+    }
+}

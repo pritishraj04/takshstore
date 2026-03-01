@@ -6,6 +6,8 @@ import Header from "../components/layout/Header";
 import Footer from "../components/layout/Footer";
 import CollectionDrawer from "../components/layout/CollectionDrawer";
 import SearchOverlay from "../components/layout/SearchOverlay";
+import QueryProvider from "../components/providers/QueryProvider";
+import AuthProvider from "../components/providers/AuthProvider";
 
 // Configure Playfair Display (Serif) with styles defined in project-bible
 const playfair = Playfair_Display({
@@ -35,11 +37,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${playfair.variable} ${inter.variable} font-sans antialiased`}>
         <SmoothScroll>
-          <Header />
-          <CollectionDrawer />
-          <SearchOverlay />
-          {children}
-          <Footer />
+          <AuthProvider>
+            <QueryProvider>
+              <Header />
+              <CollectionDrawer />
+              <SearchOverlay />
+              {children}
+              <Footer />
+            </QueryProvider>
+          </AuthProvider>
         </SmoothScroll>
       </body>
     </html>

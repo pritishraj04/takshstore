@@ -4,10 +4,16 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCollectionStore } from "../../store/useCollectionStore";
-import { Lock } from "lucide-react";
+import { useCheckout } from "../../hooks/useCheckout";
+import { Lock, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 
 export default function CheckoutFlow() {
-    const { items } = useCollectionStore();
+    const { items, clearCollection } = useCollectionStore();
+    const { mutate: checkout, isPending: isCheckingOut } = useCheckout();
+    const router = useRouter();
+    const { data: session } = useSession();
     const [mounted, setMounted] = useState(false);
 
     // Prevent hydration errors with persisted state
@@ -55,7 +61,49 @@ export default function CheckoutFlow() {
                     Secure Checkout
                 </h1>
 
-                <form className="w-full max-w-lg flex flex-col" onSubmit={(e) => e.preventDefault()}>
+                <form
+                    className="w-full max-w-lg flex flex-col"
+                    onSubmit={(e) => {
+                        e.preventDefault();
+                        console.log('1. Button Clicked, Session:', session);
+                        const formData = new FormData(e.currentTarget);
+                        const email = formData.get('email') as string;
+                        const name = formData.get('name') as string;
+                        const address = formData.get('address') as string;
+                        const city = formData.get('city') as string;
+                        const postalCode = formData.get('postalCode') as string;
+
+                        if (!session) {
+                            router.push('/login?callbackUrl=/checkout');
+                            return;
+                        }
+
+                        checkout({
+                            items: items.map(item => ({
+                                productId: item.id,
+                                quantity: item.quantity,
+                                priceAtPurchase: item.price,
+                                type: item.type,
+                                inviteData: item.type === 'DIGITAL'
+                                    ? item.inviteData
+                                    : undefined
+                            })),
+                            totalAmount: total,
+                            shippingAddress: requiresShipping ? { address, city, postalCode } : undefined
+                        }, {
+                            onSuccess: (data: any) => {
+                                console.log('2. Mutation Success, Data:', data);
+                                // Once order is created in DB, redirect to PhonePe
+                                if (data?.redirectUrl) {
+                                    window.location.href = data.redirectUrl;
+                                } else {
+                                    console.error('Missing redirectUrl in response');
+                                    alert('Payment URL not received from server.');
+                                }
+                            }
+                        });
+                    }}
+                >
 
                     {/* Section 1 - Contact */}
                     <div className="mb-12">
@@ -67,6 +115,7 @@ export default function CheckoutFlow() {
                         </h3>
                         <input
                             type="email"
+                            name="email"
                             placeholder="Email Address"
                             className="w-full bg-transparent border-b border-[#E5E4DF] pb-3 mb-8 text-sm placeholder:text-[#5A5A5A] text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                             style={{ fontFamily: 'var(--font-inter)' }}
@@ -74,6 +123,7 @@ export default function CheckoutFlow() {
                         />
                         <input
                             type="text"
+                            name="name"
                             placeholder="Full Name"
                             className="w-full bg-transparent border-b border-[#E5E4DF] pb-3 mb-8 text-sm placeholder:text-[#5A5A5A] text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                             style={{ fontFamily: 'var(--font-inter)' }}
@@ -95,6 +145,7 @@ export default function CheckoutFlow() {
                             <>
                                 <input
                                     type="text"
+                                    name="address"
                                     placeholder="Street Address"
                                     className="w-full bg-transparent border-b border-[#E5E4DF] pb-3 mb-8 text-sm placeholder:text-[#5A5A5A] text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                                     style={{ fontFamily: 'var(--font-inter)' }}
@@ -103,6 +154,7 @@ export default function CheckoutFlow() {
                                 <div className="grid grid-cols-2 gap-6 mb-8">
                                     <input
                                         type="text"
+                                        name="city"
                                         placeholder="City"
                                         className="w-full bg-transparent border-b border-[#E5E4DF] pb-3 text-sm placeholder:text-[#5A5A5A] text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                                         style={{ fontFamily: 'var(--font-inter)' }}
@@ -110,6 +162,7 @@ export default function CheckoutFlow() {
                                     />
                                     <input
                                         type="text"
+                                        name="postalCode"
                                         placeholder="Postal Code"
                                         className="w-full bg-transparent border-b border-[#E5E4DF] pb-3 text-sm placeholder:text-[#5A5A5A] text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                                         style={{ fontFamily: 'var(--font-inter)' }}
@@ -152,10 +205,15 @@ export default function CheckoutFlow() {
 
                     <button
                         type="submit"
-                        className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 mt-12 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center"
+                        disabled={isCheckingOut}
+                        className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 mt-12 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
                         style={{ fontFamily: 'var(--font-inter)' }}
                     >
-                        <Lock size={14} className="mr-2" strokeWidth={1.5} /> COMPLETE PURCHASE
+                        {isCheckingOut ? (
+                            <><Loader2 size={14} className="mr-2 animate-spin" strokeWidth={1.5} /> PROCESSING...</>
+                        ) : (
+                            <><Lock size={14} className="mr-2" strokeWidth={1.5} /> COMPLETE PURCHASE</>
+                        )}
                     </button>
                 </form>
             </div>
@@ -175,7 +233,7 @@ export default function CheckoutFlow() {
                         <div key={item.id} className="flex gap-6 items-center">
                             <div className="relative w-16 aspect-4/5 shrink-0 bg-[#FBFBF9] border border-[#E5E4DF]">
                                 <Image
-                                    src={item.image_url}
+                                    src={item.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f"}
                                     alt={item.title}
                                     fill
                                     className="object-cover"
@@ -199,7 +257,7 @@ export default function CheckoutFlow() {
                                 className="text-sm text-[#1A1A1A]"
                                 style={{ fontFamily: 'var(--font-inter)' }}
                             >
-                                ${(item.price * item.quantity).toLocaleString()}
+                                ₹{(item.price * item.quantity).toLocaleString()}
                             </p>
                         </div>
                     ))}
@@ -212,14 +270,14 @@ export default function CheckoutFlow() {
                         style={{ fontFamily: 'var(--font-inter)' }}
                     >
                         <span>Subtotal</span>
-                        <span>${subtotal.toLocaleString()}</span>
+                        <span>₹{subtotal.toLocaleString()}</span>
                     </div>
                     <div
                         className="flex justify-between items-center text-sm text-[#5A5A5A]"
                         style={{ fontFamily: 'var(--font-inter)' }}
                     >
                         <span>Shipping</span>
-                        <span>{shippingCost === 0 ? 'Complimentary' : `$${shippingCost}`}</span>
+                        <span>{shippingCost === 0 ? 'Complimentary' : `₹${shippingCost}`}</span>
                     </div>
 
                     <div
@@ -235,7 +293,7 @@ export default function CheckoutFlow() {
                             className="text-2xl text-[#1A1A1A]"
                             style={{ fontFamily: 'var(--font-playfair)' }}
                         >
-                            ${total.toLocaleString()}
+                            ₹{total.toLocaleString()}
                         </span>
                     </div>
                 </div>

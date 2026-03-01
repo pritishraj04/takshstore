@@ -8,7 +8,7 @@ function getProductById(id: string): Product {
         id: id || "prod_002",
         title: "The Midnight Suite",
         price: 1200,
-        image_url: "https://images.unsplash.com/photo-1509927083803-4bd519298ac4?auto=format&fit=crop&q=80&w=1200",
+        imageUrl: "https://images.unsplash.com/photo-1509927083803-4bd519298ac4?auto=format&fit=crop&q=80&w=1200",
         type: "DIGITAL"
     };
 }

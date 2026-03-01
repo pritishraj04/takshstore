@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { Product } from "../../types";
+import { useProducts } from "../../hooks/useProducts";
 import { User, CalendarHeart, ShoppingBag, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, ArrowLeft, X } from "lucide-react";
 
 interface WebInviteCustomizerProps {
@@ -13,6 +14,8 @@ interface WebInviteCustomizerProps {
 
 export default function WebInviteCustomizer({ product }: WebInviteCustomizerProps) {
     const { addItem, setIsOpen } = useCollectionStore();
+    const { data: products, isLoading } = useProducts();
+    const digitalProduct = products?.find(p => p.type === 'DIGITAL') as Product | undefined;
 
     // JSON State Management
     const [inviteData, setInviteData] = useState({
@@ -70,8 +73,17 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
             return;
         }
         setValidationError("");
-        addItem({ ...product, type: "DIGITAL" });
-        setIsOpen(true);
+        if (digitalProduct) {
+            addItem({
+                id: digitalProduct.id,
+                title: digitalProduct.title,
+                price: digitalProduct.price,
+                type: 'DIGITAL',
+                imageUrl: digitalProduct.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800",
+                inviteData: inviteData,
+            } as any);
+            setIsOpen(true);
+        }
     };
 
     const handleSaveDraft = () => {
@@ -421,7 +433,7 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                             className="text-lg text-[#1A1A1A]"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            ${product.price.toLocaleString()}
+                            ₹{product.price.toLocaleString()}
                         </span>
                     </div>
 
@@ -439,7 +451,8 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                         </button>
                         <button
                             onClick={handleSaveAndAdd}
-                            className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center"
+                            disabled={isLoading || !digitalProduct}
+                            className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
                             <ShoppingBag size={14} className="mr-2" strokeWidth={1} /> ADD TO BAG

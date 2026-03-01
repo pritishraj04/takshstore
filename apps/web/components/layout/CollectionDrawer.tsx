@@ -79,7 +79,7 @@ export default function CollectionDrawer() {
                                 {/* Thumbnail */}
                                 <div className="relative w-24 aspect-4/5 shrink-0 bg-[#F2F1EC]">
                                     <Image
-                                        src={item.image_url}
+                                        src={item.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f"}
                                         alt={item.title}
                                         fill
                                         className="object-cover"
@@ -105,7 +105,7 @@ export default function CollectionDrawer() {
                                             className="text-sm text-[#1A1A1A]"
                                             style={{ fontFamily: 'var(--font-inter)' }}
                                         >
-                                            ${item.price.toLocaleString()}
+                                            ₹{item.price.toLocaleString()}
                                         </p>
                                     </div>
 
@@ -131,7 +131,7 @@ export default function CollectionDrawer() {
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
                             <span>Subtotal</span>
-                            <span>${subtotal.toLocaleString()}</span>
+                            <span>₹{subtotal.toLocaleString()}</span>
                         </div>
 
                         <Link

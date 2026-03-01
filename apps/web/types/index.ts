@@ -4,10 +4,11 @@ export interface Product {
     id: string;
     title: string;
     price: number;
-    image_url: string;
+    imageUrl?: string;
     type: ProductType;
 }
 
 export interface CollectionItem extends Product {
     quantity: number;
+    inviteData?: any;
 }

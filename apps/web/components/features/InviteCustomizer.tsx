@@ -174,7 +174,7 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
                             className="text-lg text-[#1A1A1A]"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            ${product.price.toLocaleString()}
+                            ₹{product.price.toLocaleString()}
                         </span>
                     </div>
 
