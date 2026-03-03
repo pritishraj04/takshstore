@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
-import SmoothScroll from "../components/animations/SmoothScroll";
-import Header from "../components/layout/Header";
-import Footer from "../components/layout/Footer";
-import CollectionDrawer from "../components/layout/CollectionDrawer";
-import SearchOverlay from "../components/layout/SearchOverlay";
+
 import QueryProvider from "../components/providers/QueryProvider";
 import AuthProvider from "../components/providers/AuthProvider";
 import { Toaster } from "sonner";
@@ -37,17 +33,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${playfair.variable} ${inter.variable} font-sans antialiased`}>
-        <SmoothScroll>
-          <AuthProvider>
-            <QueryProvider>
-              <Header />
-              <CollectionDrawer />
-              <SearchOverlay />
-              {children}
-              <Footer />
-            </QueryProvider>
-          </AuthProvider>
-        </SmoothScroll>
+        <AuthProvider>
+          <QueryProvider>
+            {children}
+          </QueryProvider>
+        </AuthProvider>
         <Toaster theme="dark" position="bottom-right" />
       </body>
     </html>

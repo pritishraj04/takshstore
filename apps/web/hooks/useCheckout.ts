@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query';
 import { apiClient } from '../lib/apiClient';
-import { useCartStore } from '../store/useCartStore';
+import { useCollectionStore } from '../store/useCollectionStore';
 import { useRouter } from 'next/navigation';
 import { ProductType, InviteData } from '@taksh/types';
 
@@ -21,7 +21,7 @@ export interface CreateOrderPayload {
 
 export function useCheckout() {
     const router = useRouter();
-    const clearCart = useCartStore((state) => state.clearCart);
+    const clearCollection = useCollectionStore((state) => state.clearCollection);
 
     return useMutation({
         mutationFn: async (payload: CreateOrderPayload) => {
@@ -34,7 +34,7 @@ export function useCheckout() {
                 // We'll let the component handle the actual redirect or we can do it here.
                 // The prompt says "In your checkout component, inside the onSuccess callback of the mutation..."
                 // So here we do nothing or clear the cart.
-                clearCart();
+                clearCollection();
             }
         },
         onError: (error) => {

@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { Product } from "../../types";
+import { InviteData } from "@taksh/types";
+import { apiClient } from "../../lib/apiClient";
 import { useProducts } from "../../hooks/useProducts";
-import { User, CalendarHeart, ShoppingBag, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, ArrowLeft, X } from "lucide-react";
+import { Link as LinkIcon, Upload, CalendarHeart, Clock, MapPin, CheckCircle, XCircle, Loader2, User, Plus, X, Tag, Users, ExternalLink, ShoppingBag } from "lucide-react";
 
 interface WebInviteCustomizerProps {
     product: Product;
@@ -18,7 +20,7 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
     const digitalProduct = products?.find(p => p.type === 'DIGITAL') as Product | undefined;
 
     // JSON State Management
-    const [inviteData, setInviteData] = useState({
+    const [inviteData, setInviteData] = useState<InviteData>({
         couple: {
             bride: {
                 name: "Riya",
@@ -44,19 +46,52 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
             whatsappContact: "+12345678900",
             youtubeLink: "",
             optionalNote: ""
-        }
+        },
+        slug: ""
     });
 
-    const [openSection, setOpenSection] = useState<'couple' | 'parents' | 'events' | null>('couple');
+    const [slugStatus, setSlugStatus] = useState<{ loading: boolean; available: boolean | null; suggestions: string[] }>({ loading: false, available: null, suggestions: [] });
+    const [openSection, setOpenSection] = useState<'url' | 'couple' | 'parents' | 'events' | 'contact' | null>('url');
     const [developerNotes, setDeveloperNotes] = useState("");
     const [isTncOpen, setIsTncOpen] = useState(false);
     const [validationError, setValidationError] = useState("");
     const [isDraftSaved, setIsDraftSaved] = useState(false);
+    const isPurchased = false; // Always false in pre-purchase
 
     const router = useRouter();
 
+    // Debounced Slug Availability Check
+    useEffect(() => {
+        const currentSlug = inviteData.slug;
+        if (!currentSlug || currentSlug.trim().length === 0) {
+            setSlugStatus({ loading: false, available: null, suggestions: [] });
+            return;
+        }
+
+        const timer = setTimeout(async () => {
+            setSlugStatus(prev => ({ ...prev, loading: true }));
+            try {
+                const { data } = await apiClient.get(`/digital-invites/check-slug/${encodeURIComponent(currentSlug)}`);
+                setSlugStatus({
+                    loading: false,
+                    available: data.available,
+                    suggestions: data.suggestions || []
+                });
+            } catch (error) {
+                console.error("Slug check failed", error);
+                setSlugStatus({ loading: false, available: null, suggestions: [] });
+            }
+        }, 500);
+
+        return () => clearTimeout(timer);
+    }, [inviteData.slug]);
+
     const validateForm = () => {
         setValidationError("");
+        if (!inviteData.slug || slugStatus.available === false) {
+            setOpenSection('url');
+            return false;
+        }
         if (!inviteData.couple.bride.name.trim() || !inviteData.couple.groom.name.trim()) {
             return false;
         }
@@ -102,6 +137,12 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
         }
     };
 
+    const updateSlug = (value: string) => {
+        // Sanitize slug input: lowercase, keep only alphanumeric and hyphens
+        const sanitized = value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+        setInviteData(prev => ({ ...prev, slug: sanitized }));
+    };
+
     const updateCoupleField = (field: string, value: string) => {
         setInviteData(prev => ({ ...prev, couple: { ...prev.couple, [field]: value } }));
     };
@@ -133,19 +174,29 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
         setInviteData(prev => ({ ...prev, wedding: { ...prev.wedding, [field]: value } }));
     };
 
-    const updateEvent = (id: string, field: string, value: string) => {
+    const updateEvent = (id: string, field: string, value: string | boolean) => {
         setInviteData(prev => ({
             ...prev,
             celebrations: prev.celebrations.map(ev => ev.id === id ? { ...ev, [field]: value } : ev)
         }));
     };
 
-    const addEvent = () => {
+    const updateContact = (field: keyof NonNullable<InviteData['contact']>, value: string) => {
         setInviteData(prev => ({
+            ...prev,
+            contact: {
+                ...prev.contact,
+                [field]: value
+            }
+        }));
+    };
+
+    const addEvent = () => {
+        setInviteData((prev: InviteData) => ({
             ...prev,
             celebrations: [
                 ...prev.celebrations,
-                { id: Date.now().toString(), name: "New Event", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "" }
+                { id: Date.now().toString(), name: "New Event", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "", showLocation: false }
             ]
         }));
     };
@@ -159,11 +210,11 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                     <Image src="https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&q=80&w=1200" alt="Texture" fill className="object-cover" />
                 </div>
 
-                <div className="w-[375px] h-[812px] bg-[#FBFBF9] rounded-[3rem] shadow-2xl border-8 border-[#1A1A1A] overflow-hidden relative flex flex-col z-10">
+                <div className="w-[430px] h-[932px] bg-[#FBFBF9] rounded-[3rem] shadow-2xl border-8 border-[#1A1A1A] overflow-hidden relative flex flex-col z-10">
                     <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-hide bg-[#FBFBF9]">
 
                         {/* Hero Section */}
-                        <section className="relative w-full min-h-[812px] flex flex-col items-center justify-center text-center p-8">
+                        <section className="relative w-full min-h-[932px] flex flex-col items-center justify-center text-center p-8">
                             <div className="absolute inset-0 z-0">
                                 <Image src={inviteData.couple.image || "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800"} alt="Hero Background" fill className="object-cover opacity-60 mix-blend-multiply" />
                                 <div className="absolute inset-0 bg-linear-to-b from-[#F2F1EC]/40 to-[#F2F1EC] z-10" />
@@ -239,6 +290,61 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                     <h1 className="text-3xl text-[#1A1A1A] tracking-tight mb-8" style={{ fontFamily: 'var(--font-playfair)' }}>
                         Configure Digital Experience
                     </h1>
+
+                    {/* Section 0: Claim URL */}
+                    <div className="mb-6 border border-[#E5E4DF] bg-white">
+                        <button
+                            onClick={() => setOpenSection(openSection === 'url' ? null : 'url')}
+                            className="w-full flex items-center justify-between p-6 text-xs uppercase tracking-widest text-[#1A1A1A]"
+                            style={{ fontFamily: 'var(--font-inter)' }}
+                        >
+                            <span className="flex items-center gap-3"><LinkIcon size={16} strokeWidth={1} className="text-[#5A5A5A]" /> Claim Your URL</span>
+                            <span className="text-lg font-light leading-none">{openSection === 'url' ? '−' : '+'}</span>
+                        </button>
+                        <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'url' ? 'max-h-[800px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
+                            <div className="flex flex-col gap-4 pt-4 border-t border-[#E5E4DF]">
+                                <p className="text-[10px] text-[#5A5A5A] uppercase tracking-widest" style={{ fontFamily: 'var(--font-inter)' }}>Your Custom Link</p>
+                                <div className="flex items-center bg-[#F2F1EC] rounded-sm px-4 py-3 border border-[#E5E4DF] focus-within:border-[#1A1A1A] transition-colors overflow-hidden">
+                                    <span className="text-sm text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>takshstore.com/invites/</span>
+                                    <input
+                                        type="text"
+                                        value={inviteData.slug}
+                                        onChange={(e) => updateSlug(e.target.value)}
+                                        placeholder="riya-weds-moon"
+                                        className="w-full bg-transparent text-sm text-[#1A1A1A] font-medium outline-none ml-1 placeholder:font-normal"
+                                        style={{ fontFamily: 'var(--font-inter)' }}
+                                    />
+                                    <div className="shrink-0 ml-2">
+                                        {slugStatus.loading && <Loader2 size={16} className="text-[#5A5A5A] animate-spin" />}
+                                        {!slugStatus.loading && slugStatus.available === true && <CheckCircle size={16} className="text-green-600" />}
+                                        {!slugStatus.loading && slugStatus.available === false && <XCircle size={16} className="text-red-600" />}
+                                    </div>
+                                </div>
+
+                                {!slugStatus.loading && slugStatus.available === true && (
+                                    <p className="text-xs text-green-600 mt-1" style={{ fontFamily: 'var(--font-inter)' }}>This URL is available!</p>
+                                )}
+
+                                {!slugStatus.loading && slugStatus.available === false && (
+                                    <div className="mt-2 animate-in fade-in slide-in-from-top-2">
+                                        <p className="text-xs text-red-600 mb-2" style={{ fontFamily: 'var(--font-inter)' }}>This URL is taken. Try one of these:</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {slugStatus.suggestions.map((suggestion) => (
+                                                <button
+                                                    key={suggestion}
+                                                    onClick={() => updateSlug(suggestion)}
+                                                    className="px-3 py-1.5 text-[10px] uppercase tracking-widest border border-red-200 bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                                                    style={{ fontFamily: 'var(--font-inter)' }}
+                                                >
+                                                    {suggestion}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Section 1: The Couple */}
                     <div className="mb-6 border border-[#E5E4DF] bg-white">
@@ -377,14 +483,29 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                                                 style={{ fontFamily: 'var(--font-inter)' }}
                                             />
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <LinkIcon size={12} strokeWidth={1} className="text-[#C5B39A]" />
+                                        <div className="flex items-center gap-2 mt-2">
                                             <input
-                                                type="text" value={ev.googleMapsUrl} onChange={(e) => updateEvent(ev.id, 'googleMapsUrl', e.target.value)} placeholder="Google Maps URL"
-                                                className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
-                                                style={{ fontFamily: 'var(--font-inter)' }}
+                                                type="checkbox"
+                                                id={`showLocation-${ev.id}`}
+                                                checked={ev.showLocation || false}
+                                                onChange={(e) => updateEvent(ev.id, 'showLocation', e.target.checked)}
+                                                className="w-4 h-4 text-[#1A1A1A] bg-transparent border-[#E5E4DF] focus:ring-[#1A1A1A] focus:ring-1"
                                             />
+                                            <label htmlFor={`showLocation-${ev.id}`} className="text-sm text-[#1A1A1A] ml-2" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                Show Map Location
+                                            </label>
                                         </div>
+
+                                        {ev.showLocation && (
+                                            <div className="flex items-center gap-2">
+                                                <LinkIcon size={12} strokeWidth={1} className="text-[#C5B39A]" />
+                                                <input
+                                                    type="text" value={ev.googleMapsUrl || ''} onChange={(e) => updateEvent(ev.id, 'googleMapsUrl', e.target.value)} placeholder="Google Maps URL"
+                                                    className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
+                                                    style={{ fontFamily: 'var(--font-inter)' }}
+                                                />
+                                            </div>
+                                        )}
                                         <div className="flex items-center gap-2">
                                             <Tag size={12} strokeWidth={1} className="text-[#C5B39A]" />
                                             <input
@@ -403,6 +524,30 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                         </div>
                     </div>
 
+                    {/* Section 4: Contact & RSVP */}
+                    <div className="mb-6 border border-[#E5E4DF] bg-white shrink-0">
+                        <button
+                            onClick={() => setOpenSection(openSection === 'contact' ? null : 'contact')}
+                            className="w-full flex items-center justify-between p-6 text-xs uppercase tracking-widest text-[#1A1A1A]"
+                            style={{ fontFamily: 'var(--font-inter)' }}
+                        >
+                            <span className="flex items-center gap-3"><Users size={16} strokeWidth={1} className="text-[#5A5A5A]" /> Contact & RSVP</span>
+                            <span className="text-lg font-light leading-none">{openSection === 'contact' ? '−' : '+'}</span>
+                        </button>
+                        <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'contact' ? 'max-h-[800px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
+                            <div className="flex flex-col gap-6 pt-4 border-t border-[#E5E4DF]">
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>WhatsApp RSVP Number</label>
+                                    <input
+                                        type="text" value={inviteData.contact?.whatsapp || ''} onChange={(e) => updateContact('whatsapp', e.target.value)} placeholder="e.g. 9852973546"
+                                        className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
+                                        style={{ fontFamily: 'var(--font-inter)' }}
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     {/* Developer Notes */}
                     <div className="mt-12">
                         <textarea
@@ -414,7 +559,7 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                             style={{ fontFamily: 'var(--font-inter)' }}
                         />
                         <p className="text-[10px] text-[#5A5A5A] leading-relaxed mt-4" style={{ fontFamily: 'var(--font-inter)' }}>
-                            These are the basic details we need to get your invitation development started. For bespoke customizations, you can contact us directly via call, message, or email.
+                            Design your bespoke digital suite. Your changes are saved instantly and can be published infinitely. For custom structural modifications or completely bespoke designs, please contact our atelier directly.
                         </p>
                     </div>
 
@@ -438,26 +583,50 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                     </div>
 
                     {validationError && (
-                        <p className="text-red-600 text-[10px] uppercase tracking-widest mb-4 text-center" style={{ fontFamily: 'var(--font-inter)' }}>{validationError}</p>
+                        <p className="text-red-600 text-[10px] uppercase tracking-widest mb-4 text-center bg-red-50 py-2 border border-red-100" style={{ fontFamily: 'var(--font-inter)' }}>
+                            {validationError}
+                        </p>
                     )}
 
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                        <button
-                            onClick={handleSaveDraft}
-                            className="w-full bg-transparent border border-[#E5E4DF] text-[#1A1A1A] py-5 text-xs uppercase tracking-widest hover:bg-[#F2F1EC] transition-colors flex items-center justify-center"
-                            style={{ fontFamily: 'var(--font-inter)' }}
-                        >
-                            {isDraftSaved ? 'DRAFT SAVED' : 'SAVE DRAFT'}
-                        </button>
-                        <button
-                            onClick={handleSaveAndAdd}
-                            disabled={isLoading || !digitalProduct}
-                            className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                            style={{ fontFamily: 'var(--font-inter)' }}
-                        >
-                            <ShoppingBag size={14} className="mr-2" strokeWidth={1} /> ADD TO BAG
-                        </button>
-                    </div>
+                    {isPurchased ? (
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <button
+                                onClick={handleSaveDraft}
+                                disabled={isLoading}
+                                className="w-full bg-transparent border border-[#E5E4DF] text-[#1A1A1A] py-5 text-xs uppercase tracking-widest hover:bg-[#F2F1EC] transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ fontFamily: 'var(--font-inter)' }}
+                            >
+                                {isDraftSaved ? 'PUBLISHED' : 'PUBLISH CHANGES'}
+                            </button>
+                            <a
+                                href={`/invites/${inviteData.slug}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center"
+                                style={{ fontFamily: 'var(--font-inter)' }}
+                            >
+                                VIEW LIVE INVITE <ExternalLink size={14} className="ml-2" />
+                            </a>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-2 gap-4 mb-4">
+                            <button
+                                onClick={handleSaveDraft}
+                                className="w-full bg-transparent border border-[#E5E4DF] text-[#1A1A1A] py-5 text-xs uppercase tracking-widest hover:bg-[#F2F1EC] transition-colors flex items-center justify-center"
+                                style={{ fontFamily: 'var(--font-inter)' }}
+                            >
+                                {isDraftSaved ? 'DRAFT SAVED' : 'SAVE DRAFT'}
+                            </button>
+                            <button
+                                onClick={handleSaveAndAdd}
+                                disabled={isLoading || !digitalProduct}
+                                className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                style={{ fontFamily: 'var(--font-inter)' }}
+                            >
+                                <ShoppingBag size={14} className="mr-2" strokeWidth={1} /> ADD TO BAG
+                            </button>
+                        </div>
+                    )}
 
                     <div className="text-center">
                         <button onClick={() => setIsTncOpen(true)} className="text-[10px] uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors underline underline-offset-4" style={{ fontFamily: 'var(--font-inter)' }}>
@@ -478,10 +647,7 @@ export default function WebInviteCustomizer({ product }: WebInviteCustomizerProp
                         <h2 className="text-2xl text-[#1A1A1A] mb-6" style={{ fontFamily: 'var(--font-playfair)' }}>Terms & Conditions</h2>
                         <div className="text-sm text-[#5A5A5A] leading-relaxed space-y-4" style={{ fontFamily: 'var(--font-inter)' }}>
                             <p>
-                                By submitting this configuration and proceeding with your digital product purchase, you acknowledge that this acts as the foundational blueprint for your bespoke digital invitation.
-                            </p>
-                            <p>
-                                Revisions are currently limited to two (2) comprehensive rounds post-delivery of the initial interactive staging link. Further structural or aesthetic alterations beyond the scope collected here may incur additional layout fees.
+                                I understand that I am designing a self-serve digital invite. I can edit and republish my details at any time. Structural layout changes are subject to bespoke commission rates.
                             </p>
                         </div>
                     </div>

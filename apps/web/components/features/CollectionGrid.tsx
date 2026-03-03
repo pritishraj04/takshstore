@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Product } from "../../types";
@@ -20,6 +21,7 @@ export default function CollectionGrid({ products }: CollectionGridProps) {
     const [filteredProducts, setFilteredProducts] = useState(products);
     const gridRef = useRef<HTMLDivElement>(null);
     const { addItem, setIsOpen } = useCollectionStore();
+    const router = useRouter();
 
     // Handle Filtering
     useEffect(() => {
@@ -53,6 +55,10 @@ export default function CollectionGrid({ products }: CollectionGridProps) {
     }, [filteredProducts]);
 
     const handleAddToCart = (product: Product) => {
+        if (product.type === 'DIGITAL') {
+            router.push(`/customize/${product.id}`);
+            return;
+        }
         addItem(product);
         setIsOpen(true);
     };
@@ -139,7 +145,7 @@ export default function CollectionGrid({ products }: CollectionGridProps) {
                                 className="mt-6 inline-flex items-center text-[10px] uppercase tracking-[0.2em] text-[#1A1A1A] border-b border-[#E5E4DF] pb-1 opacity-0 translate-y-4 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0 hover:border-[#1A1A1A]"
                                 style={{ fontFamily: 'var(--font-inter)' }}
                             >
-                                <ShoppingBag size={14} className="mr-2" strokeWidth={1.5} /> ADD TO BAG
+                                <ShoppingBag size={14} className="mr-2" strokeWidth={1.5} /> {product.type === 'DIGITAL' ? 'PERSONALIZE' : 'ADD TO BAG'}
                             </button>
                         </div>
 

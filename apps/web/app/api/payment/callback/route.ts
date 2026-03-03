@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import axios from 'axios';
 
 export async function POST(req: Request) {
     try {
@@ -8,21 +7,30 @@ export async function POST(req: Request) {
         console.log('--- PHONEPE CALLBACK PAYLOAD ---', payload);
 
         const transactionId = payload.transactionId || payload.merchantTransactionId;
-        const code = payload.code;
+        const code = payload.code as string | undefined;
         console.log('Extracted -> Code:', code, 'TransactionId:', transactionId);
 
         if (code) {
             try {
                 console.log(`Attempting to sync PhonePe Status [${code}] for TxID: ${transactionId} in NestJS...`);
-                const nestResponse = await axios.post('http://localhost:4000/api/payments/verify-local', {
-                    transactionId: transactionId,
-                    status: code // Send the exact PhonePe code to NestJS for parsing
+                const nestResponse = await fetch('http://localhost:4000/api/payments/verify-local', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        transactionId: transactionId,
+                        status: code // Send the exact PhonePe code to NestJS for parsing
+                    })
                 });
-                console.log('NestJS Sync Successful:', nestResponse.data);
+
+                if (!nestResponse.ok) {
+                    const text = await nestResponse.text();
+                    throw new Error(`Status ${nestResponse.status}: ${text}`);
+                }
+                const data = await nestResponse.json();
+                console.log('NestJS Sync Successful:', data);
             } catch (error: any) {
                 console.error('--- NESTJS SYNC FAILED ---');
                 console.error('Error Message:', error.message);
-                console.error('NestJS Data:', error.response?.data);
             }
         }
 

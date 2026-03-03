@@ -8,27 +8,67 @@ export interface Product {
     imageUrl?: string;
 }
 
+export interface Person {
+    name: string;
+    parents: { mother: string; father: string; };
+}
+
 export interface Couple {
-    partner1: string;
-    partner2: string;
+    bride: Person;
+    groom: Person;
+    hashtag: string;
+    image?: string;
+    partner1?: string;
+    partner2?: string;
 }
 
 export interface Wedding {
-    date: string;
-    venue: string;
+    displayDate: string;
+    date?: string;
+    venue?: string;
 }
 
-export interface Celebrations {
-    events: string[];
+export interface EventDetails {
+    id: string;
+    name: string;
+    date: string;
+    time: string;
+    venue: string;
+    googleMapsUrl?: string;
+    mapImage?: string;
+    highlight?: boolean;
+    showLocation?: boolean;
+    dressCode: string;
+    calendarUrl?: string;
 }
 
 export interface Messages {
-    welcomeMessage: string;
+    inviteText: string;
+    whatsappContact?: string;
+    youtubeLink?: string;
+    optionalNote?: string;
+    welcomeMessage?: string;
+    thankYou?: string;
+    coupleQuote?: string;
+}
+
+export interface Contact {
+    whatsapp?: string;
+    instagram?: string;
+}
+
+export interface Music {
+    url?: string;
+    autoplay?: boolean;
 }
 
 export interface InviteData {
     couple: Couple;
     wedding: Wedding;
-    celebrations: Celebrations;
+    celebrations: EventDetails[];
     messages: Messages;
+    contact?: Contact;
+    music?: Music;
+    websiteUrl?: string;
+    slug?: string;
 }

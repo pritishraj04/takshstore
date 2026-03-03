@@ -53,6 +53,7 @@ export class OrdersService {
                         data: {
                             orderItemId: orderItem.id,
                             inviteData: item.inviteData,
+                            slug: (item.inviteData as any).slug || null,
                         },
                     });
                 }

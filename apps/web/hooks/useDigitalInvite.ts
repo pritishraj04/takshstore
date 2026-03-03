@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../lib/apiClient";
 import { InviteData } from "@taksh/types";
+import { toast } from "sonner";
 
 // The hook returns the full DigitalInvite record, which contains the `inviteData` JSON
 export function useDigitalInvite(id: string) {
@@ -27,6 +28,10 @@ export function useUpdateInvite(id: string) {
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["digitalInvite", id] });
+            toast.success("Changes published successfully!");
         },
+        onError: (error: any) => {
+            toast.error(error.response?.data?.message || "Failed to publish changes.");
+        }
     });
 }
