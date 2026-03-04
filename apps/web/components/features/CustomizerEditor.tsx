@@ -1,15 +1,17 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useDigitalInvite, useUpdateInvite } from "../../hooks/useDigitalInvite";
+import { useRouter } from "next/navigation";
+import { useDigitalInvite, useUpdateInvite, useDeleteDraft } from "../../hooks/useDigitalInvite";
 import { useInviteStore } from "../../store/useInviteStore";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { useProducts } from "../../hooks/useProducts";
-import { Loader2, ShoppingBag, ExternalLink, User, CalendarHeart, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, ShoppingBag, ExternalLink, User, CalendarHeart, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, CheckCircle, XCircle, Save, Globe, UploadCloud } from "lucide-react";
 import { apiClient } from "../../lib/apiClient";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { LiveInviteTemplate } from "../templates/LiveInviteTemplate";
+import { getTemplate } from "../templates/TemplateRegistry";
+import { toast } from "sonner";
 
 interface CustomizerEditorProps {
     inviteId: string;
@@ -19,6 +21,8 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     // 1. Fetch data from backend
     const { data, isLoading, isError } = useDigitalInvite(inviteId);
     const { mutate: updateInvite, isPending } = useUpdateInvite(inviteId);
+    const { mutate: deleteDraft, isPending: isDeleting } = useDeleteDraft();
+    const router = useRouter();
 
     // 2. Local State / Zustand Hydration
     const setAllData = useInviteStore((state) => state.setAllData);
@@ -41,7 +45,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     }, [data, setAllData]);
 
     // Derived States
-    const isPurchased = data?.orderItem?.order?.status === 'PAID' || data?.status === 'PUBLISHED';
+    const isPurchased = data?.isPaid === true;
 
     // Loading GSAP
     useGSAP(() => {
@@ -66,13 +70,47 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     }, [isPending]);
 
     const handleSave = () => {
-        if (currentDraft) {
+        if (!currentDraft?.slug || currentDraft.slug.trim().length === 0) {
+            toast.error('Please claim a unique URL for your invite before proceeding.');
+            return;
+        }
+        if (currentDraft && slugStatus.available !== false) {
             updateInvite(currentDraft);
+        } else {
+            toast.error('Please claim a unique and available URL before proceeding.');
+        }
+    };
+
+    const saveDraft = () => {
+        if (!currentDraft?.slug || currentDraft.slug.trim().length === 0) {
+            toast.error('Please claim a unique URL for your invite before proceeding.');
+            return;
+        }
+        // Local saving is handled by zustand automatically
+        toast.success("Draft saved locally!");
+    };
+
+    const handleDelete = () => {
+        if (confirm("Are you sure you want to delete this draft?")) {
+            deleteDraft(inviteId, {
+                onSuccess: () => {
+                    router.push('/dashboard');
+                }
+            });
         }
     };
 
     // Move the handleAddToBag below or keep here.
     const handleAddToBag = () => {
+        if (!currentDraft?.slug || currentDraft.slug.trim().length === 0) {
+            toast.error('Please claim a unique URL for your invite before proceeding.');
+            return;
+        }
+        if (slugStatus.available === false) {
+            toast.error('Please claim an available URL before proceeding.');
+            return;
+        }
+
         if (digitalProduct) {
             addItem({
                 id: digitalProduct.id,
@@ -80,11 +118,15 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                 price: digitalProduct.price,
                 type: 'DIGITAL',
                 imageUrl: digitalProduct.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800",
-                inviteData: currentDraft
+                inviteData: currentDraft,
+                draftId: inviteId
             } as any);
-            setIsOpen(true);
+            toast.success('Invite added to your atelier bag.');
+            router.push('/checkout');
         }
     };
+
+    const addToBag = handleAddToBag;
 
     // Debounced Slug Availability Check
     useEffect(() => {
@@ -192,7 +234,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     };
 
     // Luxury Loading State
-    if (isLoading) {
+    if (isLoading && inviteId !== 'new') {
         return (
             <div className="bg-primary min-h-screen flex flex-col items-center justify-center font-playfair tracking-wide">
                 <Loader2 size={32} className="animate-spin text-secondary mb-6" strokeWidth={1} />
@@ -213,6 +255,10 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             </div>
         );
     }
+
+    // Determine Dynamic Template
+    const templateId = data?.orderItem?.product?.templateId || 'riyawedsmoon'; // Or another property if it's there
+    const ActiveTemplate = getTemplate(templateId);
 
     return (
         <div className="flex w-full overflow-hidden bg-white text-black" style={{ height: 'calc(100vh - 64px)' }}>
@@ -249,7 +295,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                     <div className="shrink-0 ml-2">
                                         {slugStatus.loading && <Loader2 size={16} className="text-[#5A5A5A] animate-spin" />}
                                         {!slugStatus.loading && slugStatus.available === true && <CheckCircle size={16} className="text-green-600" />}
-                                        {!slugStatus.loading && slugStatus.available === false && <XCircle size={16} className="text-red-600" />}
+                                        {!slugStatus.loading && slugStatus.available === false && <XCircle size={16} className="text-red-500" />}
                                     </div>
                                 </div>
 
@@ -488,46 +534,51 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
 
 
                 {/* Sticky Action Footer */}
-                <div className="sticky bottom-0 border-t border-gray-200 bg-white p-4 flex flex-col gap-2 shrink-0 z-10">
-                    {isPurchased ? (
-                        <div className="flex flex-col gap-3">
-                            <button
-                                ref={saveBtnRef}
-                                onClick={handleSave}
-                                disabled={isPending}
-                                className="w-full font-inter text-xs uppercase tracking-widest text-[#1A1A1A] border border-[#1A1A1A] py-4 px-6 hover:bg-[#1A1A1A] hover:text-[#FBFBF9] transition-all disabled:pointer-events-none text-center"
-                            >
-                                {isPending ? "Publishing..." : "Publish Changes"}
-                            </button>
-                            <a
-                                href={`/invites/${data?.slug || ''}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="w-full font-inter text-xs uppercase tracking-widest bg-[#1A1A1A] text-[#FBFBF9] py-4 px-6 hover:bg-black transition-all flex items-center justify-center shrink-0"
-                            >
-                                View Live Invite <ExternalLink size={14} className="ml-2" />
-                            </a>
-                        </div>
-                    ) : (
-                        <div className="flex flex-col gap-3">
-                            <button
-                                ref={saveBtnRef}
-                                onClick={handleSave}
-                                disabled={isPending}
-                                className="w-full font-inter text-xs uppercase tracking-widest text-[#1A1A1A] border border-[#1A1A1A] py-4 px-6 hover:bg-[#1A1A1A] hover:text-[#FBFBF9] transition-all disabled:pointer-events-none text-center"
-                            >
-                                {isPending ? "Saving Draft..." : "Save Draft"}
-                            </button>
-                            <button
-                                onClick={handleAddToBag}
-                                disabled={isLoadingProducts || !digitalProduct}
-                                className="w-full font-inter text-xs uppercase tracking-widest bg-[#1A1A1A] text-[#FBFBF9] py-4 px-6 hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shrink-0"
-                            >
-                                <ShoppingBag size={14} className="mr-2" strokeWidth={1.5} /> Add to Bag
-                            </button>
-                        </div>
-                    )}
-                </div>
+                {isPurchased ? (
+                    <div className="flex gap-4 p-4 border-t border-[#E5E4DF] bg-white shadow-md mt-auto shrink-0 z-10 w-full">
+                        <button
+                            onClick={handleSave}
+                            disabled={!currentDraft?.slug || isPending}
+                            className={`flex items-center justify-center gap-2 px-4 py-2 text-sm bg-[#1A1A1A] text-white border border-transparent hover:bg-black transition-colors flex-1 ${(!currentDraft?.slug || isPending) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            {isPending ? <Loader2 size={16} className="animate-spin" /> : <UploadCloud size={16} />}
+                            Publish Changes
+                        </button>
+                        <a
+                            href={`/invites/${data?.slug || ''}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-center gap-2 px-4 py-2 text-sm bg-[#F2F1EC] text-[#1A1A1A] border border-transparent hover:border-gray-300 transition-colors flex-1"
+                        >
+                            <Globe size={16} /> View Live Invite
+                        </a>
+                    </div>
+                ) : (
+                    <div className="flex gap-2 p-4 border-t border-[#E5E4DF] bg-white shadow-md mt-auto shrink-0 z-10 w-full">
+                        <button
+                            onClick={handleDelete}
+                            disabled={isDeleting}
+                            className="text-red-500 p-2 hover:bg-red-50 transition-colors border border-transparent rounded-sm flex items-center justify-center"
+                            title="Delete Draft"
+                        >
+                            {isDeleting ? <Loader2 size={20} className="animate-spin" /> : <XCircle size={20} strokeWidth={1} />}
+                        </button>
+                        <button
+                            onClick={saveDraft}
+                            disabled={!currentDraft?.slug}
+                            className={`flex justify-center items-center gap-2 px-4 py-2 text-sm border border-gray-300 hover:bg-gray-50 transition-colors flex-1 ${!currentDraft?.slug ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <Save size={16} /> Save Draft
+                        </button>
+                        <button
+                            onClick={addToBag}
+                            disabled={!currentDraft?.slug || slugStatus.available === false}
+                            className={`flex justify-center items-center gap-2 px-4 py-2 text-sm bg-[#1A1A1A] text-white border border-transparent hover:bg-black transition-colors flex-1 ${(!currentDraft?.slug || slugStatus.available === false) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                            <ShoppingBag size={16} /> Add to Bag
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Canvas Area with Live Preview */}
@@ -536,7 +587,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                 <div className="relative w-full max-w-[430px] h-[932px] shrink-0 rounded-[2.5rem] shadow-2xl border-8 border-gray-900 overflow-hidden bg-white transform origin-center scale-[0.8] xl:scale-100 transition-transform">
                     {/* Inner container handles the independent scrolling */}
                     <div className="w-full h-full overflow-y-auto scrollbar-hide">
-                        <LiveInviteTemplate data={currentDraft} isPreviewMode={true} />
+                        <ActiveTemplate data={currentDraft} isPreviewMode={true} />
                     </div>
                 </div>
             </div>

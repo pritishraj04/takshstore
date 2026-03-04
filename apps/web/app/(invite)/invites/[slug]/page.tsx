@@ -1,6 +1,6 @@
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { LiveInviteTemplate } from '../../../../components/templates/LiveInviteTemplate';
+import { getTemplate } from '../../../../components/templates/TemplateRegistry';
 
 interface InvitePageProps {
     params: Promise<{ slug: string }>;
@@ -64,7 +64,9 @@ export default async function LiveInvitePage({ params }: InvitePageProps) {
         );
     }
 
-    const { inviteData } = invite;
+    const { inviteData, orderItem } = invite;
+    const templateId = orderItem?.product?.templateId || 'riyawedsmoon';
+    const ActiveTemplate = getTemplate(templateId);
 
-    return <LiveInviteTemplate data={inviteData} />;
+    return <ActiveTemplate data={inviteData} isPreviewMode={false} />;
 }

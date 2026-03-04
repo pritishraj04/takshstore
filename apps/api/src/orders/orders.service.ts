@@ -49,13 +49,26 @@ export class OrdersService {
 
                 // Step D: Create DigitalInvite if type is DIGITAL
                 if (item.type === ProductType.DIGITAL && item.inviteData) {
-                    await tx.digitalInvite.create({
-                        data: {
-                            orderItemId: orderItem.id,
-                            inviteData: item.inviteData,
-                            slug: (item.inviteData as any).slug || null,
-                        },
-                    });
+                    if (item.draftId) {
+                        // Link the existing draft to the new OrderItem and update status
+                        await tx.digitalInvite.update({
+                            where: { id: item.draftId },
+                            data: {
+                                orderItemId: orderItem.id,
+                                status: 'DEVELOPMENT',
+                                inviteData: item.inviteData,
+                                slug: (item.inviteData as any).slug || null,
+                            }
+                        });
+                    } else {
+                        await tx.digitalInvite.create({
+                            data: {
+                                orderItemId: orderItem.id,
+                                inviteData: item.inviteData,
+                                slug: (item.inviteData as any).slug || null,
+                            },
+                        });
+                    }
                 }
             }
 

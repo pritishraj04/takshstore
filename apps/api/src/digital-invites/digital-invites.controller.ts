@@ -1,4 +1,4 @@
-import { Controller, Get, Param, NotFoundException, Patch, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Param, NotFoundException, Patch, Post, Delete, Body, UseGuards, Request } from '@nestjs/common';
 import { DigitalInvitesService } from './digital-invites.service';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -13,7 +13,26 @@ export class DigitalInvitesController {
     @ApiBearerAuth()
     @ApiOperation({ summary: 'Get all digital invites for the authenticated user' })
     async getMyInvites(@Request() req) {
-        return this.digitalInvitesService.getInvitesByUser(req.user.id);
+        const userId = req.user?.sub || req.user?.userId;
+        return this.digitalInvitesService.getInvitesByUser(userId);
+    }
+
+    @Post('draft')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Create a new draft digital invite' })
+    async createDraft(@Request() req, @Body() body: { productId: string }) {
+        const userId = req.user?.sub || req.user?.userId;
+        return this.digitalInvitesService.createDraft(userId, body.productId);
+    }
+
+    @Delete('draft/:id')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Delete an existing draft digital invite' })
+    async deleteDraft(@Request() req, @Param('id') id: string) {
+        const userId = req.user?.sub || req.user?.userId;
+        return this.digitalInvitesService.deleteDraft(userId, id);
     }
 
     @Get('check-slug/:slug')

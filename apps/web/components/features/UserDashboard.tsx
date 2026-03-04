@@ -6,7 +6,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "../../lib/apiClient";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { Code, Brush, ArrowRight, ExternalLink, Link2, Check } from "lucide-react";
+import { Code, Brush, ArrowRight, ExternalLink, Link2, Check, Globe } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { InviteData, ProductType } from "@taksh/types";
@@ -176,15 +176,15 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                         </div>
 
                                         {/* Action Row */}
-                                        <div className="mt-12 flex flex-wrap gap-4 items-center">
+                                        <div className="mt-12 flex flex-wrap gap-4 items-center pt-4 border-t border-[#E5E4DF]">
                                             <Link
                                                 href={`/customizer/${invite.id}`}
-                                                className="bg-[#1A1A1A] text-white font-inter text-[10px] tracking-widest uppercase py-2.5 px-6 hover:bg-black transition-colors flex items-center group w-fit"
+                                                className="bg-[#1A1A1A] text-white font-inter text-xs tracking-widest uppercase py-2 px-6 hover:bg-black transition-colors flex items-center group w-fit"
                                             >
                                                 <span className="mr-2 transition-transform group-hover:translate-x-1">
-                                                    <ArrowRight size={12} strokeWidth={1.5} />
+                                                    <ArrowRight size={14} strokeWidth={1.5} />
                                                 </span>
-                                                Continue Editing
+                                                Edit
                                             </Link>
 
                                             {invite.slug && (
@@ -193,17 +193,21 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                                         href={`/invites/${invite.slug}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="border border-[#E5E4DF] bg-white text-[#1A1A1A] font-inter text-[10px] tracking-widest uppercase py-2.5 px-4 hover:border-[#1A1A1A] hover:bg-gray-50 transition-colors flex items-center"
+                                                        className="bg-transparent text-[#1A1A1A] font-inter text-xs tracking-widest uppercase py-2 px-4 hover:bg-[#F2F1EC] border border-transparent hover:border-[#E5E4DF] transition-colors flex items-center gap-2"
                                                     >
-                                                        <ExternalLink size={12} strokeWidth={1.5} className="mr-2" />
+                                                        <Globe size={14} strokeWidth={1.5} />
                                                         View Live
                                                     </a>
 
                                                     <button
-                                                        onClick={() => handleCopyLink(invite.slug as string)}
-                                                        className="border border-[#E5E4DF] bg-white text-[#1A1A1A] font-inter text-[10px] tracking-widest uppercase py-2.5 px-4 hover:border-[#1A1A1A] hover:bg-gray-50 transition-colors flex items-center"
+                                                        onClick={() => {
+                                                            const url = `${window.location.origin}/invites/${invite.slug}`;
+                                                            navigator.clipboard.writeText(url);
+                                                            import("sonner").then(m => m.toast.success('Link copied to clipboard!'));
+                                                        }}
+                                                        className="bg-transparent text-[#1A1A1A] font-inter text-xs tracking-widest uppercase py-2 px-4 hover:bg-[#F2F1EC] border border-transparent hover:border-[#E5E4DF] transition-colors flex items-center gap-2"
                                                     >
-                                                        <Link2 size={12} strokeWidth={1.5} className="mr-2" />
+                                                        <Link2 size={14} strokeWidth={1.5} />
                                                         Copy Link
                                                     </button>
                                                 </>

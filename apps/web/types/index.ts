@@ -11,4 +11,5 @@ export interface Product {
 export interface CollectionItem extends Product {
     quantity: number;
     inviteData?: any;
+    draftId?: string;
 }

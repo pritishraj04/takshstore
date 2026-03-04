@@ -8,7 +8,8 @@ import gsap from "gsap";
 import { useGSAP } from "@gsap/react";
 import { Product } from "../../types";
 import { useCollectionStore } from "../../store/useCollectionStore";
-import { ShoppingBag } from "lucide-react";
+import { useCreateDraft } from "../../hooks/useDigitalInvite";
+import { ShoppingBag, Loader2 } from "lucide-react";
 
 interface CollectionGridProps {
     products: Product[];
@@ -54,9 +55,16 @@ export default function CollectionGrid({ products }: CollectionGridProps) {
         return () => ctx.revert();
     }, [filteredProducts]);
 
+    // Use mutation for digital products
+    const { mutate: createDraft, isPending: isCreatingDraft } = useCreateDraft();
+
     const handleAddToCart = (product: Product) => {
         if (product.type === 'DIGITAL') {
-            router.push(`/customize/${product.id}`);
+            createDraft(product.id, {
+                onSuccess: (data) => {
+                    router.push(`/customizer/${data.id}`);
+                }
+            });
             return;
         }
         addItem(product);
@@ -136,16 +144,20 @@ export default function CollectionGrid({ products }: CollectionGridProps) {
                                 {product.type === 'PHYSICAL' ? 'Physical Canvas' : 'Digital Suite'} — ₹{product.price.toLocaleString()}
                             </p>
 
-                            {/* Action Button */}
                             <button
                                 onClick={(e) => {
                                     e.preventDefault();
                                     handleAddToCart(product);
                                 }}
-                                className="mt-6 inline-flex items-center text-[10px] uppercase tracking-[0.2em] text-[#1A1A1A] border-b border-[#E5E4DF] pb-1 opacity-0 translate-y-4 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0 hover:border-[#1A1A1A]"
+                                disabled={isCreatingDraft}
+                                className="mt-6 inline-flex items-center text-[10px] uppercase tracking-[0.2em] text-[#1A1A1A] border-b border-[#E5E4DF] pb-1 opacity-0 translate-y-4 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0 hover:border-[#1A1A1A] disabled:opacity-50"
                                 style={{ fontFamily: 'var(--font-inter)' }}
                             >
-                                <ShoppingBag size={14} className="mr-2" strokeWidth={1.5} /> {product.type === 'DIGITAL' ? 'PERSONALIZE' : 'ADD TO BAG'}
+                                {isCreatingDraft && product.type === 'DIGITAL' ? (
+                                    <><Loader2 size={14} className="mr-2 animate-spin" strokeWidth={1.5} /> WORKING...</>
+                                ) : (
+                                    <><ShoppingBag size={14} className="mr-2" strokeWidth={1.5} /> {product.type === 'DIGITAL' ? 'PERSONALIZE' : 'ADD TO BAG'}</>
+                                )}
                             </button>
                         </div>
 

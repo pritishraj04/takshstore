@@ -71,4 +71,5 @@ export interface InviteData {
     music?: Music;
     websiteUrl?: string;
     slug?: string;
+    isPaid?: boolean;
 }

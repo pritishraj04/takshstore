@@ -9,7 +9,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { Product } from "../../types";
-import { ShoppingBag } from "lucide-react";
+import { useCreateDraft } from "../../hooks/useDigitalInvite";
+import { ShoppingBag, Loader2 } from "lucide-react";
 
 interface ProductDetailProps {
     product: Product;
@@ -62,9 +63,15 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
     }, { scope: containerRef });
 
+    const { mutate: createDraft, isPending: isCreatingDraft } = useCreateDraft();
+
     const handlePrimaryAction = () => {
         if (product.type === 'DIGITAL') {
-            router.push(`/customize/${product.id}`);
+            createDraft(product.id, {
+                onSuccess: (data) => {
+                    router.push(`/customizer/${data.id}`);
+                }
+            });
         } else {
             addItem(product);
             setIsOpen(true);
@@ -155,10 +162,13 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
                         <button
                             onClick={handlePrimaryAction}
-                            className="mt-12 w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center"
+                            disabled={isCreatingDraft}
+                            className="mt-12 w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center disabled:opacity-50"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            {product.type === 'DIGITAL' ? (
+                            {isCreatingDraft ? (
+                                <><Loader2 size={14} className="mr-2 animate-spin" strokeWidth={1.5} /> PREPARING CANVAS...</>
+                            ) : product.type === 'DIGITAL' ? (
                                 <>PERSONALIZE SUITE</>
                             ) : (
                                 <><ShoppingBag size={14} className="mr-2" strokeWidth={1.5} /> ADD TO BAG</>

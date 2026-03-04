@@ -24,6 +24,10 @@ export class OrderItemDto {
 
     @IsOptional()
     inviteData?: any;
+
+    @IsOptional()
+    @IsString()
+    draftId?: string;
 }
 
 export class CreateOrderDto {

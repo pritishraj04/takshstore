@@ -10,6 +10,7 @@ export interface OrderItemPayload {
     priceAtPurchase: number;
     type: ProductType;
     inviteData?: InviteData;
+    draftId?: string;
 }
 
 export interface CreateOrderPayload {

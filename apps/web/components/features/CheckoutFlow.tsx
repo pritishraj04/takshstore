@@ -87,7 +87,8 @@ export default function CheckoutFlow() {
                                 type: item.type,
                                 inviteData: item.type === 'DIGITAL'
                                     ? item.inviteData
-                                    : undefined
+                                    : undefined,
+                                draftId: item.draftId
                             })),
                             totalAmount: total,
                             shippingAddress: requiresShipping ? { address, city, postalCode } : undefined
