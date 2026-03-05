@@ -63,7 +63,7 @@ export class DigitalInvitesController {
 
     @Patch(':id')
     @ApiOperation({ summary: 'Update a digital invite JSON payload' })
-    async updateInvite(@Param('id') id: string, @Body() body: { inviteData: any }) {
-        return this.digitalInvitesService.updateInvite(id, body.inviteData);
+    async updateInvite(@Param('id') id: string, @Body() body: { inviteData: any, status?: any }) {
+        return this.digitalInvitesService.updateInvite(id, body.inviteData, body.status);
     }
 }

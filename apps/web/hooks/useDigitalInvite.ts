@@ -21,14 +21,16 @@ export function useUpdateInvite(id: string) {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: async (inviteData: InviteData) => {
+        mutationFn: async (payload: { inviteData: InviteData, status?: string }) => {
             const { data } = await apiClient.patch(`/digital-invites/${id}`, {
-                inviteData,
+                inviteData: payload.inviteData,
+                status: payload.status
             });
             return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["digitalInvite", id] });
+            queryClient.invalidateQueries({ queryKey: ["my-invites"] });
             toast.success("Changes published successfully!");
         },
         onError: (error: any) => {

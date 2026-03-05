@@ -32,6 +32,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     const saveBtnRef = useRef<HTMLButtonElement>(null);
     const [openSection, setOpenSection] = useState<'url' | 'couple' | 'parents' | 'events' | 'contact' | 'music' | null>('url');
     const [slugStatus, setSlugStatus] = useState<{ loading: boolean; available: boolean | null; suggestions: string[] }>({ loading: false, available: null, suggestions: [] });
+    const [activeMobileView, setActiveMobileView] = useState<'editor' | 'preview'>('editor');
 
     // Storage Hooks
     const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
@@ -80,7 +81,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             return;
         }
         if (currentDraft && slugStatus.available !== false) {
-            updateInvite(currentDraft);
+            updateInvite({ inviteData: currentDraft, status: 'PUBLISHED' });
         } else {
             toast.error('Please claim a unique and available URL before proceeding.');
         }
@@ -313,9 +314,9 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     const ActiveTemplate = getTemplate(templateId);
 
     return (
-        <div className="flex w-full overflow-hidden bg-white text-black" style={{ height: 'calc(100vh - 64px)' }}>
+        <div className="h-[calc(100vh-64px)] w-full flex flex-col md:flex-row overflow-hidden bg-white text-black">
             {/* Real Sidebar Controller */}
-            <div className="w-1/3 min-w-[350px] max-w-[450px] border-r border-gray-200 flex flex-col bg-[#FBFBF9]">
+            <div className={`${activeMobileView === 'editor' ? 'flex' : 'hidden'} md:flex w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] flex-col h-full bg-white border-r border-gray-200 pb-16 md:pb-0`}>
                 <div className="p-6 shrink-0">
                     <h3 className="font-playfair text-2xl text-[#1A1A1A] tracking-wide">Editor</h3>
                 </div>
@@ -687,15 +688,31 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             </div>
 
             {/* Canvas Area with Live Preview */}
-            <div className="flex-1 bg-gray-100 flex items-center justify-center overflow-hidden p-4">
+            <div className={`${activeMobileView === 'preview' ? 'flex' : 'hidden'} md:flex flex-1 bg-gray-50 items-center justify-center p-4 md:p-8 h-full overflow-hidden pb-16 md:pb-0`}>
                 {/* Outer container handles the CSS scaling so it fits on smaller laptop screens */}
-                <div className="relative w-full max-w-[430px] h-[932px] shrink-0 rounded-[2.5rem] shadow-2xl border-8 border-gray-900 overflow-hidden bg-white transform origin-center scale-[0.8] xl:scale-100 transition-transform">
+                <div className="relative w-full max-w-[375px] h-[812px] md:h-full max-h-[812px] md:rounded-[2.5rem] md:shadow-2xl md:border-8 md:border-gray-900 overflow-hidden bg-white shrink-0 transform md:scale-[0.85] xl:scale-100 transition-transform origin-center">
                     {/* Inner container handles the independent scrolling */}
                     <div className="w-full h-full overflow-y-auto scrollbar-hide">
                         <ActiveTemplate data={currentDraft} isPreviewMode={true} />
                     </div>
                 </div>
             </div>
-        </div >
+
+            {/* Mobile Toggle Bar */}
+            <div className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-white border-t border-gray-200 flex z-50">
+                <button
+                    onClick={() => setActiveMobileView('editor')}
+                    className={`flex-1 flex items-center justify-center font-medium text-sm transition-colors ${activeMobileView === 'editor' ? 'text-[#1A1A1A] border-t-2 border-[#1A1A1A] bg-gray-50' : 'text-[#5A5A5A]'}`}
+                >
+                    Edit Details
+                </button>
+                <button
+                    onClick={() => setActiveMobileView('preview')}
+                    className={`flex-1 flex items-center justify-center font-medium text-sm transition-colors ${activeMobileView === 'preview' ? 'text-[#1A1A1A] border-t-2 border-[#1A1A1A] bg-gray-50' : 'text-[#5A5A5A]'}`}
+                >
+                    Live Preview
+                </button>
+            </div>
+        </div>
     );
 }

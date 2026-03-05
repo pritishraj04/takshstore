@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { gsap } from "gsap";
 import { useGSAP } from "@gsap/react";
 
@@ -10,7 +11,7 @@ export default function Hero() {
     const title1Ref = useRef<HTMLDivElement>(null);
     const title2Ref = useRef<HTMLDivElement>(null);
     const subtitleRef = useRef<HTMLDivElement>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
+    const buttonRef = useRef<HTMLAnchorElement>(null);
 
     useGSAP(() => {
         // Elegant staggered slide-up with fade
@@ -59,15 +60,16 @@ export default function Hero() {
                 </p>
 
                 {/* Minimalist Call To Action */}
-                <button
+                <Link
+                    href="/collection"
                     ref={buttonRef}
-                    className="invisible relative group text-[#FBFBF9] text-xs uppercase tracking-widest py-4 px-8 border-b border-[#FBFBF9]/30 transition-colors duration-500 hover:text-black overflow-hidden"
+                    className="inline-block invisible relative group text-[#FBFBF9] text-xs uppercase tracking-widest py-4 px-8 border-b border-[#FBFBF9]/30 transition-colors duration-500 hover:text-black overflow-hidden"
                     style={{ fontFamily: 'var(--font-inter)' }}
                 >
                     <span className="relative z-10 transition-colors duration-500">Explore Collection</span>
                     {/* Fill effect from bottom */}
                     <span className="absolute left-0 bottom-0 w-full h-full bg-[#FBFBF9] transform origin-bottom scale-y-0 transition-transform duration-500 ease-out group-hover:scale-y-100 z-0" />
-                </button>
+                </Link>
             </div>
         </section>
     );

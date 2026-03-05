@@ -111,7 +111,7 @@ export class DigitalInvitesService {
         };
     }
 
-    async updateInvite(id: string, inviteData: any) {
+    async updateInvite(id: string, inviteData: any, status?: any) {
         // Also ensure slug cascades to the root column if the frontend passes it inside the payload
         const payloadSlug = inviteData?.slug || null;
         const normalizedSlug = payloadSlug ? payloadSlug.toLowerCase().replace(/[^a-z0-9-]/g, '') : null;
@@ -119,6 +119,10 @@ export class DigitalInvitesService {
         const data: any = { inviteData };
         if (normalizedSlug) {
             data.slug = normalizedSlug;
+        }
+
+        if (status) {
+            data.status = status;
         }
 
         return this.prisma.digitalInvite.update({

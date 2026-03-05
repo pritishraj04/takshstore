@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
@@ -14,7 +15,7 @@ export default function StoryBlock() {
     const title1Ref = useRef<HTMLDivElement>(null);
     const title2Ref = useRef<HTMLDivElement>(null);
     const descRef = useRef<HTMLParagraphElement>(null);
-    const buttonRef = useRef<HTMLButtonElement>(null);
+    const buttonRef = useRef<HTMLAnchorElement>(null);
 
     // Image Refs
     const mainImageRef = useRef<HTMLDivElement>(null);
@@ -105,15 +106,16 @@ export default function StoryBlock() {
                         We blend the profound texture of physical canvas paintings with the boundless potential of digital craftsmanship. Every invitation, every stroke, is a testament to the enduring beauty of art meeting modern elegance. Experience a gallery where your story becomes a timeless artifact.
                     </p>
 
-                    <button
+                    <Link
+                        href="/about"
                         ref={buttonRef}
-                        className="invisible relative group text-xs uppercase tracking-widest text-[#1A1A1A] py-3 pr-8 border-b border-[#E5E4DF] transition-colors overflow-hidden"
+                        className="inline-block invisible relative group text-xs uppercase tracking-widest text-[#1A1A1A] py-3 pr-8 border-b border-[#E5E4DF] transition-colors overflow-hidden"
                         style={{ fontFamily: 'var(--font-inter)' }}
                     >
                         <span className="relative z-10">Meet our story</span>
                         {/* Dark fill effect expanding from the left */}
                         <span className="absolute left-0 bottom-0 w-full h-px bg-[#1A1A1A] transform origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100 z-0" />
-                    </button>
+                    </Link>
                 </div>
 
                 {/* Right Column: Images (Spanning ~7 cols) */}
