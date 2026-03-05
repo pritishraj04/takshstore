@@ -12,6 +12,7 @@ import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { getTemplate } from "../templates/TemplateRegistry";
 import { toast } from "sonner";
+import { useUploadFile, useDeleteFile } from "../../hooks/useStorage";
 
 interface CustomizerEditorProps {
     inviteId: string;
@@ -29,8 +30,12 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     const currentDraft = useInviteStore((state) => state.inviteData);
     const headerRef = useRef<HTMLDivElement>(null);
     const saveBtnRef = useRef<HTMLButtonElement>(null);
-    const [openSection, setOpenSection] = useState<'url' | 'couple' | 'parents' | 'events' | 'contact' | null>('url');
+    const [openSection, setOpenSection] = useState<'url' | 'couple' | 'parents' | 'events' | 'contact' | 'music' | null>('url');
     const [slugStatus, setSlugStatus] = useState<{ loading: boolean; available: boolean | null; suggestions: string[] }>({ loading: false, available: null, suggestions: [] });
+
+    // Storage Hooks
+    const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
+    const { mutateAsync: deleteFile } = useDeleteFile();
 
     // 3. Products & Cart
     const { data: products, isLoading: isLoadingProducts } = useProducts();
@@ -222,14 +227,61 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         });
     };
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const isAwsUrl = (url: string) => url.includes('amazonaws.com');
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'image' | 'audio') => {
         const file = e.target.files?.[0];
-        if (file && currentDraft) {
-            const url = URL.createObjectURL(file);
+        if (!file || !currentDraft) return;
+
+        const toastId = toast.loading(`Uploading ${type}...`);
+        try {
+            // Delete old file if it's an AWS URL
+            const oldUrl = type === 'image' ? currentDraft.couple?.image : currentDraft.music?.url;
+            if (oldUrl && isAwsUrl(oldUrl)) {
+                await deleteFile(oldUrl).catch(console.error); // Best effort
+            }
+
+            const newUrl = await uploadFile({ file, folder: 'invites' });
+
+            if (type === 'image') {
+                setAllData({
+                    ...currentDraft,
+                    couple: { ...currentDraft.couple, image: newUrl }
+                });
+            } else {
+                setAllData({
+                    ...currentDraft,
+                    music: { ...currentDraft.music, url: newUrl }
+                });
+            }
+            toast.success(`Successfully uploaded ${type}!`, { id: toastId });
+        } catch {
+            toast.error(`Failed to upload ${type}.`, { id: toastId });
+        }
+    };
+
+    const handleRemoveFile = async (type: 'image' | 'audio') => {
+        if (!currentDraft) return;
+
+        const oldUrl = type === 'image' ? currentDraft.couple?.image : currentDraft.music?.url;
+        if (oldUrl && isAwsUrl(oldUrl)) {
+            await deleteFile(oldUrl).catch(console.error);
+        }
+
+        if (type === 'image') {
+            const placeholder = "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800";
             setAllData({
                 ...currentDraft,
-                couple: { ...currentDraft.couple, image: url }
+                couple: { ...currentDraft.couple, image: placeholder }
             });
+            toast.success("Image removed.");
+        } else {
+            const placeholder = ""; // Assuming frontend audio player handles empty url properly or uses a fallback
+            setAllData({
+                ...currentDraft,
+                music: { ...currentDraft.music, url: placeholder }
+            });
+            toast.success("Music removed.");
         }
     };
 
@@ -363,12 +415,27 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                     style={{ fontFamily: 'var(--font-inter)' }}
                                 />
 
-                                <div className="mt-4 border border-dashed border-[#E5E4DF] p-4 flex items-center justify-center hover:bg-[#F2F1EC] transition-colors cursor-pointer">
-                                    <label className="cursor-pointer flex items-center text-xs uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors w-full justify-center" style={{ fontFamily: 'var(--font-inter)' }}>
-                                        <Upload size={14} strokeWidth={1} className="mr-2" />
-                                        {currentDraft?.couple?.image ? 'CHANGE COUPLE PHOTO' : 'UPLOAD COUPLE PHOTO'}
-                                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                                    </label>
+                                <div className="mt-4 flex flex-col gap-2">
+                                    <div className="border border-dashed border-[#E5E4DF] p-4 flex items-center justify-center hover:bg-[#F2F1EC] transition-colors cursor-pointer text-center relative pointer-events-auto">
+                                        {isUploading ? (
+                                            <span className="text-xs uppercase tracking-widest text-[#5A5A5A] flex items-center justify-center pointer-events-none" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                <Loader2 size={14} className="animate-spin mr-2" />
+                                                UPLOADING...
+                                            </span>
+                                        ) : (
+                                            <label className="cursor-pointer flex items-center text-xs uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors w-full justify-center" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                <Upload size={14} strokeWidth={1} className="mr-2" />
+                                                {currentDraft?.couple?.image ? 'CHANGE COUPLE PHOTO' : 'UPLOAD COUPLE PHOTO'}
+                                                <input type="file" accept="image/*" className="hidden" disabled={isUploading} onChange={(e) => handleFileUpload(e, 'image')} />
+                                                <div className="absolute inset-0 w-full h-full opactiy-0 cursor-pointer pointer-events-auto z-10"></div>
+                                            </label>
+                                        )}
+                                    </div>
+                                    {currentDraft?.couple?.image && currentDraft.couple.image !== "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800" && (
+                                        <button onClick={() => handleRemoveFile('image')} disabled={isUploading} className="text-[10px] text-red-500 hover:text-red-700 tracking-widest uppercase transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                                            Remove Custom Photo
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -526,6 +593,44 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                         style={{ fontFamily: 'var(--font-inter)' }}
                                     />
                                 </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 5: Music */}
+                    <div className="mb-6 border border-[#E5E4DF] bg-white shrink-0">
+                        <button
+                            onClick={() => setOpenSection(openSection === 'music' ? null : 'music')}
+                            className="w-full flex items-center justify-between p-6 text-xs uppercase tracking-widest text-[#1A1A1A]"
+                            style={{ fontFamily: 'var(--font-inter)' }}
+                        >
+                            <span className="flex items-center gap-3"><Upload size={16} strokeWidth={1} className="text-[#5A5A5A]" /> Background Music</span>
+                            <span className="text-lg font-light leading-none">{openSection === 'music' ? '−' : '+'}</span>
+                        </button>
+                        <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'music' ? 'max-h-[800px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
+                            <div className="flex flex-col gap-4 pt-4 border-t border-[#E5E4DF]">
+
+                                <div className="border border-dashed border-[#E5E4DF] p-4 flex items-center justify-center hover:bg-[#F2F1EC] transition-colors cursor-pointer relative pointer-events-auto">
+                                    {isUploading ? (
+                                        <span className="text-xs uppercase tracking-widest text-[#5A5A5A] flex items-center justify-center pointer-events-none" style={{ fontFamily: 'var(--font-inter)' }}>
+                                            <Loader2 size={14} className="animate-spin mr-2" />
+                                            UPLOADING...
+                                        </span>
+                                    ) : (
+                                        <label className="cursor-pointer flex items-center text-xs uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors w-full justify-center" style={{ fontFamily: 'var(--font-inter)' }}>
+                                            <Upload size={14} strokeWidth={1} className="mr-2" />
+                                            {currentDraft?.music?.url && currentDraft?.music?.url !== "" ? 'CHANGE MUSIC' : 'UPLOAD MUSIC (.MP3)'}
+                                            <input type="file" accept="audio/mpeg" className="hidden" disabled={isUploading} onChange={(e) => handleFileUpload(e, 'audio')} />
+                                            <div className="absolute inset-0 w-full h-full opactiy-0 cursor-pointer pointer-events-auto z-10"></div>
+                                        </label>
+                                    )}
+                                </div>
+                                {currentDraft?.music?.url && currentDraft.music.url !== "" && (
+                                    <button onClick={() => handleRemoveFile('audio')} disabled={isUploading} className="text-[10px] text-red-500 hover:text-red-700 tracking-widest uppercase transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                                        Remove Custom Music
+                                    </button>
+                                )}
+
                             </div>
                         </div>
                     </div>

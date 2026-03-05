@@ -419,9 +419,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 </div>
             </footer>
 
-            {data?.music?.url && (
-                <AudioPlayer audioSrc={data.music.url} autoPlay={data?.music?.autoplay ?? true} />
-            )}
+            <AudioPlayer audioSrc={data?.music?.url || '/assets/music/music.mp3'} autoPlay={data?.music?.autoplay ?? true} />
         </div>
     );
 

@@ -5,7 +5,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     return (
         <div className="flex flex-col min-h-screen bg-primary font-inter w-full">
             {/* Minimal App Header */}
-            <header className="h-16 border-b border-light bg-primary sticky top-0 z-50 px-6 flex items-center justify-between shrink-0">
+            <header className="h-16 border-b border-light bg-primary sticky top-0 z-50 px-6 flex items-center justify-between shrink-0 bg-gray-50">
                 <Link href="/dashboard" className="font-playfair text-2xl tracking-tight text-secondary hover:opacity-70 transition-opacity">
                     Taksh.
                 </Link>
