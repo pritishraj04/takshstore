@@ -34,8 +34,13 @@ export default function Header() {
     // Hydration sync for persisted Zustand store to avoid hydration mismatch
     const [mounted, setMounted] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+    const [isScrolled, setIsScrolled] = useState(false);
+
     useEffect(() => {
         setMounted(true);
+        const handleScroll = () => setIsScrolled(window.scrollY > 20);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const totalItems = items.reduce((total, item) => total + item.quantity, 0);
@@ -115,8 +120,23 @@ export default function Header() {
 
             {/* Logo (Center) */}
             <div className="flex-1 flex justify-start md:justify-center items-center">
-                <Link href="/" className="text-[#1A1A1A] text-xl md:text-2xl tracking-wide uppercase" style={{ fontFamily: 'var(--font-playfair)' }}>
-                    Taksh Store
+                <Link href="/" className="flex items-center group overflow-hidden">
+                    {/* The SVG Logo (Always Visible) */}
+                    <div className="relative z-10 shrink-0">
+                        <img src="/logo-taksh.svg" alt="Taksh Store Icon" className="w-8 h-8 object-contain" />
+                    </div>
+
+                    {/* The Sliding Text (Expands at the top, collapses on scroll) */}
+                    <div
+                        className={`overflow-hidden transition-all duration-500 ease-out flex items-center ${isScrolled
+                            ? 'max-w-0 opacity-0 -translate-x-full'
+                            : 'max-w-[200px] opacity-100 translate-x-0 ml-3'
+                            }`}
+                    >
+                        <span className="font-serif text-lg md:text-xl tracking-widest uppercase whitespace-nowrap text-[#1A1A1A]" style={{ fontFamily: 'var(--font-playfair)' }}>
+                            Taksh Store
+                        </span>
+                    </div>
                 </Link>
             </div>
 

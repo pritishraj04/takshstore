@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, Inter } from "next/font/google";
 import "./globals.css";
 
@@ -20,9 +20,17 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
+export const viewport: Viewport = {
+  themeColor: '#1a0f0f',
+};
+
 export const metadata: Metadata = {
   title: "Taksh Store",
   description: "A luxurious visual experience",
+  icons: {
+    icon: '/assets/images/favicon.png',
+    apple: '/assets/images/apple-touch-icon.png',
+  },
 };
 
 export default function RootLayout({

@@ -108,7 +108,7 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
                 <button
                     type="submit"
                     disabled={isSubmitting && showModal}
-                    className="inline-flex items-center justify-center font-heading text-[1rem] tracking-[0.18em] uppercase whitespace-nowrap px-[2.6rem] py-[0.9rem] rounded-full mt-8 bg-[rgba(255,235,190,0.92)] text-[#4b2e1f] border border-[rgba(180,140,90,0.6)] hover:bg-[#ffe6af] hover:shadow-[0_10px_28px_rgba(0,0,0,0.18)] hover:-translate-y-[2px] transition-all duration-400 disabled:opacity-50 mx-auto"
+                    className="inline-flex items-center justify-center font-heading text-[0.8rem] md:text-[1rem] tracking-[0.18em] uppercase whitespace-nowrap px-[2.6rem] py-[0.9rem] rounded-full mt-8 bg-[rgba(255,235,190,0.92)] text-[#4b2e1f] border border-[rgba(180,140,90,0.6)] hover:bg-[#ffe6af] hover:shadow-[0_10px_28px_rgba(0,0,0,0.18)] hover:-translate-y-[2px] transition-all duration-400 disabled:opacity-50 mx-auto"
                 >
                     <Image src="/assets/images/whatsapp.png" alt="WhatsApp" width={16} height={16} className="object-contain mr-4 inline-block w-4 h-4" />
                     Confirm Presence

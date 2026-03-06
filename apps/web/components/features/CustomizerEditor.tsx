@@ -10,7 +10,6 @@ import { Loader2, ShoppingBag, ExternalLink, User, CalendarHeart, MapPin, Clock,
 import { apiClient } from "../../lib/apiClient";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { getTemplate } from "../templates/TemplateRegistry";
 import { toast } from "sonner";
 import { useUploadFile, useDeleteFile } from "../../hooks/useStorage";
 
@@ -33,6 +32,8 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     const [openSection, setOpenSection] = useState<'url' | 'couple' | 'parents' | 'events' | 'contact' | 'music' | null>('url');
     const [slugStatus, setSlugStatus] = useState<{ loading: boolean; available: boolean | null; suggestions: string[] }>({ loading: false, available: null, suggestions: [] });
     const [activeMobileView, setActiveMobileView] = useState<'editor' | 'preview'>('editor');
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [iframeLoaded, setIframeLoaded] = useState(false);
 
     // Storage Hooks
     const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
@@ -49,6 +50,27 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             setAllData(data.inviteData);
         }
     }, [data, setAllData]);
+
+    // Listen for iframe readiness
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            if (event.data?.type === 'PREVIEW_READY') {
+                setIframeLoaded(true);
+            }
+        };
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
+
+    // Broadcast draft updates to the preview iframe
+    useEffect(() => {
+        if (iframeLoaded && iframeRef.current?.contentWindow && currentDraft) {
+            iframeRef.current.contentWindow.postMessage(
+                { type: 'UPDATE_DRAFT', payload: currentDraft },
+                '*'
+            );
+        }
+    }, [currentDraft, iframeLoaded]);
 
     // Derived States
     const isPurchased = data?.isPaid === true;
@@ -218,6 +240,15 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         }
     };
 
+    const updateMusic = (field: 'url' | 'autoplay', value: string | boolean) => {
+        if (currentDraft) {
+            setAllData({
+                ...currentDraft,
+                music: { ...currentDraft.music, [field]: value }
+            });
+        }
+    };
+
     const addEvent = () => {
         if (currentDraft) setAllData({
             ...currentDraft,
@@ -308,10 +339,6 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             </div>
         );
     }
-
-    // Determine Dynamic Template
-    const templateId = data?.orderItem?.product?.templateId || 'riyawedsmoon'; // Or another property if it's there
-    const ActiveTemplate = getTemplate(templateId);
 
     return (
         <div className="h-[calc(100vh-64px)] w-full flex flex-col md:flex-row overflow-hidden bg-white text-black">
@@ -632,6 +659,19 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                     </button>
                                 )}
 
+                                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[#E5E4DF]">
+                                    <input
+                                        type="checkbox"
+                                        id="autoplay-music"
+                                        checked={currentDraft?.music?.autoplay || false}
+                                        onChange={(e) => updateMusic('autoplay', e.target.checked)}
+                                        className="w-4 h-4 text-[#C5B39A] bg-transparent border-[#E5E4DF] focus:ring-[#C5B39A] focus:ring-1"
+                                    />
+                                    <label htmlFor="autoplay-music" className="text-sm text-[#1A1A1A]" style={{ fontFamily: 'var(--font-inter)' }}>
+                                        Autoplay Music on Live Invite
+                                    </label>
+                                </div>
+
                             </div>
                         </div>
                     </div>
@@ -687,14 +727,15 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                 )}
             </div>
 
-            {/* Canvas Area with Live Preview */}
             <div className={`${activeMobileView === 'preview' ? 'flex' : 'hidden'} md:flex flex-1 bg-gray-50 items-center justify-center p-4 md:p-8 h-full overflow-hidden pb-16 md:pb-0`}>
-                {/* Outer container handles the CSS scaling so it fits on smaller laptop screens */}
-                <div className="relative w-full max-w-[375px] h-[812px] md:h-full max-h-[812px] md:rounded-[2.5rem] md:shadow-2xl md:border-8 md:border-gray-900 overflow-hidden bg-white shrink-0 transform md:scale-[0.85] xl:scale-100 transition-transform origin-center">
-                    {/* Inner container handles the independent scrolling */}
-                    <div className="w-full h-full overflow-y-auto scrollbar-hide">
-                        <ActiveTemplate data={currentDraft} isPreviewMode={true} />
-                    </div>
+                <div className="w-[430px] h-[932px] rounded-[3rem] shadow-2xl border-8 border-gray-900 overflow-hidden bg-white shrink-0 transform md:scale-[0.75] xl:scale-[0.85] 2xl:scale-[0.9] origin-center transition-transform">
+                    <iframe
+                        ref={iframeRef}
+                        src="/preview"
+                        className="w-full h-full border-0"
+                        title="Live Preview"
+                        onLoad={() => setIframeLoaded(true)}
+                    />
                 </div>
             </div>
 

@@ -89,7 +89,7 @@ export default function Footer() {
                     </h2>
                     <Link
                         href="/collection"
-                        className="relative group text-xs uppercase tracking-widest text-[#1A1A1A] py-3 pr-8 border-b border-[#E5E4DF] transition-colors overflow-hidden inline-flex items-center invisible"
+                        className="relative group text-xs uppercase tracking-widest text-[#1A1A1A] px-8 py-4 border border-[#1A1A1A] transition-colors overflow-hidden inline-flex items-center justify-center invisible"
                         style={{ fontFamily: 'var(--font-inter)' }}
                     >
                         <span className="relative z-10 transition-colors duration-500 group-hover:text-[#FBFBF9]">VIEW ALL WORKS</span>
@@ -107,12 +107,11 @@ export default function Footer() {
 
                     {/* Column 1: Brand & Newsletter */}
                     <div className="col-span-1 md:col-span-2 flex flex-col items-start pr-0 md:pr-12">
-                        <Link
-                            href="/"
-                            className="text-2xl tracking-wide uppercase text-[#1A1A1A] mb-6"
-                            style={{ fontFamily: 'var(--font-playfair)' }}
-                        >
-                            Taksh Store
+                        <Link href="/" className="flex items-center gap-3 mb-6">
+                            <img src="/logo-taksh.svg" alt="Taksh Store Icon" className="w-8 h-8 object-contain" />
+                            <span className="font-serif text-xl tracking-widest uppercase whitespace-nowrap text-[#1A1A1A]" style={{ fontFamily: 'var(--font-playfair)' }}>
+                                Taksh Store
+                            </span>
                         </Link>
                         <form className="w-full max-w-sm relative mt-2 group">
                             <input

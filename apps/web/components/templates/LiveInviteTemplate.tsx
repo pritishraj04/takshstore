@@ -25,19 +25,21 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
     const lanternsRef = useRef<HTMLDivElement>(null);
 
     useGSAP(() => {
-        if (isPreviewMode || !data || !containerRef.current) return; // Skip animations in preview or if no data/ref
+        if (!data || !containerRef.current) return; // Skip if no data or no ref
 
         // 1. Scroll Indicator Fade
         const handleScroll = () => {
             if (scrollIndicatorRef.current) {
-                if (window.scrollY > 50) {
+                const scrollY = isPreviewMode && containerRef.current ? containerRef.current.scrollTop : window.scrollY;
+                if (scrollY > 50) {
                     scrollIndicatorRef.current.style.opacity = '0';
                 } else {
                     scrollIndicatorRef.current.style.opacity = '1';
                 }
             }
         };
-        window.addEventListener("scroll", handleScroll, { passive: true });
+        const scrollTarget = isPreviewMode ? containerRef.current : window;
+        scrollTarget?.addEventListener("scroll", handleScroll, { passive: true });
         handleScroll();
 
         // 2. Lanterns Generation & Animation
@@ -100,6 +102,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
             // Scroll parallax for lanterns
             ScrollTrigger.create({
                 trigger: "#hero",
+                scroller: isPreviewMode ? containerRef.current : window,
                 start: "top top",
                 end: "bottom top",
                 scrub: 0.5,
@@ -129,6 +132,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                         ease: "power2.out",
                         scrollTrigger: {
                             trigger: el,
+                            scroller: isPreviewMode ? containerRef.current : window,
                             start: "top 80%",
                             toggleActions: "play none none none",
                         },
@@ -138,15 +142,16 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
         });
 
         // Cleanup scroll listener
+        const cleanupScrollTarget = isPreviewMode ? containerRef.current : window;
         return () => {
-            window.removeEventListener("scroll", handleScroll);
+            cleanupScrollTarget?.removeEventListener("scroll", handleScroll);
         };
-    }, { scope: containerRef, dependencies: [data] });
+    }, { scope: containerRef, dependencies: [data, isPreviewMode] });
 
     if (!data) return null;
 
     const content = (
-        <div ref={containerRef} className={`w-full max-w-[1024px] mx-auto overflow-x-hidden bg-[#1a0f0f] text-[#2c2c2c] ${isPreviewMode ? 'relative overflow-y-auto scrollbar-hide h-full' : 'relative min-h-screen'}`}>
+        <div ref={containerRef} className={`w-full max-w-[1200px] mx-auto overflow-x-hidden bg-[#1a0f0f] text-[#2c2c2c] ${isPreviewMode ? 'relative overflow-y-auto scrollbar-hide h-full' : 'relative min-h-screen'}`}>
             <style dangerouslySetInnerHTML={{
                 __html: `
                 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
@@ -225,13 +230,13 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                     {/* Lanterns placeholder */}
                     <div id="lanterns-container" ref={lanternsRef} className="lantern-container absolute inset-0 pointer-events-none z-0 overflow-hidden"></div>
 
-                    <div className="text-center relative z-20 w-full flex-1 flex flex-col justify-start pointer-events-auto mt-[7vh] md:mt-[10vh]">
+                    <div className="text-center relative z-20 w-full flex-1 flex flex-col justify-start pointer-events-auto mt-[7vh] md:mt-[10vh] px-4">
                         <p className="font-heading uppercase tracking-[0.2em] text-[0.8rem] md:text-[0.9rem] text-[#d4af37] mb-4">save the date</p>
-                        <h1 className="font-heading text-[3rem] sm:text-[4rem] md:text-[5rem] font-extralight uppercase text-white drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] my-2 leading-none">
+                        <h1 className="font-heading text-[3rem] sm:text-[4rem] md:text-[5rem] font-extralight uppercase text-white drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] my-2 leading-none wrap-break-word">
                             {data?.couple?.bride?.name || "Bride"}
                         </h1>
                         <div className="font-script text-[1.5rem] md:text-[2rem] text-[#d4af37]">Weds</div>
-                        <h1 className="font-heading text-[3rem] sm:text-[4rem] md:text-[5rem] font-extralight uppercase text-white drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] my-2 leading-none">
+                        <h1 className="font-heading text-[3rem] sm:text-[4rem] md:text-[5rem] font-extralight uppercase text-white drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] my-2 leading-none wrap-break-word">
                             {data?.couple?.groom?.name || "Groom"}
                         </h1>
                         <div className="mt-8">
@@ -267,7 +272,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                             {data?.couple?.bride?.parents?.mother || ""}<br />&amp;<br />{data?.couple?.bride?.parents?.father || ""}
                         </p>
 
-                        <h2 className="font-heading text-[2rem] md:text-[3rem] text-[#d9fff2] font-extralight uppercase tracking-widest mb-6 leading-tight">
+                        <h2 className="font-heading text-[2rem] md:text-[3rem] text-[#d9fff2] font-extralight uppercase tracking-widest mb-6 leading-tight wrap-break-word">
                             {data?.couple?.bride?.name}<br />&amp;<br />{data?.couple?.groom?.name}
                         </h2>
 
@@ -293,8 +298,8 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
 
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center max-w-[1100px] mx-auto">
                             {(data?.celebrations || []).map((ev: any, i: number) => (
-                                <div key={i} className={`fade-in-section relative rounded-[18px] p-[1.6rem] bg-[rgba(255,248,235,0.96)] border border-[rgba(190,150,95,0.6)] shadow-[0_12px_28px_rgba(0,0,0,0.18),inset_0_0_0_1px_rgba(255,255,255,0.4)] w-full max-w-[320px] text-center font-body text-[#3b2a1a] ${ev.highlight ? 'highlight-card' : ''}`}>
-                                    <h3 className="font-heading text-[1.6rem] font-extralight tracking-[0.15em] mb-[0.6rem] before:content-['✦'] before:block before:text-[1.2rem] before:mb-[0.4rem] before:text-[rgba(190,150,95,0.9)] after:content-[''] after:block after:w-[40px] after:h-1px after:bg-[rgba(190,150,95,0.7)] after:my-[0.6rem] after:mx-auto text-[#3b2a1a]">
+                                <div key={i} className={`fade-in-section relative rounded-[18px] p-[1.6rem] bg-[rgba(255,248,235,0.96)] border border-[rgba(190,150,95,0.6)] shadow-[0_12px_28px_rgba(0,0,0,0.18),inset_0_0_0_1px_rgba(255,255,255,0.4)] w-full max-w-[320px] mx-auto text-center font-body text-[#3b2a1a] ${ev.highlight ? 'highlight-card' : ''}`}>
+                                    <h3 className="font-heading text-[1.6rem] font-extralight tracking-[0.15em] mb-[0.6rem] before:content-['✦'] before:block before:text-[1.2rem] before:mb-[0.4rem] before:text-[rgba(190,150,95,0.9)] after:content-[''] after:block after:w-[40px] after:h-1px after:bg-[rgba(190,150,95,0.7)] after:my-[0.6rem] after:mx-auto text-[#3b2a1a] wrap-break-word">
                                         <b>{ev.name}</b>
                                     </h3>
                                     <div className="w-12 h-px bg-[#be965fb3] mx-auto mb-2"></div>
@@ -358,10 +363,10 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 <section id="couple" className="relative p-8 flex flex-col items-center justify-center min-h-auto">
                     <div className="w-full max-w-[1200px] mx-auto text-center relative z-10 fade-in-section">
                         <h2 className="font-heading text-[2.5rem] md:text-[3.5rem] text-[#d9fff2] mb-8 font-extralight uppercase tracking-widest inline-block relative">The Happy Couple</h2>
-                        <div className="flex justify-center my-8 md:my-12 mx-0 relative z-10">
+                        <div className="flex justify-center my-8 md:my-12 mx-0 relative z-10 px-4">
                             <div className="relative p-[14px] rounded-[22px] bg-linear-to-br from-[rgba(215,180,120,0.9)] to-[rgba(150,110,60,0.9)] shadow-[0_20px_40px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.3)] 
-                                            after:content-[''] after:absolute after:-inset-[25px] after:bg-[radial-gradient(circle,rgba(215,180,120,0.15),transparent_70%)] after:-z-10">
-                                <img src={data?.couple?.image || "/assets/images/couple.png"} alt="Couple" className="block max-w-[320px] w-full h-auto rounded-[18px] border border-[rgba(255,255,255,0.45)] bg-[#fff8ec]" />
+                                            after:content-[''] after:absolute after:-inset-[25px] after:bg-[radial-gradient(circle,rgba(215,180,120,0.15),transparent_70%)] after:-z-10 w-full max-w-[320px] mx-auto">
+                                <img src={data?.couple?.image || "/assets/images/couple.png"} alt="Couple" className="block w-full h-auto rounded-[18px] border border-[rgba(255,255,255,0.45)] bg-[#fff8ec]" />
                             </div>
                         </div>
                         <p className="mt-[1.6rem] font-body italic text-[1.2rem] tracking-[0.08em] text-[rgba(243,230,200,0.75)] mb-2 text-center">{data?.messages?.coupleQuote || "Two souls, one heart."}</p>

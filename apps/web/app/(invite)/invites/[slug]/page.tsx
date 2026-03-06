@@ -1,4 +1,4 @@
-import { Metadata } from 'next';
+import { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTemplate } from '../../../../components/templates/TemplateRegistry';
 
@@ -16,29 +16,56 @@ async function getInviteData(slug: string) {
     }
 }
 
-export async function generateMetadata({ params }: InvitePageProps): Promise<Metadata> {
+export async function generateMetadata(
+    { params }: InvitePageProps,
+    parent: ResolvingMetadata
+): Promise<Metadata> {
     const resolvedParams = await params;
     const invite = await getInviteData(resolvedParams.slug);
 
     if (!invite) {
         return {
-            title: 'Invite Not Found | Taksh',
-            description: 'This digital invitation could not be found.',
+            title: 'Invitation Not Found | Taksh Store',
         };
     }
 
     const { inviteData } = invite;
-    const title = `${inviteData.couple.bride.name} & ${inviteData.couple.groom.name} | You're Invited!`;
-    const description = inviteData.messages.inviteText || `Join us in celebrating the wedding of ${inviteData.couple.bride.name} and ${inviteData.couple.groom.name}.`;
+    const brideName = inviteData?.couple?.bride?.name || 'Bride';
+    const groomName = inviteData?.couple?.groom?.name || 'Groom';
+
+    const title = `${brideName} Weds ${groomName} | A Royal Wedding Invite`;
+    const description = `${inviteData?.messages?.inviteText || 'Join us in celebrating our wedding.'} Join us on ${inviteData?.wedding?.displayDate || 'our special day'}.`;
+
+    // Fallback to a default image if they haven't uploaded one yet
+    const ogImage = inviteData?.couple?.image || 'https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=1200';
+    const currentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invites/${resolvedParams.slug}`;
 
     return {
         title,
         description,
+        keywords: ['wedding invitation', groomName, brideName, 'royal wedding', 'wedding celebration'],
+        authors: [{ name: `${groomName} & ${brideName}` }],
         openGraph: {
+            type: 'website',
+            url: currentUrl,
             title,
             description,
-            images: [inviteData.couple.image || 'https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=1200'],
-            type: 'website',
+            siteName: `${brideName} & ${groomName} Wedding`,
+            images: [
+                {
+                    url: ogImage,
+                    width: 1200,
+                    height: 630,
+                    alt: `${brideName} & ${groomName} Wedding Invitation`,
+                },
+            ],
+            locale: 'en_US',
+        },
+        twitter: {
+            card: 'summary_large_image',
+            title,
+            description,
+            images: [ogImage],
         },
     };
 }

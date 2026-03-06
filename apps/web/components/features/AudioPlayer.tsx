@@ -6,9 +6,10 @@ import { Music } from 'lucide-react';
 interface AudioPlayerProps {
     audioSrc: string;
     autoPlay?: boolean;
+    isPreviewMode?: boolean;
 }
 
-export function AudioPlayer({ audioSrc, autoPlay = true }: AudioPlayerProps) {
+export function AudioPlayer({ audioSrc, autoPlay = true, isPreviewMode = false }: AudioPlayerProps) {
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [isMuted, setIsMuted] = useState(false);
@@ -36,6 +37,7 @@ export function AudioPlayer({ audioSrc, autoPlay = true }: AudioPlayerProps) {
 
                 // Add one-time listener to document to unlock audio on first interaction
                 const unlock = async () => {
+                    if (isPreviewMode) return; // Never unlock if in preview mode
                     try {
                         await audio.play();
                         setIsPlaying(true);
@@ -47,12 +49,18 @@ export function AudioPlayer({ audioSrc, autoPlay = true }: AudioPlayerProps) {
                     }
                 };
 
-                if (!hasInteracted) {
+                if (!hasInteracted && !isPreviewMode) {
                     document.addEventListener('click', unlock, { once: true });
                     document.addEventListener('touchstart', unlock, { once: true });
                 }
             }
         };
+
+        if (isPreviewMode) {
+            audio.pause();
+            setIsPlaying(false);
+            return;
+        }
 
         if (autoPlay) {
             attemptPlay();
@@ -64,7 +72,7 @@ export function AudioPlayer({ audioSrc, autoPlay = true }: AudioPlayerProps) {
             audio.src = '';
             audioRef.current = null;
         };
-    }, [audioSrc, autoPlay, hasInteracted]);
+    }, [audioSrc, autoPlay, hasInteracted, isPreviewMode]);
 
     const togglePlay = () => {
         const audio = audioRef.current;
