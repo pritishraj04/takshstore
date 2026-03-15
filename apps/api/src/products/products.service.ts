@@ -6,8 +6,19 @@ import { ProductType } from '@prisma/client';
 export class ProductsService {
     constructor(private readonly prisma: PrismaService) { }
 
-    async findAll() {
-        return this.prisma.product.findMany();
+    async findAll(query?: string) {
+        if (!query) {
+            return this.prisma.product.findMany();
+        }
+
+        return this.prisma.product.findMany({
+            where: {
+                title: {
+                    contains: query,
+                    mode: 'insensitive'
+                }
+            }
+        });
     }
 
     async seed() {

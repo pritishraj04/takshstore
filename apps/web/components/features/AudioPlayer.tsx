@@ -56,10 +56,14 @@ export function AudioPlayer({ audioSrc, autoPlay = true, isPreviewMode = false }
             }
         };
 
+        // HARD LOCK: Never autoplay in the Customizer preview iframe
         if (isPreviewMode) {
+            audio.muted = true;
             audio.pause();
             setIsPlaying(false);
             return;
+        } else {
+            audio.muted = false;
         }
 
         if (autoPlay) {

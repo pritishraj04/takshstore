@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
-const MOCK_ARTICLES = [
+export const MOCK_ARTICLES = [
     {
         id: "1",
         slug: "the-anatomy-of-a-digital-heirloom",

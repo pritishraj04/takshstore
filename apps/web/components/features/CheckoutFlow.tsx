@@ -8,6 +8,7 @@ import { useCheckout } from "../../hooks/useCheckout";
 import { Lock, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { apiClient } from "../../lib/apiClient";
 
 export default function CheckoutFlow() {
     const { items, clearCollection } = useCollectionStore();
@@ -16,6 +17,13 @@ export default function CheckoutFlow() {
     const { data: session } = useSession();
     const [mounted, setMounted] = useState(false);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
+
+    // Coupon State
+    const [couponCode, setCouponCode] = useState('');
+    const [discountPct, setDiscountPct] = useState(0);
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+    const [couponError, setCouponError] = useState<string | null>(null);
+    const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
 
     // Prevent hydration errors with persisted state
     useEffect(() => {
@@ -26,8 +34,9 @@ export default function CheckoutFlow() {
 
     const requiresShipping = items.some(item => item.type === 'PHYSICAL');
     const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const discountAmount = Math.round((subtotal * discountPct) / 100);
     const shippingCost = requiresShipping ? 150 : 0; // Flat luxury shipping rate or free
-    const total = subtotal + shippingCost;
+    const total = subtotal - discountAmount + shippingCost;
 
     if (items.length === 0) {
         return (
@@ -49,6 +58,23 @@ export default function CheckoutFlow() {
             </div>
         );
     }
+
+    const applyCoupon = async () => {
+        if (!couponCode.trim()) return;
+        setIsApplyingCoupon(true);
+        setCouponError(null);
+        setCouponSuccess(null);
+        try {
+            const { data } = await apiClient.get(`/coupons/validate/${couponCode}`);
+            setDiscountPct(data.discountPercentage);
+            setCouponSuccess(`Code applied! ${data.discountPercentage}% off`);
+        } catch (err: any) {
+            setCouponError(err.response?.data?.message || err.message || 'Invalid coupon or expired');
+            setDiscountPct(0);
+        } finally {
+            setIsApplyingCoupon(false);
+        }
+    };
 
     return (
         <div className="w-full min-h-screen bg-[#FBFBF9] text-[#1A1A1A] grid grid-cols-1 lg:grid-cols-2">
@@ -303,6 +329,60 @@ export default function CheckoutFlow() {
                         <span>Shipping</span>
                         <span>{shippingCost === 0 ? 'Complimentary' : `₹${shippingCost}`}</span>
                     </div>
+
+                    {/* Promo Code Section */}
+                    <div className="pt-4 border-t border-[#E5E4DF]">
+                        <label className="block text-xs uppercase tracking-widest text-[#5A5A5A] mb-3" style={{ fontFamily: 'var(--font-inter)' }}>
+                            Promo Code
+                        </label>
+                        <div className="flex gap-3">
+                            <input
+                                type="text"
+                                value={couponCode}
+                                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                                disabled={discountPct > 0 || isApplyingCoupon}
+                                placeholder="Enter code"
+                                className="flex-1 bg-transparent border border-[#E5E4DF] px-4 py-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors disabled:opacity-50"
+                                style={{ fontFamily: 'var(--font-inter)' }}
+                            />
+                            {discountPct > 0 ? (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setCouponCode('');
+                                        setDiscountPct(0);
+                                        setCouponSuccess(null);
+                                    }}
+                                    className="px-6 bg-[#1A1A1A] text-[#FBFBF9] text-xs uppercase tracking-widest hover:bg-black transition-colors"
+                                    style={{ fontFamily: 'var(--font-inter)' }}
+                                >
+                                    Remove
+                                </button>
+                            ) : (
+                                <button
+                                    type="button"
+                                    onClick={applyCoupon}
+                                    disabled={!couponCode.trim() || isApplyingCoupon}
+                                    className="px-6 bg-[#1A1A1A] text-[#FBFBF9] text-xs uppercase tracking-widest hover:bg-black transition-colors disabled:opacity-50"
+                                    style={{ fontFamily: 'var(--font-inter)' }}
+                                >
+                                    {isApplyingCoupon ? '...' : 'Apply'}
+                                </button>
+                            )}
+                        </div>
+                        {couponError && <p className="text-red-600 text-xs mt-2">{couponError}</p>}
+                        {couponSuccess && <p className="text-green-600 text-xs mt-2">{couponSuccess}</p>}
+                    </div>
+
+                    {discountPct > 0 && (
+                        <div
+                            className="flex justify-between items-center text-sm text-[#5A5A5A] mt-2"
+                            style={{ fontFamily: 'var(--font-inter)' }}
+                        >
+                            <span>Discount ({discountPct}%)</span>
+                            <span className="text-green-700">-₹{discountAmount.toLocaleString()}</span>
+                        </div>
+                    )}
 
                     <div
                         className="flex justify-between items-end mt-4 pt-4 border-t border-[#E5E4DF]"

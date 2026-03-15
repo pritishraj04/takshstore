@@ -8,9 +8,10 @@ import { OrdersModule } from './orders/orders.module';
 import { PaymentsModule } from './payments/payments.module';
 import { DigitalInvitesModule } from './digital-invites/digital-invites.module';
 import { StorageModule } from './storage/storage.module';
+import { CouponsModule } from './coupons/coupons.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, DigitalInvitesModule, StorageModule],
+  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, DigitalInvitesModule, StorageModule, CouponsModule],
   controllers: [AppController],
   providers: [AppService],
 })

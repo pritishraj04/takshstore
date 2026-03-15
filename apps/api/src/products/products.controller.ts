@@ -1,6 +1,6 @@
-import { Controller, Get, Post } from '@nestjs/common';
+import { Controller, Get, Post, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
-import { ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Products')
 @Controller('products')
@@ -9,8 +9,9 @@ export class ProductsController {
 
     @Get()
     @ApiOperation({ summary: 'Get all public products' })
-    async findAll() {
-        return this.productsService.findAll();
+    @ApiQuery({ name: 'q', required: false, type: String, description: 'Search query for products' })
+    async findAll(@Query('q') query?: string) {
+        return this.productsService.findAll(query);
     }
 
     @Post('seed')

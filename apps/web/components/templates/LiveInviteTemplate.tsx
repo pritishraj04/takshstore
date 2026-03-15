@@ -25,7 +25,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
     const lanternsRef = useRef<HTMLDivElement>(null);
 
     useGSAP(() => {
-        if (!data || !containerRef.current) return; // Skip if no data or no ref
+        if (!containerRef.current) return;
 
         // 1. Scroll Indicator Fade
         const handleScroll = () => {
@@ -45,9 +45,13 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
         // 2. Lanterns Generation & Animation
         if (lanternsRef.current) {
             const container = lanternsRef.current;
+            container.innerHTML = ''; // Clean up previous lanterns on re-render
+
             const lanternCount = 20;
             const lanterns: any[] = [];
-            const isMobile = window.innerWidth < 768;
+            // Use container width to detect mobile mode so it respects the preview box width
+            const containerWidth = containerRef.current?.clientWidth || window.innerWidth;
+            const isMobile = containerWidth < 768;
 
             for (let i = 0; i < lanternCount; i++) {
                 const wrapper = document.createElement("div");
@@ -60,8 +64,8 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 wrapper.appendChild(img);
                 container.appendChild(wrapper);
 
-                const minSize = isMobile ? 30 : 40;
-                const maxSize = isMobile ? 70 : 120;
+                const minSize = isMobile ? 25 : 40;
+                const maxSize = isMobile ? 60 : 120;
                 const size = gsap.utils.random(minSize, maxSize);
 
                 const xPos = Math.random() > 0.5
@@ -118,6 +122,16 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
             });
         }
 
+        // Cleanup scroll listener
+        return () => {
+            scrollTarget?.removeEventListener("scroll", handleScroll);
+        };
+    }, { scope: containerRef, dependencies: [isPreviewMode] }); // Removed `data` from dependencies
+
+    // Separate useGSAP for data-dependent elements (like fade-in sections)
+    useGSAP(() => {
+        if (!data || !containerRef.current) return;
+
         // 3. Fade In ScrollTrigger Sections
         const sections = [".fade-in-section"];
         sections.forEach((selector) => {
@@ -140,12 +154,6 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 );
             });
         });
-
-        // Cleanup scroll listener
-        const cleanupScrollTarget = isPreviewMode ? containerRef.current : window;
-        return () => {
-            cleanupScrollTarget?.removeEventListener("scroll", handleScroll);
-        };
     }, { scope: containerRef, dependencies: [data, isPreviewMode] });
 
     if (!data) return null;
@@ -214,12 +222,14 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 }
             `}} />
 
-            {/* Scroll Indicator */}
-            <div ref={scrollIndicatorRef} className="absolute bottom-[10dvh] left-1/2 -translate-x-1/2 opacity-100 z-30 animate-bounce-custom flex flex-col items-center justify-center gap-2 text-white drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] pointer-events-none">
-                <div className="font-heading uppercase tracking-[0.15em] text-[0.9rem] font-normal">Swipe to scroll</div>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[30px] h-[30px] stroke-white stroke-[1.5] drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
-                    <path d="M7 13L12 18L17 13M7 6L12 11L17 6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+            {/* Scroll Indicator Wrapper */}
+            <div className="absolute top-0 left-0 w-full h-svh pointer-events-none z-30">
+                <div ref={scrollIndicatorRef} className="absolute bottom-[2dvh] left-1/2 opacity-100 transition-opacity duration-500 animate-bounce-custom flex flex-col items-center justify-center gap-2 text-white drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] pointer-events-none">
+                    <div className="font-heading uppercase tracking-[0.15em] text-[0.9rem] font-normal">Swipe to scroll</div>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[30px] h-[30px] stroke-white stroke-[1.5] drop-shadow-[0_0_10px_rgba(212,175,55,0.4)]">
+                        <path d="M7 13L12 18L17 13M7 6L12 11L17 6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                </div>
             </div>
 
             {/* 1. HERO SECTION */}
@@ -424,7 +434,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 </div>
             </footer>
 
-            <AudioPlayer audioSrc={data?.music?.url || '/assets/music/music.mp3'} autoPlay={data?.music?.autoplay ?? true} />
+            <AudioPlayer audioSrc={data?.music?.url || '/assets/music/music.mp3'} autoPlay={data?.music?.autoplay ?? true} isPreviewMode={isPreviewMode} />
         </div>
     );
 

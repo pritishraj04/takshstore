@@ -1,12 +1,12 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useCollectionStore } from "../../store/useCollectionStore";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiClient } from "../../lib/apiClient";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { Code, Brush, ArrowRight, ExternalLink, Link2, Check, Globe } from "lucide-react";
+import { Code, Brush, ArrowRight, ExternalLink, Link2, Check, Globe, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { InviteData, ProductType } from "@taksh/types";
@@ -60,6 +60,33 @@ export default function UserDashboard({ name }: UserDashboardProps) {
     const container = useRef<HTMLDivElement>(null);
     const searchParams = useSearchParams();
     const queryClient = useQueryClient();
+
+    const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+    const deleteDraftMutation = useMutation({
+        mutationFn: async (id: string) => {
+            await apiClient.delete(`/digital-invites/draft/${id}`);
+        },
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ["my-invites"] });
+            import("sonner").then(m => m.toast.success('Draft deleted successfully.'));
+            setDeleteConfirmId(null);
+        },
+        onError: () => {
+            import("sonner").then(m => m.toast.error('Failed to delete draft.'));
+            setDeleteConfirmId(null);
+        }
+    });
+
+    const handleDeleteDraft = (id: string) => {
+        setDeleteConfirmId(id);
+    };
+
+    const confirmDelete = () => {
+        if (deleteConfirmId) {
+            deleteDraftMutation.mutate(deleteConfirmId);
+        }
+    };
 
     // Invalidate cache if returning from a successful checkout redirect
     useEffect(() => {
@@ -116,11 +143,11 @@ export default function UserDashboard({ name }: UserDashboardProps) {
     return (
         <div ref={container} className="pt-40 pb-32 px-6 md:px-16 lg:px-32 bg-primary min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <div className="dashboard-animate mb-24">
-                    <h4 className="font-inter text-xs tracking-widest uppercase text-secondary mb-4">
+                <div className="dashboard-animate mb-16 md:mb-24 wrap-break-word">
+                    <h4 className="font-inter text-xs tracking-widest uppercase text-secondary mb-2 md:mb-4">
                         Private Atelier
                     </h4>
-                    <h1 className="font-playfair text-5xl md:text-6xl text-primary tracking-wide">
+                    <h1 className="font-playfair text-4xl sm:text-5xl md:text-6xl text-primary tracking-wide leading-tight">
                         Welcome back, {name}.
                     </h1>
                 </div>
@@ -150,7 +177,7 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                     >
                                         <div>
                                             {/* Pills Row */}
-                                            <div className="flex items-center gap-4 mb-8">
+                                            <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 md:mb-8">
                                                 {/* Invite Status */}
                                                 <div className="flex items-center gap-2 border border-[#E5E4DF] px-3 py-1 bg-white rounded-full">
                                                     <span className={`h-1.5 w-1.5 rounded-full ${invite.status === "PUBLISHED" ? "bg-green-500" : "bg-gray-400"}`} />
@@ -176,7 +203,7 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                         </div>
 
                                         {/* Action Row */}
-                                        <div className="mt-12 flex flex-wrap gap-4 items-center pt-4 border-t border-[#E5E4DF]">
+                                        <div className="mt-8 md:mt-12 flex flex-wrap gap-3 md:gap-4 items-center pt-4 border-t border-[#E5E4DF]">
                                             <Link
                                                 href={`/customizer/${invite.id}`}
                                                 className="bg-[#1A1A1A] text-white font-inter text-xs tracking-widest uppercase py-2 px-6 hover:bg-black transition-colors flex items-center group w-fit"
@@ -211,6 +238,17 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                                         Copy Link
                                                     </button>
                                                 </>
+                                            )}
+                                            
+                                            {invite.status === 'DRAFT' && (
+                                                <button
+                                                    onClick={() => handleDeleteDraft(invite.id)}
+                                                    disabled={deleteDraftMutation.isPending && deleteDraftMutation.variables === invite.id}
+                                                    className="bg-transparent text-red-600 font-inter text-xs tracking-widest uppercase py-2 px-4 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors flex items-center gap-2 ml-auto mt-2 sm:mt-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    <Trash2 size={14} strokeWidth={1.5} />
+                                                    {deleteDraftMutation.isPending && deleteDraftMutation.variables === invite.id ? "Deleting..." : "Delete"}
+                                                </button>
                                             )}
                                         </div>
                                     </div>
@@ -271,6 +309,34 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                     </div>
                 )}
             </div>
+
+            {/* Custom Delete Confirmation Modal */}
+            {deleteConfirmId && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+                    <div className="bg-[#FAF9F6] w-full max-w-md p-8 border border-[#E5E4DF] shadow-2xl">
+                        <h3 className="font-playfair text-3xl text-[#1A1A1A] mb-4">Delete Draft</h3>
+                        <p className="font-inter text-[#4A4A4A] text-sm mb-6 sm:mb-8 font-light leading-relaxed">
+                            Are you sure you want to delete this draft? This action cannot be undone and all data will be permanently removed.
+                        </p>
+                        <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 justify-end">
+                            <button
+                                onClick={() => setDeleteConfirmId(null)}
+                                disabled={deleteDraftMutation.isPending}
+                                className="font-inter text-xs tracking-widest uppercase py-3 px-6 border border-[#E5E4DF] text-[#1A1A1A] hover:bg-[#F2F1EC] transition-colors disabled:opacity-50 text-center w-full sm:w-auto"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={confirmDelete}
+                                disabled={deleteDraftMutation.isPending}
+                                className="font-inter text-xs tracking-widest uppercase py-3 px-6 bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 w-full sm:w-auto"
+                            >
+                                {deleteDraftMutation.isPending ? "Deleting..." : "Delete Draft"}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
