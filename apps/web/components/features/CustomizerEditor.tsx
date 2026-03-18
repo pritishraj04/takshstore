@@ -6,21 +6,21 @@ import { useDigitalInvite, useUpdateInvite, useDeleteDraft } from "../../hooks/u
 import { useInviteStore } from "../../store/useInviteStore";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { useProducts } from "../../hooks/useProducts";
-import { Loader2, ShoppingBag, ExternalLink, User, CalendarHeart, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, CheckCircle, XCircle, Save, Globe, UploadCloud } from "lucide-react";
+import { Loader2, ShoppingBag, ExternalLink, User, CalendarHeart, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, CheckCircle, XCircle, Save, Globe, UploadCloud, PlayCircle, Music, Edit3, Type, Images, Key, FileText, Search, AlertTriangle, Trash2, Shield } from "lucide-react";
 import { apiClient } from "../../lib/apiClient";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { toast } from "sonner";
 import { useUploadFile, useDeleteFile } from "../../hooks/useStorage";
+import { LockedMediaUpload } from "./LockedMediaUpload";
 
 interface CustomizerEditorProps {
     inviteId: string;
 }
 
 export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
-    // 1. Fetch data from backend
     const { data, isLoading, isError } = useDigitalInvite(inviteId);
-    const { mutate: updateInvite, isPending } = useUpdateInvite(inviteId);
+    const { mutateAsync: updateInviteAsync, isPending } = useUpdateInvite(inviteId);
     const { mutate: deleteDraft, isPending: isDeleting } = useDeleteDraft();
     const router = useRouter();
 
@@ -29,7 +29,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     const currentDraft = useInviteStore((state) => state.inviteData);
     const headerRef = useRef<HTMLDivElement>(null);
     const saveBtnRef = useRef<HTMLButtonElement>(null);
-    const [openSection, setOpenSection] = useState<'url' | 'couple' | 'parents' | 'events' | 'contact' | 'music' | null>('url');
+    const [openSection, setOpenSection] = useState<'url' | 'couple' | 'parents' | 'events' | 'contact' | 'music' | 'messages' | null>('url');
     const [slugStatus, setSlugStatus] = useState<{ loading: boolean; available: boolean | null; suggestions: string[] }>({ loading: false, available: null, suggestions: [] });
     const [activeMobileView, setActiveMobileView] = useState<'editor' | 'preview'>('editor');
     const iframeRef = useRef<HTMLIFrameElement>(null);
@@ -97,13 +97,22 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         }
     }, [isPending]);
 
-    const handleSave = () => {
+    const handleSave = async () => {
         if (!currentDraft?.slug || currentDraft.slug.trim().length === 0) {
             toast.error('Please claim a unique URL for your invite before proceeding.');
             return;
         }
         if (currentDraft && slugStatus.available !== false) {
-            updateInvite({ inviteData: currentDraft, status: 'PUBLISHED' });
+            try {
+                await updateInviteAsync({ inviteData: currentDraft, status: 'PUBLISHED' });
+            } catch (error: any) {
+                const message = error.response?.data?.message || 'Update failed';
+                toast.error(message);
+                // Rollback local state
+                if (data?.inviteData) {
+                    setAllData(data.inviteData);
+                }
+            }
         } else {
             toast.error('Please claim a unique and available URL before proceeding.');
         }
@@ -130,10 +139,23 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
 
     // Move the handleAddToBag below or keep here.
     const handleAddToBag = () => {
-        if (!currentDraft?.slug || currentDraft.slug.trim().length === 0) {
-            toast.error('Please claim a unique URL for your invite before proceeding.');
+        const { couple, celebrations, slug } = currentDraft || {};
+
+        if (!couple?.bride?.name?.trim() || !couple?.groom?.name?.trim()) {
+            toast.error("Please enter both the Bride and Groom's names before proceeding.");
             return;
         }
+
+        if (!celebrations || celebrations.length === 0 || !celebrations[0].date) {
+            toast.error("Please add at least one celebration with a valid date.");
+            return;
+        }
+
+        if (!slug?.trim()) {
+            toast.error("Please claim your custom URL slug before proceeding.");
+            return;
+        }
+
         if (slugStatus.available === false) {
             toast.error('Please claim an available URL before proceeding.');
             return;
@@ -220,6 +242,29 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         });
     };
 
+    const updateParentOrder = (person: 'bride' | 'groom', value: 'MOTHER_FIRST' | 'FATHER_FIRST') => {
+        if (currentDraft) setAllData({
+            ...currentDraft,
+            couple: {
+                ...currentDraft.couple,
+                [person]: {
+                    ...currentDraft.couple[person],
+                    parents: {
+                        ...currentDraft.couple[person].parents,
+                        order: value
+                    }
+                }
+            }
+        });
+    };
+
+    const updateMessage = (field: string, value: string) => {
+        if (currentDraft) setAllData({
+            ...currentDraft,
+            messages: { ...currentDraft.messages, [field]: value }
+        });
+    };
+
     const updateWedding = (field: string, value: string) => {
         if (currentDraft) setAllData({ ...currentDraft, wedding: { ...currentDraft.wedding, [field]: value } });
     };
@@ -254,9 +299,17 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             ...currentDraft,
             celebrations: [
                 ...currentDraft.celebrations,
-                { id: Date.now().toString(), name: "New Event", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "", showLocation: false }
+                { id: Date.now().toString(), name: "New Event", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "", showLocation: false, highlight: false }
             ]
         });
+    };
+
+    const removeCelebration = (index: number) => {
+        if (currentDraft && currentDraft.celebrations.length > 1) {
+            const newCelebrations = [...currentDraft.celebrations];
+            newCelebrations.splice(index, 1);
+            setAllData({ ...currentDraft, celebrations: newCelebrations });
+        }
     };
 
     const isAwsUrl = (url: string) => url.includes('amazonaws.com');
@@ -301,7 +354,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         }
 
         if (type === 'image') {
-            const placeholder = "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800";
+            const placeholder = "";
             setAllData({
                 ...currentDraft,
                 couple: { ...currentDraft.couple, image: placeholder }
@@ -317,6 +370,13 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         }
     };
 
+    useEffect(() => {
+        if (isError) {
+            toast.error("This invitation draft is unavailable or you do not have permission to view it.");
+            router.push('/dashboard');
+        }
+    }, [isError, router]);
+
     // Luxury Loading State
     if (isLoading && inviteId !== 'new') {
         return (
@@ -330,14 +390,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     }
 
     if (isError) {
-        return (
-            <div className="bg-primary min-h-screen flex flex-col items-center justify-center font-playfair tracking-wide">
-                <h2 className="text-2xl text-red-800">Error retrieving draft.</h2>
-                <p className="font-inter text-sm mt-4 text-secondary">
-                    Please return to your dashboard and try again.
-                </p>
-            </div>
-        );
+        return null;
     }
 
     return (
@@ -368,7 +421,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                         type="text"
                                         value={currentDraft?.slug || ''}
                                         onChange={(e) => updateSlug(e.target.value)}
-                                        placeholder="riya-weds-moon"
+                                        placeholder="karan-weds-priya"
                                         className="w-full bg-transparent text-sm text-[#1A1A1A] font-medium outline-none ml-1 placeholder:font-normal"
                                         style={{ fontFamily: 'var(--font-inter)' }}
                                     />
@@ -422,6 +475,22 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                         </button>
                         <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'couple' ? 'max-h-[800px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
                             <div className="flex flex-col gap-6 pt-4 border-t border-[#E5E4DF]">
+                                <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200 rounded-md text-amber-800 text-xs text-left" style={{ fontFamily: 'var(--font-inter)' }}>
+                                    <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                                    <p><strong>Please verify spelling carefully.</strong> To protect license integrity, major name changes and event postponements beyond 90 days are permanently locked after purchase. Only minor typos can be corrected post-checkout.</p>
+                                </div>
+                                <div className="flex flex-col gap-2 mb-2">
+                                    <label className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>Primary Display Order</label>
+                                    <select
+                                        value={currentDraft?.couple?.primaryOrder || 'BRIDE_FIRST'}
+                                        onChange={(e) => updateCoupleField('primaryOrder', e.target.value)}
+                                        className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
+                                        style={{ fontFamily: 'var(--font-inter)' }}
+                                    >
+                                        <option value="BRIDE_FIRST">Bride's Name First</option>
+                                        <option value="GROOM_FIRST">Groom's Name First</option>
+                                    </select>
+                                </div>
                                 <input
                                     type="text" value={currentDraft?.couple?.bride?.name || ''} onChange={(e) => updatePersonName('bride', e.target.value)} placeholder="Bride Name"
                                     className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
@@ -444,25 +513,34 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                 />
 
                                 <div className="mt-4 flex flex-col gap-2">
-                                    <div className="border border-dashed border-[#E5E4DF] p-4 flex items-center justify-center hover:bg-[#F2F1EC] transition-colors cursor-pointer text-center relative pointer-events-auto">
-                                        {isUploading ? (
-                                            <span className="text-xs uppercase tracking-widest text-[#5A5A5A] flex items-center justify-center pointer-events-none" style={{ fontFamily: 'var(--font-inter)' }}>
-                                                <Loader2 size={14} className="animate-spin mr-2" />
-                                                UPLOADING...
-                                            </span>
-                                        ) : (
-                                            <label className="cursor-pointer flex items-center text-xs uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors w-full justify-center" style={{ fontFamily: 'var(--font-inter)' }}>
-                                                <Upload size={14} strokeWidth={1} className="mr-2" />
-                                                {currentDraft?.couple?.image ? 'CHANGE COUPLE PHOTO' : 'UPLOAD COUPLE PHOTO'}
-                                                <input type="file" accept="image/*" className="hidden" disabled={isUploading} onChange={(e) => handleFileUpload(e, 'image')} />
-                                                <div className="absolute inset-0 w-full h-full opactiy-0 cursor-pointer pointer-events-auto z-10"></div>
-                                            </label>
-                                        )}
-                                    </div>
-                                    {currentDraft?.couple?.image && currentDraft.couple.image !== "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800" && (
-                                        <button onClick={() => handleRemoveFile('image')} disabled={isUploading} className="text-[10px] text-red-500 hover:text-red-700 tracking-widest uppercase transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
-                                            Remove Custom Photo
-                                        </button>
+                                    {isPurchased ? (
+                                        <>
+                                            <div className="border border-dashed border-[#E5E4DF] p-4 flex items-center justify-center hover:bg-[#F2F1EC] transition-colors cursor-pointer text-center relative pointer-events-auto">
+                                                {isUploading ? (
+                                                    <span className="text-xs uppercase tracking-widest text-[#5A5A5A] flex items-center justify-center pointer-events-none" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                        <Loader2 size={14} className="animate-spin mr-2" />
+                                                        UPLOADING...
+                                                    </span>
+                                                ) : (
+                                                    <label className="cursor-pointer flex items-center text-xs uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors w-full justify-center" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                        <Upload size={14} strokeWidth={1} className="mr-2" />
+                                                        {currentDraft?.couple?.image && currentDraft.couple.image !== "" && currentDraft.couple.image !== "/assets/images/couple.png" && currentDraft.couple.image !== "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800" ? 'CHANGE COUPLE PHOTO' : 'UPLOAD COUPLE PHOTO'}
+                                                        <input type="file" accept="image/*" className="hidden" disabled={isUploading} onChange={(e) => handleFileUpload(e, 'image')} />
+                                                        <div className="absolute inset-0 w-full h-full opactiy-0 cursor-pointer pointer-events-auto z-10"></div>
+                                                    </label>
+                                                )}
+                                            </div>
+                                            {currentDraft?.couple?.image && currentDraft.couple.image !== "" && currentDraft.couple.image !== "/assets/images/couple.png" && currentDraft.couple.image !== "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800" && (
+                                                <button onClick={() => handleRemoveFile('image')} disabled={isUploading} className="text-[10px] text-red-500 hover:text-red-700 tracking-widest uppercase transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                    Remove Custom Photo
+                                                </button>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <LockedMediaUpload
+                                            title="Custom Photo Upload"
+                                            description="Personalize your invite with your own photo. This feature unlocks immediately after you complete your purchase."
+                                        />
                                     )}
                                 </div>
                             </div>
@@ -484,6 +562,17 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
 
                                 <div className="flex flex-col gap-4">
                                     <h4 className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>Bride's Family</h4>
+                                    <div className="flex flex-col gap-2 mb-2">
+                                        <select
+                                            value={currentDraft?.couple?.bride?.parents?.order || 'MOTHER_FIRST'}
+                                            onChange={(e) => updateParentOrder('bride', e.target.value as any)}
+                                            className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
+                                            style={{ fontFamily: 'var(--font-inter)' }}
+                                        >
+                                            <option value="MOTHER_FIRST">Mother's Name First</option>
+                                            <option value="FATHER_FIRST">Father's Name First</option>
+                                        </select>
+                                    </div>
                                     <input
                                         type="text" value={currentDraft?.couple?.bride?.parents?.mother || ''} onChange={(e) => updateParentInfo('bride', 'mother', e.target.value)} placeholder="Mother's Name"
                                         className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
@@ -498,6 +587,17 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
 
                                 <div className="flex flex-col gap-4">
                                     <h4 className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>Groom's Family</h4>
+                                    <div className="flex flex-col gap-2 mb-2">
+                                        <select
+                                            value={currentDraft?.couple?.groom?.parents?.order || 'FATHER_FIRST'}
+                                            onChange={(e) => updateParentOrder('groom', e.target.value as any)}
+                                            className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
+                                            style={{ fontFamily: 'var(--font-inter)' }}
+                                        >
+                                            <option value="MOTHER_FIRST">Mother's Name First</option>
+                                            <option value="FATHER_FIRST">Father's Name First</option>
+                                        </select>
+                                    </div>
                                     <input
                                         type="text" value={currentDraft?.couple?.groom?.parents?.mother || ''} onChange={(e) => updateParentInfo('groom', 'mother', e.target.value)} placeholder="Mother's Name"
                                         className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
@@ -530,6 +630,11 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                     <div key={ev.id} className="flex flex-col gap-4">
                                         <div className="flex items-center justify-between">
                                             <h4 className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>{ev.name || `Event ${i + 1}`}</h4>
+                                            {currentDraft.celebrations.length > 1 && (
+                                                <button onClick={() => removeCelebration(i)} className="text-red-500 hover:text-red-700 p-1">
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            )}
                                         </div>
                                         <input
                                             type="text" value={ev.name || ''} onChange={(e) => updateEvent(ev.id, 'name', e.target.value)} placeholder="Event Name"
@@ -540,7 +645,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                             <div className="flex items-center gap-2">
                                                 <CalendarHeart size={12} strokeWidth={1} className="text-[#C5B39A]" />
                                                 <input
-                                                    type="text" value={ev.date || ''} onChange={(e) => updateEvent(ev.id, 'date', e.target.value)} placeholder="Date"
+                                                    type="date" value={ev.date || ''} onChange={(e) => updateEvent(ev.id, 'date', e.target.value)} placeholder="Date"
                                                     className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                                                     style={{ fontFamily: 'var(--font-inter)' }}
                                                 />
@@ -548,7 +653,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                             <div className="flex items-center gap-2">
                                                 <Clock size={12} strokeWidth={1} className="text-[#C5B39A]" />
                                                 <input
-                                                    type="text" value={ev.time || ''} onChange={(e) => updateEvent(ev.id, 'time', e.target.value)} placeholder="Time"
+                                                    type="time" value={ev.time || ''} onChange={(e) => updateEvent(ev.id, 'time', e.target.value)} placeholder="Time"
                                                     className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                                                     style={{ fontFamily: 'var(--font-inter)' }}
                                                 />
@@ -572,6 +677,18 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                             />
                                             <label htmlFor={`showLocation-${ev.id}`} className="text-sm text-[#1A1A1A]" style={{ fontFamily: 'var(--font-inter)' }}>
                                                 Show Map Location for this event
+                                            </label>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-2">
+                                            <input
+                                                type="checkbox"
+                                                id={`highlight-${ev.id}`}
+                                                checked={ev.highlight || false}
+                                                onChange={(e) => updateEvent(ev.id, 'highlight', e.target.checked)}
+                                                className="w-4 h-4 text-[#C5B39A] bg-transparent border-[#E5E4DF] focus:ring-[#C5B39A] focus:ring-1"
+                                            />
+                                            <label htmlFor={`highlight-${ev.id}`} className="text-sm text-[#1A1A1A]" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                Highlight this event
                                             </label>
                                         </div>
                                         {ev.showLocation && (
@@ -621,6 +738,14 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                         style={{ fontFamily: 'var(--font-inter)' }}
                                     />
                                 </div>
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>Instagram Profile URL</label>
+                                    <input
+                                        type="text" value={currentDraft?.contact?.instagram || ''} onChange={(e) => updateContact('instagram', e.target.value)} placeholder="https://instagram.com/myusername"
+                                        className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
+                                        style={{ fontFamily: 'var(--font-inter)' }}
+                                    />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -638,25 +763,34 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                         <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'music' ? 'max-h-[800px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
                             <div className="flex flex-col gap-4 pt-4 border-t border-[#E5E4DF]">
 
-                                <div className="border border-dashed border-[#E5E4DF] p-4 flex items-center justify-center hover:bg-[#F2F1EC] transition-colors cursor-pointer relative pointer-events-auto">
-                                    {isUploading ? (
-                                        <span className="text-xs uppercase tracking-widest text-[#5A5A5A] flex items-center justify-center pointer-events-none" style={{ fontFamily: 'var(--font-inter)' }}>
-                                            <Loader2 size={14} className="animate-spin mr-2" />
-                                            UPLOADING...
-                                        </span>
-                                    ) : (
-                                        <label className="cursor-pointer flex items-center text-xs uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors w-full justify-center" style={{ fontFamily: 'var(--font-inter)' }}>
-                                            <Upload size={14} strokeWidth={1} className="mr-2" />
-                                            {currentDraft?.music?.url && currentDraft?.music?.url !== "" ? 'CHANGE MUSIC' : 'UPLOAD MUSIC (.MP3)'}
-                                            <input type="file" accept="audio/mpeg" className="hidden" disabled={isUploading} onChange={(e) => handleFileUpload(e, 'audio')} />
-                                            <div className="absolute inset-0 w-full h-full opactiy-0 cursor-pointer pointer-events-auto z-10"></div>
-                                        </label>
-                                    )}
-                                </div>
-                                {currentDraft?.music?.url && currentDraft.music.url !== "" && (
-                                    <button onClick={() => handleRemoveFile('audio')} disabled={isUploading} className="text-[10px] text-red-500 hover:text-red-700 tracking-widest uppercase transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
-                                        Remove Custom Music
-                                    </button>
+                                {isPurchased ? (
+                                    <>
+                                        <div className="border border-dashed border-[#E5E4DF] p-4 flex items-center justify-center hover:bg-[#F2F1EC] transition-colors cursor-pointer relative pointer-events-auto">
+                                            {isUploading ? (
+                                                <span className="text-xs uppercase tracking-widest text-[#5A5A5A] flex items-center justify-center pointer-events-none" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                    <Loader2 size={14} className="animate-spin mr-2" />
+                                                    UPLOADING...
+                                                </span>
+                                            ) : (
+                                                <label className="cursor-pointer flex items-center text-xs uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors w-full justify-center" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                    <Upload size={14} strokeWidth={1} className="mr-2" />
+                                                    {currentDraft?.music?.url && currentDraft?.music?.url !== "" ? 'CHANGE MUSIC' : 'UPLOAD MUSIC (.MP3)'}
+                                                    <input type="file" accept="audio/mpeg" className="hidden" disabled={isUploading} onChange={(e) => handleFileUpload(e, 'audio')} />
+                                                    <div className="absolute inset-0 w-full h-full opactiy-0 cursor-pointer pointer-events-auto z-10"></div>
+                                                </label>
+                                            )}
+                                        </div>
+                                        {currentDraft?.music?.url && currentDraft.music.url !== "" && (
+                                            <button onClick={() => handleRemoveFile('audio')} disabled={isUploading} className="text-[10px] text-red-500 hover:text-red-700 tracking-widest uppercase transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                Remove Custom Music
+                                            </button>
+                                        )}
+                                    </>
+                                ) : (
+                                    <LockedMediaUpload
+                                        title="Custom Background Music"
+                                        description="Set the perfect mood with your own MP3. This feature unlocks immediately after checkout."
+                                    />
                                 )}
 
                                 <div className="flex items-center gap-2 mt-2 pt-2 border-t border-[#E5E4DF]">
@@ -670,6 +804,48 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                     <label htmlFor="autoplay-music" className="text-sm text-[#1A1A1A]" style={{ fontFamily: 'var(--font-inter)' }}>
                                         Autoplay Music on Live Invite
                                     </label>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Section 6: Messages & SEO */}
+                    <div className="mb-6 border border-[#E5E4DF] bg-white shrink-0">
+                        <button
+                            onClick={() => setOpenSection(openSection === 'messages' ? null : 'messages')}
+                            className="w-full flex items-center justify-between p-6 text-xs uppercase tracking-widest text-[#1A1A1A]"
+                            style={{ fontFamily: 'var(--font-inter)' }}
+                        >
+                            <span className="flex items-center gap-3"><FileText size={16} strokeWidth={1} className="text-[#5A5A5A]" /> Messages & SEO</span>
+                            <span className="text-lg font-light leading-none">{openSection === 'messages' ? '−' : '+'}</span>
+                        </button>
+                        <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'messages' ? 'max-h-[1200px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
+                            <div className="flex flex-col gap-6 pt-4 border-t border-[#E5E4DF]">
+
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>Invite Text</label>
+                                    <textarea
+                                        value={currentDraft?.messages?.inviteText || ''}
+                                        onChange={(e) => updateMessage('inviteText', e.target.value.substring(0, 300))}
+                                        placeholder="With joyful hearts, we invite you..."
+                                        className="w-full bg-[#f8f8f8] border border-[#E5E4DF] p-3 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors rounded-sm min-h-[100px] resize-none"
+                                        style={{ fontFamily: 'var(--font-inter)' }}
+                                    />
+                                    <span className="text-xs text-gray-500 text-right">{currentDraft?.messages?.inviteText?.length || 0}/300</span>
+                                </div>
+
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>Social Share Text (SEO)</label>
+                                    <textarea
+                                        value={currentDraft?.messages?.socialShareText || ''}
+                                        onChange={(e) => updateMessage('socialShareText', e.target.value.substring(0, 160))}
+                                        placeholder="With immense joy and heartfelt happiness..."
+                                        maxLength={160}
+                                        className="w-full bg-[#f8f8f8] border border-[#E5E4DF] p-3 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors rounded-sm min-h-[80px] resize-none"
+                                        style={{ fontFamily: 'var(--font-inter)' }}
+                                    />
+                                    <span className="text-xs text-gray-500 text-right">{currentDraft?.messages?.socialShareText?.length || 0}/160</span>
                                 </div>
 
                             </div>

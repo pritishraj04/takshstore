@@ -9,7 +9,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { useSearchStore } from "../../store/useSearchStore";
 import { useEffect, useState } from "react";
-import { Search, ShoppingBag, Menu, X, User, LogOut } from "lucide-react";
+import { Search, ShoppingBag, Menu, X, User, LogOut, LayoutDashboard } from "lucide-react";
 import { useSession, signIn, signOut } from "next-auth/react";
 
 const navLinks = [
@@ -18,6 +18,7 @@ const navLinks = [
     { name: "How to Order", path: "/how-to-order" },
     { name: "Contacts", path: "/contacts" },
 ];
+
 
 export default function Header() {
     const headerRef = useRef<HTMLElement>(null);
@@ -170,13 +171,15 @@ export default function Header() {
                     <>
                         <Link href="/dashboard" className="flex items-center gap-2 relative group py-1 overflow-hidden">
                             <User size={20} strokeWidth={1.5} className="md:hidden text-[#1A1A1A]" />
+                            <LayoutDashboard size={20} strokeWidth={1.5} className="shrink-0" />
                             <span className="hidden md:block transition-colors duration-500 group-hover:text-[#1A1A1A]">DASHBOARD</span>
                             <span className="hidden md:block absolute left-0 bottom-0 w-full h-px bg-[#1A1A1A] transform origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100" />
                         </Link>
                         <button
                             onClick={() => signOut({ callbackUrl: '/' })}
-                            className="hidden md:block text-xs tracking-widest uppercase hover:text-gray-500 transition-colors py-1"
+                            className="hidden md:flex items-center gap-2 text-xs tracking-widest uppercase hover:text-gray-500 transition-colors py-1 cursor-pointer"
                         >
+                            <LogOut size={14} strokeWidth={1.5} className="shrink-0" />
                             LOG OUT
                         </button>
                     </>
@@ -235,10 +238,11 @@ export default function Header() {
                         <div className="mt-auto border-t border-[#E5E4DF] p-6">
                             <button
                                 onClick={() => signOut({ callbackUrl: '/' })}
-                                className="flex items-center gap-3 text-red-600 font-medium tracking-widest uppercase w-full"
+                                className="flex items-center gap-3 text-red-600 font-medium tracking-widest uppercase w-full cursor-pointer"
                                 style={{ fontFamily: 'var(--font-inter)' }}
                             >
-                                <LogOut size={20} /> Log Out
+                                <LogOut size={14} strokeWidth={1.5} className="shrink-0" />
+                                Log Out
                             </button>
                         </div>
                     )}

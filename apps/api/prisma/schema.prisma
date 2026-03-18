@@ -79,10 +79,13 @@ model DigitalInvite {
   orderItem   OrderItem    @relation(fields: [orderItemId], references: [id])
   inviteData  Json
   websiteUrl  String?
-  slug        String?      @unique
-  status      InviteStatus @default(DRAFT)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  slug              String?      @unique
+  status            InviteStatus @default(DRAFT)
+  originalEventDate DateTime?
+  originalBrideName String?
+  originalGroomName String?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
 }
 
 model Coupon {

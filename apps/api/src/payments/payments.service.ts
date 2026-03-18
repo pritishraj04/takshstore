@@ -108,9 +108,28 @@ export class PaymentsService {
 
             for (const item of order.items) {
                 if (item.digitalInvite && item.digitalInvite.status === 'DRAFT') {
+                    const inviteData = item.digitalInvite.inviteData as any;
+                    let latestDate: Date | null = null;
+                    if (inviteData?.celebrations && Array.isArray(inviteData.celebrations)) {
+                        const times = inviteData.celebrations
+                            .map((c: any) => new Date(c.date).getTime())
+                            .filter((t: number) => !isNaN(t));
+                        if (times.length > 0) {
+                            latestDate = new Date(Math.max(...times));
+                        }
+                    }
+
+                    const brideName = inviteData?.couple?.bride?.name || null;
+                    const groomName = inviteData?.couple?.groom?.name || null;
+
                     await this.prisma.digitalInvite.update({
                         where: { id: item.digitalInvite.id },
-                        data: { status: 'DEVELOPMENT' }
+                        data: { 
+                            status: 'DEVELOPMENT',
+                            originalEventDate: latestDate,
+                            originalBrideName: brideName,
+                            originalGroomName: groomName
+                        }
                     });
                 }
             }
@@ -150,9 +169,28 @@ export class PaymentsService {
 
             for (const item of order.items) {
                 if (item.digitalInvite && item.digitalInvite.status === 'DRAFT') {
+                    const inviteData = item.digitalInvite.inviteData as any;
+                    let latestDate: Date | null = null;
+                    if (inviteData?.celebrations && Array.isArray(inviteData.celebrations)) {
+                        const times = inviteData.celebrations
+                            .map((c: any) => new Date(c.date).getTime())
+                            .filter((t: number) => !isNaN(t));
+                        if (times.length > 0) {
+                            latestDate = new Date(Math.max(...times));
+                        }
+                    }
+
+                    const brideName = inviteData?.couple?.bride?.name || null;
+                    const groomName = inviteData?.couple?.groom?.name || null;
+
                     await this.prisma.digitalInvite.update({
                         where: { id: item.digitalInvite.id },
-                        data: { status: 'DEVELOPMENT' },
+                        data: { 
+                            status: 'DEVELOPMENT',
+                            originalEventDate: latestDate,
+                            originalBrideName: brideName,
+                            originalGroomName: groomName
+                        },
                     });
                 }
             }

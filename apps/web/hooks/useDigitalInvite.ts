@@ -9,7 +9,7 @@ export function useDigitalInvite(id: string) {
         queryKey: ["digitalInvite", id],
         queryFn: async () => {
             if (id === 'new') return null;
-            const { data } = await apiClient.get(`/digital-invites/${id}`);
+            const { data } = await apiClient.get(`/digital-invites/draft/${id}`);
             return data;
         },
         enabled: id !== 'new' && !!id, // Only run the query if we have an ID and it's not 'new'

@@ -10,10 +10,11 @@ export interface Product {
 
 export interface Person {
     name: string;
-    parents: { mother: string; father: string; };
+    parents: { mother: string; father: string; order?: 'MOTHER_FIRST' | 'FATHER_FIRST' };
 }
 
 export interface Couple {
+    primaryOrder?: 'BRIDE_FIRST' | 'GROOM_FIRST';
     bride: Person;
     groom: Person;
     hashtag: string;
@@ -44,6 +45,7 @@ export interface EventDetails {
 
 export interface Messages {
     inviteText: string;
+    socialShareText?: string;
     whatsappContact?: string;
     youtubeLink?: string;
     optionalNote?: string;

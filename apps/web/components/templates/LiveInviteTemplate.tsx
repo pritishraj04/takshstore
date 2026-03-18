@@ -14,6 +14,58 @@ if (typeof window !== "undefined") {
     gsap.registerPlugin(ScrollTrigger, useGSAP);
 }
 
+const formatDisplayDate = (dateStr: string) => {
+    if (!dateStr) return '';
+    return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+};
+
+const formatDisplayTime = (timeStr: string) => {
+    if (!timeStr) return '';
+    const [hours, minutes] = timeStr.split(':');
+    if (!hours || !minutes) return timeStr;
+    const date = new Date();
+    date.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+};
+
+const generateCalendarLink = (nameStr: string, dateStr: string, timeStr: string, venueStr: string, dressCodeStr: string) => {
+    if (!nameStr || !dateStr || !timeStr) return '';
+    try {
+        const [year, month, day] = dateStr.split('-');
+        const [hours, minutes] = timeStr.split(':');
+        if (!year || !hours) return '';
+
+        const startDate = new Date(parseInt(year, 10), parseInt(month, 10) - 1, parseInt(day, 10), parseInt(hours, 10), parseInt(minutes, 10));
+
+        const endDate = new Date(startDate);
+        endDate.setHours(startDate.getHours() + 2); // 2-hour duration
+
+        const formatDateToISO = (d: Date) => d.toISOString().replace(/-|:|\.\d\d\d/g, "");
+
+        const currentStart = formatDateToISO(startDate);
+        const currentEnd = formatDateToISO(endDate);
+
+        const url = new URL("https://calendar.google.com/calendar/render");
+        url.searchParams.append("action", "TEMPLATE");
+        url.searchParams.append("text", nameStr);
+        url.searchParams.append("dates", `${currentStart}/${currentEnd}`);
+
+        if (venueStr) {
+            url.searchParams.append("location", venueStr);
+        }
+
+        let details = "We can't wait to celebrate with you!";
+        if (dressCodeStr) {
+            details += `\n\nDress Code: ${dressCodeStr}`;
+        }
+        url.searchParams.append("details", details);
+
+        return url.toString();
+    } catch (e) {
+        return '';
+    }
+};
+
 interface LiveInviteTemplateProps {
     data: any; // Mapped from window.weddingData JSON
     isPreviewMode?: boolean;
@@ -23,6 +75,28 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollIndicatorRef = useRef<HTMLDivElement>(null);
     const lanternsRef = useRef<HTMLDivElement>(null);
+
+    const isGroomFirst = data?.couple?.primaryOrder === 'GROOM_FIRST';
+
+    const coupleNames = isGroomFirst
+        ? [data?.couple?.groom?.name, data?.couple?.bride?.name]
+        : [data?.couple?.bride?.name, data?.couple?.groom?.name];
+
+    const brideParents = data?.couple?.bride?.parents?.order === 'FATHER_FIRST'
+        ? [data?.couple?.bride?.parents?.father, data?.couple?.bride?.parents?.mother]
+        : [data?.couple?.bride?.parents?.mother, data?.couple?.bride?.parents?.father];
+
+    const groomParents = data?.couple?.groom?.parents?.order === 'FATHER_FIRST'
+        ? [data?.couple?.groom?.parents?.father, data?.couple?.groom?.parents?.mother]
+        : [data?.couple?.groom?.parents?.mother, data?.couple?.groom?.parents?.father];
+
+    const firstParents = isGroomFirst ? groomParents : brideParents;
+    const secondParents = isGroomFirst ? brideParents : groomParents;
+
+    const firstParentsLabel = isGroomFirst ? "Groom's" : "Bride's";
+    const secondParentsLabel = isGroomFirst ? "Bride's" : "Groom's";
+
+    const helperData = { coupleNames, firstParents, secondParents, firstParentsLabel, secondParentsLabel };
 
     useGSAP(() => {
         if (!containerRef.current) return;
@@ -191,13 +265,72 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                     animation: bounceIndicator 2s infinite;
                 }
                 
-                @keyframes royalGlow {
-                    0%, 100% { box-shadow: 0 28px 60px rgba(0,0,0,0.45), 0 0 40px rgba(215,180,120,0.25); }
-                    50% { box-shadow: 0 28px 60px rgba(0,0,0,0.45), 0 0 60px rgba(215,180,120,0.45); }
-                }
                 .highlight-card {
-                    animation: royalGlow 6s ease-in-out infinite;
+                    transform: translateY(-10px) scale(1.03);
+                    z-index: 2;
+
+                    background: transparent;
+
+                    border-color: transparent;
+
+                    box-shadow:
+                        0 18px 40px rgba(0, 0, 0, 0.15);
+
+                    overflow: hidden;
                 }
+
+                .highlight-card::before {
+                    content: "";
+                    position: absolute;
+                    inset: 2px;
+                    border-radius: 16px;
+                    background: rgba(255, 248, 235, 1);
+                    z-index: -1;
+                    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+                }
+
+                .highlight-card::after {
+                    content: "";
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 200%;
+                    height: 200%;
+                    background: conic-gradient(transparent,
+                        transparent 35%,
+                        rgb(216, 161, 65) 42%,
+                        #fff 45%,
+                        rgb(216, 161, 65) 48%,
+                        transparent 50%,
+                        transparent 85%,
+                        rgb(216, 161, 65) 92%,
+                        #fff 95%,
+                        rgb(216, 161, 65) 98%,
+                        transparent 100%);
+                    transform: translate(-50%, -50%) rotate(0deg);
+                    z-index: -2;
+                    animation: borderSparkle 3s linear infinite;
+                    pointer-events: none;
+                }
+
+                @keyframes borderSparkle {
+                    0% { transform: translate(-50%, -50%) rotate(0deg); }
+                    100% { transform: translate(-50%, -50%) rotate(360deg); }
+                }
+
+                .highlight-card h3 {
+                    color: #5a3a18;
+                    letter-spacing: 0.22em;
+                }
+
+                .highlight-card h3::before {
+                    content: "✦";
+                    display: block;
+                    margin-bottom: 0.5rem;
+                    font-size: 1rem;
+                    color: rgba(215, 180, 120, 1);
+                }
+                
                 @keyframes wave {
                     0% { transform: scale(0.5); opacity: 0; }
                     50% { opacity: 0.5; }
@@ -243,11 +376,11 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                     <div className="text-center relative z-20 w-full flex-1 flex flex-col justify-start pointer-events-auto mt-[7vh] md:mt-[10vh] px-4">
                         <p className="font-heading uppercase tracking-[0.2em] text-[0.8rem] md:text-[0.9rem] text-[#d4af37] mb-4">save the date</p>
                         <h1 className="font-heading text-[3rem] sm:text-[4rem] md:text-[5rem] font-extralight uppercase text-white drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] my-2 leading-none wrap-break-word">
-                            {data?.couple?.bride?.name || "Bride"}
+                            {helperData.coupleNames[0] || (data?.couple?.primaryOrder === 'GROOM_FIRST' ? "Groom" : "Bride")}
                         </h1>
                         <div className="font-script text-[1.5rem] md:text-[2rem] text-[#d4af37]">Weds</div>
                         <h1 className="font-heading text-[3rem] sm:text-[4rem] md:text-[5rem] font-extralight uppercase text-white drop-shadow-[0_0_20px_rgba(212,175,55,0.4)] my-2 leading-none wrap-break-word">
-                            {data?.couple?.groom?.name || "Groom"}
+                            {helperData.coupleNames[1] || (data?.couple?.primaryOrder === 'GROOM_FIRST' ? "Bride" : "Groom")}
                         </h1>
                         <div className="mt-8">
                             <span className="font-heading text-[1.2rem] md:text-[1.4rem] tracking-[0.15em] text-[#f3ecba] border-y border-[#d4af37] px-8 py-2 inline-block">
@@ -273,22 +406,22 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                     <div className="px-12 max-w-[700px] text-center opacity-100 pointer-events-auto fade-in-section">
                         <img src="/assets/images/lord.png" alt="Decoration" className="block w-full max-w-[120px] h-auto mx-auto mb-10" />
                         <p className="font-body text-base md:text-[1rem] text-[#f3ecba] mb-6">
-                            {data?.messages?.inviteText || "With joyful hearts, we invite you to share in our happiness..."}
+                            {data?.messages?.inviteText || "With joyful hearts, we invite you to share in our happiness as we begin our new life together. Join us for an evening of love, laughter, and celebration."}
                         </p>
                         <div className="w-12 h-px bg-[#f3ecba] mx-auto mb-6"></div>
 
-                        <p className="font-body text-[1.2rem] text-[#f3ecba] mb-2">From the hearts of Bride's parents</p>
+                        <p className="font-body text-[1.2rem] text-[#f3ecba] mb-2">From the hearts of {helperData.firstParentsLabel} parents</p>
                         <p className="font-body text-[1.7em] text-[#f3ecba] font-bold mb-6 leading-none inline-block">
-                            {data?.couple?.bride?.parents?.mother || ""}<br />&amp;<br />{data?.couple?.bride?.parents?.father || ""}
+                            {helperData.firstParents[0] || "Mother's Name"}<br />&amp;<br />{helperData.firstParents[1] || "Father's Name"}
                         </p>
 
                         <h2 className="font-heading text-[2rem] md:text-[3rem] text-[#d9fff2] font-extralight uppercase tracking-widest mb-6 leading-tight wrap-break-word">
-                            {data?.couple?.bride?.name}<br />&amp;<br />{data?.couple?.groom?.name}
+                            {helperData.coupleNames[0] || "First Name"}<br />&amp;<br />{helperData.coupleNames[1] || "Second Name"}
                         </h2>
 
-                        <p className="font-body text-[1.2rem] text-[#f3ecba] mb-2">From the hearts of Groom's parents</p>
+                        <p className="font-body text-[1.2rem] text-[#f3ecba] mb-2">From the hearts of {helperData.secondParentsLabel} parents</p>
                         <p className="font-body text-[1.7em] text-[#f3ecba] font-bold mb-6 leading-none inline-block">
-                            {data?.couple?.groom?.parents?.mother || ""}<br />&amp;<br />{data?.couple?.groom?.parents?.father || ""}
+                            {helperData.secondParents[0] || "Mother's Name"}<br />&amp;<br />{helperData.secondParents[1] || "Father's Name"}
                         </p>
                     </div>
                 </div>
@@ -310,15 +443,15 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                             {(data?.celebrations || []).map((ev: any, i: number) => (
                                 <div key={i} className={`fade-in-section relative rounded-[18px] p-[1.6rem] bg-[rgba(255,248,235,0.96)] border border-[rgba(190,150,95,0.6)] shadow-[0_12px_28px_rgba(0,0,0,0.18),inset_0_0_0_1px_rgba(255,255,255,0.4)] w-full max-w-[320px] mx-auto text-center font-body text-[#3b2a1a] ${ev.highlight ? 'highlight-card' : ''}`}>
                                     <h3 className="font-heading text-[1.6rem] font-extralight tracking-[0.15em] mb-[0.6rem] before:content-['✦'] before:block before:text-[1.2rem] before:mb-[0.4rem] before:text-[rgba(190,150,95,0.9)] after:content-[''] after:block after:w-[40px] after:h-1px after:bg-[rgba(190,150,95,0.7)] after:my-[0.6rem] after:mx-auto text-[#3b2a1a] wrap-break-word">
-                                        <b>{ev.name}</b>
+                                        <b>{ev.name || "Special Event"}</b>
                                     </h3>
                                     <div className="w-12 h-px bg-[#be965fb3] mx-auto mb-2"></div>
-                                    <p className="text-[1.3rem] my-[0.3rem] tracking-[0.08em] font-bold text-[rgba(60,40,20,0.85)]"><b>{ev.date}</b></p>
-                                    <p className="text-[1rem] my-[0.3rem] tracking-[0.08em] opacity-85 text-[rgba(60,40,20,0.85)]">{ev.time}</p>
-                                    <p className="text-[1rem] my-[0.3rem] tracking-[0.08em] opacity-90 italic text-[rgba(60,40,20,0.85)]">{ev.venue}</p>
-                                    <p className="mt-2 text-[0.8rem] uppercase tracking-widest opacity-80 text-[#5a3a18]">Dress Code: {ev.dressCode}</p>
-                                    {ev.calendarUrl && (
-                                        <a href={ev.calendarUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => isPreviewMode && e.preventDefault()} className="inline-flex items-center justify-center font-heading text-[0.9rem] tracking-widest uppercase whitespace-nowrap px-6 py-[0.6rem] rounded-full mt-4 bg-[rgba(255,235,190,0.4)] text-[#4b2e1f] border border-[rgba(180,140,90,0.4)] hover:bg-[rgba(255,230,175,0.8)] hover:text-[#2c1a10] hover:-translate-y-[2px] hover:shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-all duration-300">Add to Calendar</a>
+                                    <p className="text-[1.3rem] my-[0.3rem] tracking-[0.08em] font-bold text-[rgba(60,40,20,0.85)]"><b>{formatDisplayDate(ev.date) || "Event Date"}</b></p>
+                                    <p className="text-[1rem] my-[0.3rem] tracking-[0.08em] opacity-85 text-[rgba(60,40,20,0.85)]">{formatDisplayTime(ev.time) || "Event Time"}</p>
+                                    <p className="text-[1rem] my-[0.3rem] tracking-[0.08em] opacity-90 italic text-[rgba(60,40,20,0.85)]">{ev.venue || "Event Venue"}</p>
+                                    {ev.dressCode && <p className="mt-2 text-[0.8rem] uppercase tracking-widest opacity-80 text-[#5a3a18]">Dress Code: {ev.dressCode}</p>}
+                                    {generateCalendarLink(ev.name, ev.date, ev.time, ev.venue, ev.dressCode) && (
+                                        <a href={generateCalendarLink(ev.name, ev.date, ev.time, ev.venue, ev.dressCode)} target="_blank" rel="noopener noreferrer" onClick={(e) => isPreviewMode && e.preventDefault()} className="inline-flex items-center justify-center font-heading text-[0.9rem] tracking-widest uppercase whitespace-nowrap px-6 py-[0.6rem] rounded-full mt-4 z-10 relative bg-[rgba(255,235,190,0.4)] text-[#4b2e1f] border border-[rgba(180,140,90,0.4)] hover:bg-[rgba(255,230,175,0.8)] hover:text-[#2c1a10] hover:-translate-y-[2px] hover:shadow-[0_5px_15px_rgba(0,0,0,0.1)] transition-all duration-300">Add to Calendar</a>
                                     )}
                                 </div>
                             ))}
@@ -345,8 +478,8 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                                                     <img src={ev.mapImage ? `/${ev.mapImage}` : "/assets/images/map.png"} alt="Map" className="w-full h-auto rounded-[18px] bg-[#fff3db] p-[14px] border border-[rgba(190,150,95,0.6)] shadow-[0_18px_40px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.4)]" />
                                                 </div>
 
-                                                <h4 className="font-heading text-[1.5rem] md:text-[2rem] text-[#f4e4bc] mt-4 mb-2 text-center tracking-[0.15em] uppercase font-extralight">{ev.name}</h4>
-                                                <p className="text-[1.2rem] md:text-[1.5rem] text-[rgba(243,236,186,0.8)] font-body text-center -mt-2">{ev.venue}</p>
+                                                <h4 className="font-heading text-[1.5rem] md:text-[2rem] text-[#f4e4bc] mt-4 mb-2 text-center tracking-[0.15em] uppercase font-extralight">{ev.name || "Special Event"}</h4>
+                                                <p className="text-[1.2rem] md:text-[1.5rem] text-[rgba(243,236,186,0.8)] font-body text-center -mt-2">{ev.venue || "Event Venue"}</p>
 
                                                 {ev.googleMapsUrl && (
                                                     <a href={ev.googleMapsUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => isPreviewMode && e.preventDefault()} className="inline-flex items-center justify-center font-heading text-[1rem] tracking-[0.18em] uppercase whitespace-nowrap px-[2.6rem] py-[0.9rem] rounded-full mt-8 bg-[rgba(255,235,190,0.92)] text-[#4b2e1f] border border-[rgba(180,140,90,0.6)] hover:bg-[#ffe6af] hover:-translate-y-[2px] hover:shadow-[0_10px_28px_rgba(0,0,0,0.18)] transition-all duration-400">Get Directions</a>
@@ -412,15 +545,18 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                             {/* Countdown Component (Phase 2) */}
                             <InviteCountdown targetDate={data?.wedding?.date || data?.wedding?.displayDate} />
 
-                            <h2 className="font-script text-[#f4e4bc] text-[2.5rem] md:text-[3rem] font-normal mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] text-center tracking-[0.05em]">{data?.couple?.bride?.name} &amp; {data?.couple?.groom?.name}</h2>
+                            <h2 className="font-script text-[#f4e4bc] text-[2.5rem] md:text-[3rem] font-normal mb-2 drop-shadow-[0_2px_4px_rgba(0,0,0,0.6)] text-center tracking-[0.05em]">{helperData.coupleNames[0] || "First Name"} &amp; {helperData.coupleNames[1] || "Second Name"}</h2>
                             <p className="font-body text-[#f3ecba] text-[0.9rem] mb-4 drop-shadow-[0_1px_5px_rgba(0,0,0,0.5)]">{data?.messages?.thankYou || "Thank you for being part of our journey."}</p>
-                            <p className="font-body text-[#d9fff2] font-bold text-[1.2rem] mb-8 tracking-[1px]">{data?.couple?.hashtag}</p>
+                            <p className="font-body text-[#d9fff2] font-bold text-[1.2rem] mb-8 tracking-[1px]">{data?.couple?.hashtag || "#OurWedding"}</p>
 
                             <div className="flex justify-center gap-16 flex-wrap w-full mt-4 text-left">
                                 <div className="flex flex-col gap-[0.8rem] min-w-[150px]">
                                     <h3 className="font-body text-[1.3rem] font-bold text-white uppercase mb-2 border-b border-[#d4af37] pb-2 inline-block w-fit">Links</h3>
                                     <a href="#route" className="font-body text-[1.1rem] text-[#f3ecba] no-underline hover:text-[#d4af37] transition-colors">Venue location</a>
                                     <a href="#rsvp" className="font-body text-[1.1rem] text-[#f3ecba] no-underline hover:text-[#d4af37] transition-colors">RSVP</a>
+                                    {data?.contact?.instagram && (
+                                        <a href={data.contact.instagram} target="_blank" rel="noopener noreferrer" className="font-body text-[1.1rem] text-[#f3ecba] no-underline hover:text-[#d4af37] transition-colors">Instagram</a>
+                                    )}
                                 </div>
                                 <div className="flex flex-col gap-[0.8rem] min-w-[150px]">
                                     <h3 className="font-body text-[1.3rem] font-bold text-white uppercase mb-2 border-b border-[#d4af37] pb-2 inline-block w-fit">Navigation</h3>
@@ -428,6 +564,12 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                                     <a href="#couple" className="font-body text-[1.1rem] text-[#f3ecba] no-underline hover:text-[#d4af37] transition-colors">Bride and Groom</a>
                                     <a href="#events" className="font-body text-[1.1rem] text-[#f3ecba] no-underline hover:text-[#d4af37] transition-colors">Things to know</a>
                                 </div>
+                            </div>
+
+                            <div className="flex justify-center flex-col items-center mt-24 w-full">
+                                <a href="https://taksh.store" target="_blank" rel="noopener noreferrer" className="opacity-20 hover:opacity-100 transition-opacity text-[10px] text-[#f3ecba] font-body uppercase tracking-[0.2em] no-underline">
+                                    Crafted digitally by Taksh Store
+                                </a>
                             </div>
                         </div>
                     </div>

@@ -1,5 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { getEditDistance } from '../utils/levenshtein';
 
 @Injectable()
 export class DigitalInvitesService {
@@ -87,9 +88,16 @@ export class DigitalInvitesService {
         };
     }
 
-    async getInviteById(id: string) {
-        const invite = await this.prisma.digitalInvite.findUnique({
-            where: { id },
+    async getInviteById(id: string, userId: string) {
+        const invite = await this.prisma.digitalInvite.findFirst({
+            where: { 
+                id,
+                orderItem: {
+                    order: {
+                        userId: userId
+                    }
+                }
+            },
             include: {
                 orderItem: {
                     include: {
@@ -103,7 +111,7 @@ export class DigitalInvitesService {
             }
         });
 
-        if (!invite) return null;
+        if (!invite) throw new NotFoundException('Invite not found');
 
         return {
             ...invite,
@@ -111,7 +119,48 @@ export class DigitalInvitesService {
         };
     }
 
-    async updateInvite(id: string, inviteData: any, status?: any) {
+    async updateInvite(id: string, userId: string, inviteData: any, status?: any) {
+        // Enforce ownership: Will throw NotFoundException if not owned by the user
+        const existingInvite = await this.getInviteById(id, userId);
+
+        const isPaid = existingInvite.isPaid || existingInvite.status === 'DEVELOPMENT' || existingInvite.status === 'PUBLISHED';
+
+        // Exploit Guards
+        if (isPaid) {
+            const existingData = existingInvite.inviteData as any;
+            const incomingData = inviteData as any;
+
+            // Guard A: Typo-Tolerance (Max 3 character changes allowed)
+            const existingBrideName = (existingInvite.originalBrideName || '').toLowerCase();
+            const incomingBrideName = (incomingData?.couple?.bride?.name || '').toLowerCase();
+            const existingGroomName = (existingInvite.originalGroomName || '').toLowerCase();
+            const incomingGroomName = (incomingData?.couple?.groom?.name || '').toLowerCase();
+
+            const brideDistance = getEditDistance(existingBrideName, incomingBrideName);
+            const groomDistance = getEditDistance(existingGroomName, incomingGroomName);
+
+            if (brideDistance > 3 || groomDistance > 3) {
+                throw new BadRequestException('Major name changes are locked. You can only correct minor typos (max 3 characters) from the original purchased names.');
+            }
+
+            // Guard B: Date Horizon Lock (Max 90 days from original)
+            if (existingInvite.originalEventDate && incomingData?.celebrations && Array.isArray(incomingData.celebrations)) {
+                const times = incomingData.celebrations
+                    .map((c: any) => new Date(c.date).getTime())
+                    .filter((t: number) => !isNaN(t));
+
+                if (times.length > 0) {
+                    const incomingLatestDate = new Date(Math.max(...times));
+                    const horizonDate = new Date(existingInvite.originalEventDate);
+                    horizonDate.setDate(horizonDate.getDate() + 90);
+
+                    if (incomingLatestDate > horizonDate) {
+                        throw new BadRequestException('Event dates cannot be postponed more than 90 days from the original purchased date.');
+                    }
+                }
+            }
+        }
+
         // Also ensure slug cascades to the root column if the frontend passes it inside the payload
         const payloadSlug = inviteData?.slug || null;
         const normalizedSlug = payloadSlug ? payloadSlug.toLowerCase().replace(/[^a-z0-9-]/g, '') : null;
@@ -161,28 +210,29 @@ export class DigitalInvitesService {
                 }
             });
 
-            // Initial default placeholder values
             const defaultInviteData = {
                 couple: {
+                    primaryOrder: 'BRIDE_FIRST',
                     bride: {
-                        name: "Bride Name",
-                        parents: { mother: "Mother's Name", father: "Father's Name" }
+                        name: "",
+                        parents: { mother: "", father: "", order: 'MOTHER_FIRST' }
                     },
                     groom: {
-                        name: "Groom Name",
-                        parents: { mother: "Mother's Name", father: "Father's Name" }
+                        name: "",
+                        parents: { mother: "", father: "", order: 'FATHER_FIRST' }
                     },
-                    hashtag: "#OurWedding",
+                    hashtag: "",
                     image: ""
                 },
                 wedding: {
-                    displayDate: "To Be Announced"
+                    displayDate: ""
                 },
                 celebrations: [
-                    { id: "event-1", name: "Wedding Celebration", date: "", time: "", venue: "To Be Decided", googleMapsUrl: "", dressCode: "", showLocation: false },
+                    { id: "event-1", name: "", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "", showLocation: false, highlight: false },
                 ],
                 messages: {
-                    inviteText: "Together with our families, we joyfully invite you to celebrate our wedding.",
+                    inviteText: "With joyful hearts, we invite you to share in our happiness as we begin our new life together. Join us for an evening of love, laughter, and celebration.",
+                    socialShareText: "With immense joy and heartfelt happiness, we, as a family, request the honor of your presence at the wedding of [Bride] and [Groom]. As they begin a beautiful journey...",
                     whatsappContact: "",
                     youtubeLink: "",
                     optionalNote: ""
@@ -203,9 +253,16 @@ export class DigitalInvitesService {
     }
 
     async deleteDraft(userId: string, id: string) {
-        // Validate ownership and status before deleting
-        const invite = await this.prisma.digitalInvite.findUnique({
-            where: { id },
+        // Validate ownership and status before deleting by incorporating userId natively in the query
+        const invite = await this.prisma.digitalInvite.findFirst({
+            where: { 
+                id,
+                orderItem: {
+                    order: {
+                        userId: userId
+                    }
+                }
+            },
             include: {
                 orderItem: {
                     include: { order: true }
@@ -219,10 +276,6 @@ export class DigitalInvitesService {
 
         if (invite.status !== 'DRAFT') {
             throw new BadRequestException('Cannot delete a published or paid invite');
-        }
-
-        if (invite.orderItem.order.userId !== userId) {
-            throw new BadRequestException('Access denied');
         }
 
         // Delete dependencies safely within a transaction

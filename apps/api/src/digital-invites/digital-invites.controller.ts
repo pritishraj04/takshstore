@@ -41,19 +41,24 @@ export class DigitalInvitesController {
         return this.digitalInvitesService.checkSlugAvailability(slug);
     }
 
-    @Get(':slugOrId')
-    @ApiOperation({ summary: 'Get a digital invite by its custom slug or database ID' })
+    @Get('draft/:id')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
+    @ApiOperation({ summary: 'Get a draft digital invite by its database ID for the Customizer editor' })
+    @ApiResponse({ status: 200, description: 'Return the digital invite.' })
+    @ApiResponse({ status: 404, description: 'Invite not found or unauthorized.' })
+    async getDraft(@Param('id') id: string, @Request() req) {
+        const userId = req.user?.sub || req.user?.userId;
+        const invite = await this.digitalInvitesService.getInviteById(id, userId);
+        return invite;
+    }
+
+    @Get(':slug')
+    @ApiOperation({ summary: 'Get a digital invite by its custom slug for public viewing' })
     @ApiResponse({ status: 200, description: 'Return the digital invite.' })
     @ApiResponse({ status: 404, description: 'Invite not found.' })
-    async getInvite(@Param('slugOrId') slugOrId: string) {
-        const isUuid = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(slugOrId);
-
-        let invite;
-        if (isUuid) {
-            invite = await this.digitalInvitesService.getInviteById(slugOrId);
-        } else {
-            invite = await this.digitalInvitesService.getInviteBySlug(slugOrId);
-        }
+    async getInvite(@Param('slug') slug: string) {
+        const invite = await this.digitalInvitesService.getInviteBySlug(slug);
 
         if (!invite) {
             throw new NotFoundException(`Digital invite was not found`);
@@ -62,8 +67,11 @@ export class DigitalInvitesController {
     }
 
     @Patch(':id')
+    @UseGuards(JwtAuthGuard)
+    @ApiBearerAuth()
     @ApiOperation({ summary: 'Update a digital invite JSON payload' })
-    async updateInvite(@Param('id') id: string, @Body() body: { inviteData: any, status?: any }) {
-        return this.digitalInvitesService.updateInvite(id, body.inviteData, body.status);
+    async updateInvite(@Param('id') id: string, @Body() body: { inviteData: any, status?: any }, @Request() req) {
+        const userId = req.user?.sub || req.user?.userId;
+        return this.digitalInvitesService.updateInvite(id, userId, body.inviteData, body.status);
     }
 }

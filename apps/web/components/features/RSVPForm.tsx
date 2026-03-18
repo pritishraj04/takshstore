@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Check } from 'lucide-react';
+import { createPortal } from 'react-dom';
 
 interface RSVPFormProps {
     targetNumber: string;
@@ -17,6 +18,8 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
     const [showModal, setShowModal] = useState(false);
     const [countdown, setCountdown] = useState(5);
     const [whatsappWebUrl, setWhatsappWebUrl] = useState('');
+    const [whatsappAppUrl, setWhatsappAppUrl] = useState('');
+    const [hasRedirected, setHasRedirected] = useState(false);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -45,11 +48,40 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
 
         const encodedMessage = encodeURIComponent(message);
         const cleanNumber = targetNumber.replace(/[^0-9]/g, '');
+        
         const webUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
+        const appUrl = `whatsapp://send?phone=${cleanNumber}&text=${encodedMessage}`;
 
         setWhatsappWebUrl(webUrl);
+        setWhatsappAppUrl(appUrl);
+        setHasRedirected(false);
         setShowModal(true);
         setCountdown(5);
+    };
+
+    const triggerRedirect = (isManual = false) => {
+        if (hasRedirected) return;
+        setHasRedirected(true);
+        setShowModal(false);
+
+        if (isManual) {
+            window.open(whatsappWebUrl, "_blank");
+            setIsSubmitting(false);
+            setName('');
+        } else {
+            // Try to open WhatsApp app directly via deep link
+            window.location.href = whatsappAppUrl;
+
+            // Fallback to web link if deep link fails
+            setTimeout(() => {
+                if (document.hasFocus()) {
+                    window.location.href = whatsappWebUrl;
+                }
+            }, 500);
+            
+            setIsSubmitting(false);
+            setName('');
+        }
     };
 
     useEffect(() => {
@@ -60,19 +92,15 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
                 setCountdown((prev) => prev - 1);
             }, 1000);
         } else if (showModal && countdown <= 0) {
-            // Auto redirect when countdown finishes
-            window.location.href = whatsappWebUrl;
+            triggerRedirect(false);
         }
 
         return () => clearInterval(interval);
-    }, [showModal, countdown, whatsappWebUrl]);
+    }, [showModal, countdown]);
 
     const handleManualRedirect = (e: React.MouseEvent) => {
         e.preventDefault();
-        window.open(whatsappWebUrl, '_blank');
-        setShowModal(false);
-        setIsSubmitting(false);
-        setName(''); // Reset form
+        triggerRedirect(true);
     };
 
     return (
@@ -115,40 +143,41 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
                 </button>
             </form>
 
-            {/* RSVP Success Modal */}
-            {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#1a0f0f]/80 backdrop-blur-sm animate-in fade-in duration-300">
-                    <div className="bg-[#fcfbf9] w-full max-w-md p-8 rounded-[18px] border border-[#d4af37]/30 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
+            {/* RSVP Success Modal - Rendered via Portal to escape GSAP contexts */}
+            {showModal && typeof document !== 'undefined' && createPortal(
+                <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-[#1a0f0f]/90 backdrop-blur-md animate-in fade-in duration-300 pointer-events-auto">
+                    <div className="w-full max-w-[420px] p-[2.5rem] rounded-[18px] bg-[rgba(255,248,235,0.98)] border border-[rgba(190,150,95,0.6)] shadow-[0_20px_40px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.4)] flex flex-col items-center text-center relative overflow-hidden text-[#3b2a1a]">
 
                         {/* Decorative background element */}
                         <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-transparent via-[#d4af37] to-transparent opacity-50"></div>
 
-                        <div className="w-16 h-16 rounded-full bg-[#d9fff2] flex items-center justify-center mb-6">
-                            <Check className="text-[#1a0f0f] w-8 h-8" strokeWidth={1.5} />
+                        <div className="w-16 h-16 rounded-full bg-[#d9fff2] flex items-center justify-center mb-6 shadow-[0_4px_10px_rgba(0,0,0,0.1)] border border-[rgba(190,150,95,0.2)]">
+                            <Check className="text-[#3b2a1a] w-8 h-8" strokeWidth={1.5} />
                         </div>
 
-                        <h2 className="font-heading text-3xl font-extralight text-[#1a0f0f] mb-4">Thank You!</h2>
+                        <h2 className="font-heading tracking-widest text-3xl font-extralight text-[#3b2a1a] mb-4 uppercase">Thank You!</h2>
 
-                        <p className="font-body text-[#1a0f0f]/80 mb-6 leading-relaxed">
-                            We have received your response. Redirecting you to WhatsApp to send the message in <span className="font-bold text-[#d4af37] text-lg mx-1">{countdown}</span> seconds...
+                        <p className="font-body text-[1.1rem] text-[#5a3a18] mb-8 leading-relaxed opacity-90">
+                            Redirecting you to WhatsApp in <span className="font-bold text-[#d4af37] text-lg mx-1">{countdown}</span> seconds...
                         </p>
 
                         <button
                             onClick={handleManualRedirect}
-                            className="w-full bg-[#25D366] text-white py-3 flex items-center justify-center gap-2 uppercase tracking-widest font-heading text-sm shadow-lg hover:bg-[#1ebd5a] transition-colors rounded-full"
+                            className="w-full bg-[#25D366] text-white py-[0.9rem] flex items-center justify-center gap-3 uppercase tracking-widest font-heading text-[0.9rem] shadow-[0_5px_15px_rgba(37,211,102,0.3)] hover:bg-[#1ebd5a] hover:-translate-y-[2px] hover:shadow-[0_8px_20px_rgba(37,211,102,0.4)] transition-all duration-300 rounded-full"
                         >
-                            <Image src="/assets/images/whatsapp.png" alt="WhatsApp" width={16} height={16} className="object-contain brightness-0 invert" />
-                            Open WhatsApp Now
+                            <Image src="/assets/images/whatsapp.png" alt="WhatsApp" width={18} height={18} className="object-contain brightness-0 invert" />
+                            Open WhatsApp
                         </button>
 
                         <button
                             onClick={() => { setShowModal(false); setIsSubmitting(false); }}
-                            className="mt-4 text-xs font-body uppercase tracking-wider text-[#1a0f0f]/50 hover:text-[#1a0f0f] underline-offset-4 hover:underline"
+                            className="mt-6 text-[0.8rem] font-body uppercase tracking-widest text-[#5a3a18]/60 hover:text-[#5a3a18] underline-offset-4 hover:underline transition-colors"
                         >
                             Cancel Redirect
                         </button>
                     </div>
-                </div>
+                </div>,
+                document.body
             )}
         </>
     );

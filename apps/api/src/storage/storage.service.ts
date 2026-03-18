@@ -11,17 +11,20 @@ export class StorageService {
     constructor() {
         this.bucketName = process.env.AWS_S3_BUCKET_NAME || 'taksh-store-assets';
 
+        const hasCredentials = process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY;
+        if (!hasCredentials) {
+            this.logger.warn('AWS credentials are not explicitly configured in the environment. Relying on fallback AWS SDK profiles or IAM roles.');
+        }
+
         this.s3Client = new S3Client({
             region: process.env.AWS_REGION || 'ap-south-1',
-            credentials: {
-                accessKeyId: process.env.AWS_ACCESS_KEY_ID || '',
-                secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
-            },
+            ...(hasCredentials && {
+                credentials: {
+                    accessKeyId: process.env.AWS_ACCESS_KEY_ID as string,
+                    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY as string,
+                }
+            }),
         });
-
-        if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-            this.logger.warn('AWS credentials are not properly configured in the environment.');
-        }
     }
 
     async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {

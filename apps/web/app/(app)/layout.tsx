@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { LogOut, Home } from "lucide-react";
 import { useEffect, useState } from "react";
+import { signOut } from "next-auth/react";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
     const [isScrolled, setIsScrolled] = useState(false);
@@ -39,7 +40,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                         <Home size={14} strokeWidth={1.5} className="shrink-0" />
                         <span className="hidden sm:inline-block">Storefront</span>
                     </Link>
-                    <button className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs uppercase tracking-widest text-secondary hover:text-black transition-colors px-2 sm:px-4 py-2 hover:bg-light/30 rounded-md shrink-0">
+                    <button onClick={() => signOut({ callbackUrl: '/' })} className="flex items-center gap-1 sm:gap-2 text-[10px] sm:text-xs uppercase tracking-widest text-secondary hover:text-black transition-colors px-2 sm:px-4 py-2 hover:bg-light/30 rounded-md shrink-0 cursor-pointer">
                         <LogOut size={14} strokeWidth={1.5} className="shrink-0" />
                         <span className="hidden sm:inline-block">Log Out</span>
                     </button>

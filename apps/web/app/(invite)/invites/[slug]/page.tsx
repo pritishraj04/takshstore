@@ -30,33 +30,39 @@ export async function generateMetadata(
     }
 
     const { inviteData } = invite;
-    const brideName = inviteData?.couple?.bride?.name || 'Bride';
-    const groomName = inviteData?.couple?.groom?.name || 'Groom';
+    const couple = inviteData?.couple;
+    const messages = inviteData?.messages;
 
-    const title = `${brideName} Weds ${groomName} | A Royal Wedding Invite`;
-    const description = `${inviteData?.messages?.inviteText || 'Join us in celebrating our wedding.'} Join us on ${inviteData?.wedding?.displayDate || 'our special day'}.`;
+    const brideName = couple?.bride?.name || 'Bride';
+    const groomName = couple?.groom?.name || 'Groom';
+
+    const name1 = couple?.primaryOrder === 'GROOM_FIRST' ? groomName : brideName;
+    const name2 = couple?.primaryOrder === 'GROOM_FIRST' ? brideName : groomName;
+
+    const title = `${name1} Weds ${name2} | The Royal Invitation`;
+    const description = messages?.socialShareText || messages?.inviteText || 'Join us in celebrating our wedding.';
 
     // Fallback to a default image if they haven't uploaded one yet
-    const ogImage = inviteData?.couple?.image || 'https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=1200';
+    const ogImage = couple?.image || 'https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=1200';
     const currentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invites/${resolvedParams.slug}`;
 
     return {
         title,
         description,
-        keywords: ['wedding invitation', groomName, brideName, 'royal wedding', 'wedding celebration'],
-        authors: [{ name: `${groomName} & ${brideName}` }],
+        keywords: ['wedding invitation', name1, name2, 'royal wedding', 'wedding celebration'],
+        authors: [{ name: `${name1} & ${name2}` }],
         openGraph: {
             type: 'website',
             url: currentUrl,
             title,
             description,
-            siteName: `${brideName} & ${groomName} Wedding`,
+            siteName: `${name1} & ${name2} Wedding`,
             images: [
                 {
                     url: ogImage,
                     width: 1200,
                     height: 630,
-                    alt: `${brideName} & ${groomName} Wedding Invitation`,
+                    alt: `${name1} & ${name2} Wedding Invitation`,
                 },
             ],
             locale: 'en_US',
@@ -92,7 +98,7 @@ export default async function LiveInvitePage({ params }: InvitePageProps) {
     }
 
     const { inviteData, orderItem } = invite;
-    const templateId = orderItem?.product?.templateId || 'riyawedsmoon';
+    const templateId = orderItem?.product?.templateId || 'the-royal-invitation';
     const ActiveTemplate = getTemplate(templateId);
 
     return <ActiveTemplate data={inviteData} isPreviewMode={false} />;
