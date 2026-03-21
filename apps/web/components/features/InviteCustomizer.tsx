@@ -36,7 +36,7 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
 
                 {/* Abstract Background Texture for ambiance */}
                 <div className="absolute inset-0 opacity-10 pointer-events-none">
-                    <Image src="https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&q=80&w=1200" alt="Texture" fill className="object-cover" />
+                    <Image src="/main-website-assets/images/placeholder.webp" alt="Texture" fill className="object-cover" />
                 </div>
 
                 {/* The Canvas Card */}

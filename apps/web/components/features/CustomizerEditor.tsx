@@ -6,7 +6,7 @@ import { useDigitalInvite, useUpdateInvite, useDeleteDraft } from "../../hooks/u
 import { useInviteStore } from "../../store/useInviteStore";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { useProducts } from "../../hooks/useProducts";
-import { Loader2, ShoppingBag, ExternalLink, User, CalendarHeart, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, CheckCircle, XCircle, Save, Globe, UploadCloud, PlayCircle, Music, Edit3, Type, Images, Key, FileText, Search, AlertTriangle, Trash2, Shield } from "lucide-react";
+import { Loader2, ShoppingBag, ExternalLink, User, CalendarHeart, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, CheckCircle, XCircle, Save, Globe, UploadCloud, PlayCircle, Music, Edit3, Type, Images, Key, FileText, Search, AlertTriangle, Trash2, Shield, ChevronDown } from "lucide-react";
 import { apiClient } from "../../lib/apiClient";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -167,7 +167,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                 title: digitalProduct.title,
                 price: digitalProduct.price,
                 type: 'DIGITAL',
-                imageUrl: digitalProduct.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800",
+                imageUrl: digitalProduct.imageUrl || "/main-website-assets/images/placeholder.webp",
                 inviteData: currentDraft,
                 draftId: inviteId
             } as any);
@@ -481,15 +481,18 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                 </div>
                                 <div className="flex flex-col gap-2 mb-2">
                                     <label className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>Primary Display Order</label>
-                                    <select
-                                        value={currentDraft?.couple?.primaryOrder || 'BRIDE_FIRST'}
-                                        onChange={(e) => updateCoupleField('primaryOrder', e.target.value)}
-                                        className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
-                                        style={{ fontFamily: 'var(--font-inter)' }}
-                                    >
-                                        <option value="BRIDE_FIRST">Bride's Name First</option>
-                                        <option value="GROOM_FIRST">Groom's Name First</option>
-                                    </select>
+                                    <div className="relative">
+                                        <select
+                                            value={currentDraft?.couple?.primaryOrder || 'BRIDE_FIRST'}
+                                            onChange={(e) => updateCoupleField('primaryOrder', e.target.value)}
+                                            className="w-full bg-transparent appearance-none border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors pr-6 cursor-pointer"
+                                            style={{ fontFamily: 'var(--font-inter)' }}
+                                        >
+                                            <option value="BRIDE_FIRST">Bride's Name First</option>
+                                            <option value="GROOM_FIRST">Groom's Name First</option>
+                                        </select>
+                                        <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#5A5A5A] pointer-events-none -mt-1" />
+                                    </div>
                                 </div>
                                 <input
                                     type="text" value={currentDraft?.couple?.bride?.name || ''} onChange={(e) => updatePersonName('bride', e.target.value)} placeholder="Bride Name"
@@ -524,13 +527,13 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                                 ) : (
                                                     <label className="cursor-pointer flex items-center text-xs uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors w-full justify-center" style={{ fontFamily: 'var(--font-inter)' }}>
                                                         <Upload size={14} strokeWidth={1} className="mr-2" />
-                                                        {currentDraft?.couple?.image && currentDraft.couple.image !== "" && currentDraft.couple.image !== "/assets/images/couple.png" && currentDraft.couple.image !== "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800" ? 'CHANGE COUPLE PHOTO' : 'UPLOAD COUPLE PHOTO'}
+                                                        {currentDraft?.couple?.image && currentDraft.couple.image !== "" && currentDraft.couple.image !== "/themes/royal-wedding/assets/images/couple.webp" && currentDraft.couple.image !== "/main-website-assets/images/placeholder.webp" ? 'CHANGE COUPLE PHOTO' : 'UPLOAD COUPLE PHOTO'}
                                                         <input type="file" accept="image/*" className="hidden" disabled={isUploading} onChange={(e) => handleFileUpload(e, 'image')} />
                                                         <div className="absolute inset-0 w-full h-full opactiy-0 cursor-pointer pointer-events-auto z-10"></div>
                                                     </label>
                                                 )}
                                             </div>
-                                            {currentDraft?.couple?.image && currentDraft.couple.image !== "" && currentDraft.couple.image !== "/assets/images/couple.png" && currentDraft.couple.image !== "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=800" && (
+                                            {currentDraft?.couple?.image && currentDraft.couple.image !== "" && currentDraft.couple.image !== "/themes/royal-wedding/assets/images/couple.webp" && currentDraft.couple.image !== "/main-website-assets/images/placeholder.webp" && (
                                                 <button onClick={() => handleRemoveFile('image')} disabled={isUploading} className="text-[10px] text-red-500 hover:text-red-700 tracking-widest uppercase transition-colors" style={{ fontFamily: 'var(--font-inter)' }}>
                                                     Remove Custom Photo
                                                 </button>
@@ -563,15 +566,18 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                 <div className="flex flex-col gap-4">
                                     <h4 className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>Bride's Family</h4>
                                     <div className="flex flex-col gap-2 mb-2">
-                                        <select
-                                            value={currentDraft?.couple?.bride?.parents?.order || 'MOTHER_FIRST'}
-                                            onChange={(e) => updateParentOrder('bride', e.target.value as any)}
-                                            className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
-                                            style={{ fontFamily: 'var(--font-inter)' }}
-                                        >
-                                            <option value="MOTHER_FIRST">Mother's Name First</option>
-                                            <option value="FATHER_FIRST">Father's Name First</option>
-                                        </select>
+                                        <div className="relative">
+                                            <select
+                                                value={currentDraft?.couple?.bride?.parents?.order || 'MOTHER_FIRST'}
+                                                onChange={(e) => updateParentOrder('bride', e.target.value as any)}
+                                                className="w-full bg-transparent appearance-none border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors pr-6 cursor-pointer"
+                                                style={{ fontFamily: 'var(--font-inter)' }}
+                                            >
+                                                <option value="MOTHER_FIRST">Mother's Name First</option>
+                                                <option value="FATHER_FIRST">Father's Name First</option>
+                                            </select>
+                                            <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#5A5A5A] pointer-events-none -mt-1" />
+                                        </div>
                                     </div>
                                     <input
                                         type="text" value={currentDraft?.couple?.bride?.parents?.mother || ''} onChange={(e) => updateParentInfo('bride', 'mother', e.target.value)} placeholder="Mother's Name"
@@ -588,15 +594,18 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                 <div className="flex flex-col gap-4">
                                     <h4 className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>Groom's Family</h4>
                                     <div className="flex flex-col gap-2 mb-2">
-                                        <select
-                                            value={currentDraft?.couple?.groom?.parents?.order || 'FATHER_FIRST'}
-                                            onChange={(e) => updateParentOrder('groom', e.target.value as any)}
-                                            className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
-                                            style={{ fontFamily: 'var(--font-inter)' }}
-                                        >
-                                            <option value="MOTHER_FIRST">Mother's Name First</option>
-                                            <option value="FATHER_FIRST">Father's Name First</option>
-                                        </select>
+                                        <div className="relative">
+                                            <select
+                                                value={currentDraft?.couple?.groom?.parents?.order || 'FATHER_FIRST'}
+                                                onChange={(e) => updateParentOrder('groom', e.target.value as any)}
+                                                className="w-full bg-transparent appearance-none border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors pr-6 cursor-pointer"
+                                                style={{ fontFamily: 'var(--font-inter)' }}
+                                            >
+                                                <option value="MOTHER_FIRST">Mother's Name First</option>
+                                                <option value="FATHER_FIRST">Father's Name First</option>
+                                            </select>
+                                            <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#5A5A5A] pointer-events-none -mt-1" />
+                                        </div>
                                     </div>
                                     <input
                                         type="text" value={currentDraft?.couple?.groom?.parents?.mother || ''} onChange={(e) => updateParentInfo('groom', 'mother', e.target.value)} placeholder="Mother's Name"

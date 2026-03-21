@@ -24,6 +24,7 @@ export default function SearchOverlay() {
     const [searchQuery, setSearchQuery] = useState("");
     const [debouncedQuery] = useDebounce(searchQuery, 400);
     const overlayRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const { data: searchResults, isLoading, isFetching } = useQuery<SearchResultItem[]>({
         queryKey: ["search", debouncedQuery],
@@ -76,7 +77,7 @@ export default function SearchOverlay() {
         if (isOpen && overlayRef.current) {
             gsap.fromTo(overlayRef.current,
                 { y: -30, autoAlpha: 0 },
-                { y: 0, autoAlpha: 1, duration: 0.6, ease: "power3.out" }
+                { y: 0, autoAlpha: 1, duration: 0.6, ease: "power3.out", onComplete: () => inputRef.current?.focus() }
             );
         }
     }, [isOpen]);
@@ -100,6 +101,7 @@ export default function SearchOverlay() {
             {/* The Input Area */}
             <div className="w-full max-w-[1600px] mx-auto mt-12 md:mt-24 shrink-0">
                 <input
+                    ref={inputRef}
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}

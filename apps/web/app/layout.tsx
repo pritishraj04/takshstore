@@ -28,8 +28,8 @@ export const metadata: Metadata = {
   title: "Taksh Store",
   description: "A luxurious visual experience",
   icons: {
-    icon: '/assets/images/favicon.png',
-    apple: '/assets/images/apple-touch-icon.png',
+    icon: '/themes/royal-wedding/assets/images/favicon.png',
+    apple: '/themes/royal-wedding/assets/images/apple-touch-icon.png',
   },
 };
 

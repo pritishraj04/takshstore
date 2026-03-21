@@ -39,19 +39,32 @@ export default function Header() {
 
     useEffect(() => {
         setMounted(true);
-        const handleScroll = () => setIsScrolled(window.scrollY > 20);
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
     }, []);
 
     const totalItems = items.reduce((total, item) => total + item.quantity, 0);
 
+    const isDarkBg = pathname === '/' || pathname === '/about';
+    const useLightText = isDarkBg && !isScrolled;
+
+    const textColorPrimary = useLightText ? "text-[#FBFBF9]" : "text-[#1A1A1A]";
+    const textColorSecondary = useLightText ? "text-[#FBFBF9]/90" : "text-[#5A5A5A]";
+    const bgColorPrimary = useLightText ? "bg-[#FBFBF9]" : "bg-[#1A1A1A]";
+    const groupHoverText = useLightText ? "group-hover:text-[#FBFBF9]" : "group-hover:text-[#1A1A1A]";
+
     useGSAP(() => {
         gsap.registerPlugin(ScrollTrigger);
 
+        // Calculate initial state explicitly in case of scroll restoration
+        if (window.scrollY > 20) {
+            setIsScrolled(true);
+            gsap.set(bgRef.current, { autoAlpha: 1 });
+            gsap.set(borderRef.current, { scaleX: 1 });
+        }
+
         ScrollTrigger.create({
-            start: "top -50",
+            start: "top -20",
             onEnter: () => {
+                setIsScrolled(true);
                 gsap.to(bgRef.current, {
                     autoAlpha: 1,
                     duration: 0.6,
@@ -64,6 +77,7 @@ export default function Header() {
                 });
             },
             onLeaveBack: () => {
+                setIsScrolled(false);
                 gsap.to(bgRef.current, {
                     autoAlpha: 0,
                     duration: 0.6,
@@ -99,19 +113,18 @@ export default function Header() {
             {/* Left Nav Area (Mobile Menu Button & Desktop Links) */}
             <div className="flex-1 flex items-center">
                 <button className="md:hidden flex items-center" aria-label="Menu" onClick={() => setIsMobileMenuOpen(true)}>
-                    <Menu size={24} strokeWidth={1.5} className="text-[#1A1A1A]" />
+                    <Menu size={24} strokeWidth={1.5} className={`transition-colors duration-500 ${textColorPrimary}`} />
                 </button>
-                <nav className="hidden md:flex gap-8 items-center text-xs uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>
+                <nav className={`hidden md:flex gap-8 items-center text-xs uppercase tracking-widest transition-colors duration-500 ${textColorSecondary}`} style={{ fontFamily: 'var(--font-inter)' }}>
                     {navLinks.map((link) => {
                         const isActive = pathname === link.path;
                         return (
                             <Link key={link.name} href={link.path} className="relative group overflow-hidden py-1">
-                                <span className={`transition-colors duration-500 ${isActive ? "text-[#1A1A1A]" : "group-hover:text-[#1A1A1A]"}`}>
+                                <span className={`transition-colors duration-500 ${isActive ? textColorPrimary : `${textColorSecondary} ${groupHoverText}`}`}>
                                     {link.name}
                                 </span>
                                 <span
-                                    className={`absolute left-0 bottom-0 w-full h-px bg-[#1A1A1A] transform origin-left transition-transform duration-500 ease-out ${isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"
-                                        }`}
+                                    className={`absolute left-0 bottom-0 w-full h-px ${bgColorPrimary} transform origin-left transition-transform duration-500 ease-out ${isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100"}`}
                                 />
                             </Link>
                         );
@@ -124,7 +137,7 @@ export default function Header() {
                 <Link href="/" className="flex items-center group overflow-hidden">
                     {/* The SVG Logo (Always Visible) */}
                     <div className="relative z-10 shrink-0">
-                        <img src="/logo-taksh.svg" alt="Taksh Store Icon" className="w-8 h-8 object-contain" />
+                        <img src="/logo-taksh.svg" alt="Taksh Store Icon" className="w-8 h-8 object-contain transition-all duration-500" />
                     </div>
 
                     {/* The Sliding Text (Expands at the top, collapses on scroll) */}
@@ -134,7 +147,7 @@ export default function Header() {
                             : 'max-w-[200px] opacity-100 translate-x-0 ml-3'
                             }`}
                     >
-                        <span className="font-serif text-lg md:text-xl tracking-widest uppercase whitespace-nowrap text-[#1A1A1A]" style={{ fontFamily: 'var(--font-playfair)' }}>
+                        <span className={`font-serif text-lg md:text-xl tracking-widest uppercase whitespace-nowrap transition-colors duration-500 ${textColorPrimary}`} style={{ fontFamily: 'var(--font-playfair)' }}>
                             Taksh Store
                         </span>
                     </div>
@@ -142,16 +155,16 @@ export default function Header() {
             </div>
 
             {/* Actions (Right) */}
-            <div className="flex-1 flex justify-end gap-3 md:gap-6 items-center text-xs uppercase tracking-widest text-[#1A1A1A]" style={{ fontFamily: 'var(--font-inter)' }}>
-                <button className="relative group py-1" aria-label="Search" onClick={() => setSearchOpen(true)}>
-                    <Search size={20} strokeWidth={1.5} className="text-[#1A1A1A]" />
+            <div className={`flex-1 flex justify-end gap-3 md:gap-6 items-center text-xs uppercase tracking-widest transition-colors duration-500 ${textColorPrimary}`} style={{ fontFamily: 'var(--font-inter)' }}>
+                <button className="relative group py-1 cursor-pointer" aria-label="Search" onClick={() => setSearchOpen(true)}>
+                    <Search size={20} strokeWidth={1.5} className={`transition-colors duration-500 ${textColorPrimary}`} />
                 </button>
                 <button
-                    className="relative group py-1"
+                    className="relative group py-1 cursor-pointer"
                     onClick={() => setIsOpen(true)}
                     aria-label="Bag"
                 >
-                    <ShoppingBag size={20} strokeWidth={1.5} className="text-[#1A1A1A]" />
+                    <ShoppingBag size={20} strokeWidth={1.5} className={`transition-colors duration-500 ${textColorPrimary}`} />
                     {mounted && totalItems > 0 && (
                         <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[9px] font-medium text-white">
                             {totalItems}
@@ -163,21 +176,21 @@ export default function Header() {
                     <div className="w-16 animate-pulse bg-gray-200 h-4 rounded"></div>
                 ) : !session ? (
                     <Link href="/login" className="flex items-center gap-2 relative group py-1 overflow-hidden">
-                        <User size={20} strokeWidth={1.5} className="md:hidden text-[#1A1A1A]" />
-                        <span className="hidden md:block transition-colors duration-500 group-hover:text-[#1A1A1A]">LOG IN</span>
-                        <span className="hidden md:block absolute left-0 bottom-0 w-full h-px bg-[#1A1A1A] transform origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100" />
+                        <User size={20} strokeWidth={1.5} className={`md:hidden transition-colors duration-500 ${textColorPrimary}`} />
+                        <span className={`hidden md:block transition-colors duration-500 ${textColorSecondary} ${groupHoverText}`}>LOG IN</span>
+                        <span className={`hidden md:block absolute left-0 bottom-0 w-full h-px ${bgColorPrimary} transform origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100`} />
                     </Link>
                 ) : (
                     <>
                         <Link href="/dashboard" className="flex items-center gap-2 relative group py-1 overflow-hidden">
-                            <User size={20} strokeWidth={1.5} className="md:hidden text-[#1A1A1A]" />
+                            <User size={20} strokeWidth={1.5} className={`md:hidden transition-colors duration-500 ${textColorPrimary}`} />
                             <LayoutDashboard size={20} strokeWidth={1.5} className="shrink-0" />
-                            <span className="hidden md:block transition-colors duration-500 group-hover:text-[#1A1A1A]">DASHBOARD</span>
-                            <span className="hidden md:block absolute left-0 bottom-0 w-full h-px bg-[#1A1A1A] transform origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100" />
+                            <span className={`hidden md:block transition-colors duration-500 ${textColorSecondary} ${groupHoverText}`}>DASHBOARD</span>
+                            <span className={`hidden md:block absolute left-0 bottom-0 w-full h-px ${bgColorPrimary} transform origin-left scale-x-0 transition-transform duration-500 ease-out group-hover:scale-x-100`} />
                         </Link>
                         <button
                             onClick={() => signOut({ callbackUrl: '/' })}
-                            className="hidden md:flex items-center gap-2 text-xs tracking-widest uppercase hover:text-gray-500 transition-colors py-1 cursor-pointer"
+                            className={`hidden md:flex items-center gap-2 text-xs tracking-widest uppercase py-1 cursor-pointer transition-colors duration-500 ${textColorSecondary} ${groupHoverText}`}
                         >
                             <LogOut size={14} strokeWidth={1.5} className="shrink-0" />
                             LOG OUT

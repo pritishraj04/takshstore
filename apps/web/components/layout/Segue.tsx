@@ -20,7 +20,7 @@ export default function Segue({
     title = "Begin Your Collection",
     buttonLabel = "VIEW ALL WORKS",
     linkHref = "/collection",
-    imageSrc = "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=90&w=2689&ixlib=rb-4.0.3"
+    imageSrc = "/main-website-assets/images/placeholder.webp"
 }: SegueProps) {
     const sectionRef = useRef<HTMLElement>(null);
     const bgImageRef = useRef<HTMLDivElement>(null);

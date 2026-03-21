@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
@@ -22,7 +21,10 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     const rightColRef = useRef<HTMLDivElement>(null);
     const { addItem, setIsOpen } = useCollectionStore();
     const [openAccordion, setOpenAccordion] = useState<string | null>(null);
+    const [activeImage, setActiveImage] = useState(product.imageUrl);
     const router = useRouter();
+
+    const allImages = Array.from(new Set([product.imageUrl, ...(product.images || [])]));
 
     // GSAP Animations
     useGSAP(() => {
@@ -90,37 +92,31 @@ export default function ProductDetail({ product }: ProductDetailProps) {
             <div className="w-full max-w-[1600px] mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16">
 
                 {/* Left Column (The Art - Spanning 7 columns) */}
-                <div ref={leftColRef} className="col-span-1 lg:col-span-7 flex flex-col gap-12">
-                    {/* Main View */}
-                    <div className="relative w-full aspect-4/5 overflow-hidden bg-[#F2F1EC] invisible">
-                        <Image
-                            src={product.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f"}
-                            alt={`${product.title} - Main View`}
-                            fill
-                            sizes="(max-width: 1024px) 100vw, 60vw"
-                            className="object-cover"
-                            priority
-                        />
-                    </div>
-                    {/* Detail/Texture View */}
-                    <div className="relative w-full aspect-4/5 overflow-hidden bg-[#F2F1EC] invisible">
-                        <Image
-                            src="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?auto=format&fit=crop&q=80&w=1200"
-                            alt={`${product.title} - Texture Detail`}
-                            fill
-                            sizes="(max-width: 1024px) 100vw, 60vw"
-                            className="object-cover"
-                        />
-                    </div>
-                    {/* In-Situ View */}
-                    <div className="relative w-full aspect-square overflow-hidden bg-[#F2F1EC] invisible">
-                        <Image
-                            src="https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&q=80&w=1200"
-                            alt={`${product.title} - In Perspective`}
-                            fill
-                            sizes="(max-width: 1024px) 100vw, 60vw"
-                            className="object-cover"
-                        />
+                <div ref={leftColRef} className="col-span-1 lg:col-span-7">
+                    <div className="flex flex-col-reverse lg:flex-row gap-4 invisible">
+                        {/* Thumbnail Column (Left on Desktop, Bottom on Mobile) */}
+                        {allImages.length > 1 && (
+                            <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible snap-x scrollbar-hide py-2 lg:py-0">
+                                {allImages.map((img, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => setActiveImage(img)}
+                                        className={`shrink-0 snap-center w-16 h-16 lg:w-20 lg:h-20 rounded-lg border-2 overflow-hidden transition-all ${activeImage === img ? 'border-[#1A1A1A] shadow-md' : 'border-transparent opacity-70 hover:opacity-100'}`}
+                                    >
+                                        <img src={img || '/assets/images/placeholder-product.jpg'} alt={`${product.title} view ${idx + 1}`} className="w-full h-full object-cover bg-[#F2F1EC]" />
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
+                        {/* Main Active Image Display */}
+                        <div className="relative w-full aspect-square lg:aspect-4/5 bg-[#F2F1EC] rounded-2xl overflow-hidden">
+                            <img
+                                src={activeImage || '/assets/images/placeholder-product.jpg'}
+                                alt={product.title}
+                                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                            />
+                        </div>
                     </div>
                 </div>
 

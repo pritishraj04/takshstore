@@ -8,7 +8,7 @@ function getArticleData(slug: string) {
         category: "DIGITAL CRAFT",
         title: slug.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
         author: "Taksh Studio",
-        heroImage: "https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=2000",
+        heroImage: "/main-website-assets/images/placeholder.webp",
         content: (
             <>
                 <p>

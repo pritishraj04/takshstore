@@ -48,7 +48,7 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
 
         const encodedMessage = encodeURIComponent(message);
         const cleanNumber = targetNumber.replace(/[^0-9]/g, '');
-        
+
         const webUrl = `https://wa.me/${cleanNumber}?text=${encodedMessage}`;
         const appUrl = `whatsapp://send?phone=${cleanNumber}&text=${encodedMessage}`;
 
@@ -78,7 +78,7 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
                     window.location.href = whatsappWebUrl;
                 }
             }, 500);
-            
+
             setIsSubmitting(false);
             setName('');
         }
@@ -138,7 +138,7 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
                     disabled={isSubmitting && showModal}
                     className="inline-flex items-center justify-center font-heading text-[0.8rem] md:text-[1rem] tracking-[0.18em] uppercase whitespace-nowrap px-[2.6rem] py-[0.9rem] rounded-full mt-8 bg-[rgba(255,235,190,0.92)] text-[#4b2e1f] border border-[rgba(180,140,90,0.6)] hover:bg-[#ffe6af] hover:shadow-[0_10px_28px_rgba(0,0,0,0.18)] hover:-translate-y-[2px] transition-all duration-400 disabled:opacity-50 mx-auto"
                 >
-                    <Image src="/assets/images/whatsapp.png" alt="WhatsApp" width={16} height={16} className="object-contain mr-4 inline-block w-4 h-4" />
+                    <Image src="/themes/royal-wedding/assets/images/whatsapp.png" alt="WhatsApp" width={16} height={16} className="object-contain mr-4 inline-block w-4 h-4" />
                     Confirm Presence
                 </button>
             </form>
@@ -165,7 +165,7 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
                             onClick={handleManualRedirect}
                             className="w-full bg-[#25D366] text-white py-[0.9rem] flex items-center justify-center gap-3 uppercase tracking-widest font-heading text-[0.9rem] shadow-[0_5px_15px_rgba(37,211,102,0.3)] hover:bg-[#1ebd5a] hover:-translate-y-[2px] hover:shadow-[0_8px_20px_rgba(37,211,102,0.4)] transition-all duration-300 rounded-full"
                         >
-                            <Image src="/assets/images/whatsapp.png" alt="WhatsApp" width={18} height={18} className="object-contain brightness-0 invert" />
+                            <Image src="/themes/royal-wedding/assets/images/whatsapp.png" alt="WhatsApp" width={18} height={18} className="object-contain brightness-0 invert" />
                             Open WhatsApp
                         </button>
 

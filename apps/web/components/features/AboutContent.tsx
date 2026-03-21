@@ -82,7 +82,7 @@ export default function AboutContent() {
             {/* Section 1: The Hero */}
             <section className="relative w-full min-h-screen flex flex-col items-center justify-center px-6 pt-32 pb-16 overflow-hidden">
                 <div className="absolute inset-0 z-0">
-                    <Image src="https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=2000" alt="Studio Background" fill className="object-cover opacity-20 mix-blend-luminosity" />
+                    <Image src="/main-website-assets/images/blue-background.webp" alt="Studio Background" fill className="object-cover opacity-20 mix-blend-luminosity" />
                 </div>
 
                 <div className="relative z-10 flex flex-col items-center w-full max-w-5xl text-center">
@@ -101,7 +101,7 @@ export default function AboutContent() {
                     {/* Left: Studio/Founder Image */}
                     <div className="md:col-span-5 relative w-full aspect-4/5 overflow-hidden">
                         <div className="parallax-image absolute -inset-y-[15%] inset-x-0 w-full h-[130%]">
-                            <Image src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&fit=crop&q=80&w=1200" alt="Founders Studio" fill className="object-cover" />
+                            <Image src="/main-website-assets/images/team.webp" alt="Founders Studio" fill className="object-cover" />
                         </div>
                     </div>
 

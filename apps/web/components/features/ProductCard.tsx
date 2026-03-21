@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Product } from "../../types";
@@ -36,12 +35,10 @@ export default function ProductCard({ product }: ProductCardProps) {
 
             {/* Image Wrapper (Link to Detail Page) */}
             <Link href={`/collection/${product.id}`} className="relative w-full aspect-4/5 overflow-hidden bg-[#F2F1EC] block">
-                <Image
-                    src={product.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f"}
+                <img
+                    src={product.imageUrl || '/assets/images/placeholder-product.jpg'}
                     alt={product.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover transform scale-100 transition-transform duration-700 ease-out group-hover:scale-105"
+                    className="absolute inset-0 w-full h-full object-cover transform scale-100 transition-transform duration-700 ease-out group-hover:scale-105"
                 />
             </Link>
 

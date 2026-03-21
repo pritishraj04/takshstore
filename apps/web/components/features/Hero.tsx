@@ -29,7 +29,7 @@ export default function Hero() {
             {/* Background Image */}
             <div className="absolute inset-0 -z-10 w-full h-full">
                 <Image
-                    src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&q=90&w=2940&ixlib=rb-4.0.3"
+                    src="/main-website-assets/images/banner.jpg"
                     alt="Ethereal Wedding Layout"
                     fill
                     priority
@@ -43,7 +43,7 @@ export default function Hero() {
             <div className="z-10 flex flex-col items-center text-center px-6">
                 {/* Headline with Staggered Lines */}
                 <h1
-                    className="text-[#FBFBF9] text-5xl md:text-8xl tracking-tight leading-none mb-6 relative overflow-hidden"
+                    className="text-[#FBFBF9] text-5xl md:text-8xl tracking-tight leading-none mb-6 relative"
                     style={{ fontFamily: 'var(--font-playfair)' }}
                 >
                     <div ref={title1Ref} className="invisible">The Art of</div>

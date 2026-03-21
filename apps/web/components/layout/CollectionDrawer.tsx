@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { ShoppingBag } from "lucide-react";
@@ -78,11 +77,10 @@ export default function CollectionDrawer() {
 
                                 {/* Thumbnail */}
                                 <div className="relative w-24 aspect-4/5 shrink-0 bg-[#F2F1EC]">
-                                    <Image
-                                        src={item.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f"}
+                                    <img
+                                        src={item.imageUrl || '/assets/images/placeholder-product.jpg'}
                                         alt={item.title}
-                                        fill
-                                        className="object-cover"
+                                        className="absolute inset-0 w-full h-full object-cover"
                                     />
                                 </div>
 

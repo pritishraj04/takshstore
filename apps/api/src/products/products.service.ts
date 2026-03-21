@@ -30,7 +30,7 @@ export class ProductsService {
                 title: 'Premium Canvas Print',
                 price: 199.99,
                 type: ProductType.PHYSICAL,
-                imageUrl: 'https://example.com/canvas.jpg',
+                imageUrl: '/main-website-assets/images/placeholder.webp',
             },
         });
 
@@ -39,7 +39,7 @@ export class ProductsService {
                 title: 'Customizer Base Invite',
                 price: 49.99,
                 type: ProductType.DIGITAL,
-                imageUrl: 'https://example.com/digital.jpg',
+                imageUrl: '/main-website-assets/images/placeholder.webp',
             },
         });
 

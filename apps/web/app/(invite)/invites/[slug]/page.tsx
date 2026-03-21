@@ -43,7 +43,7 @@ export async function generateMetadata(
     const description = messages?.socialShareText || messages?.inviteText || 'Join us in celebrating our wedding.';
 
     // Fallback to a default image if they haven't uploaded one yet
-    const ogImage = couple?.image || 'https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=80&w=1200';
+    const ogImage = couple?.image || '/main-website-assets/images/placeholder.webp';
     const currentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invites/${resolvedParams.slug}`;
 
     return {

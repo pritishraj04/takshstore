@@ -36,7 +36,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
                 className="bg-secondary relative hidden lg:flex items-center justify-center p-16 overflow-hidden"
             >
                 <Image
-                    src="https://images.unsplash.com/photo-1544441893-675973e31985?q=80&w=2670&auto=format&fit=crop" // Beautiful atelier/art inspired placeholder
+                    src="/main-website-assets/images/placeholder.webp" // Beautiful atelier/art inspired placeholder
                     alt="Taksh Store Atelier"
                     fill
                     className="object-cover"

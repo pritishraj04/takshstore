@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { useCheckout } from "../../hooks/useCheckout";
@@ -282,11 +281,10 @@ export default function CheckoutFlow() {
                     {items.map(item => (
                         <div key={item.id} className="flex gap-6 items-center">
                             <div className="relative w-16 aspect-4/5 shrink-0 bg-[#FBFBF9] border border-[#E5E4DF]">
-                                <Image
-                                    src={item.imageUrl || "https://images.unsplash.com/photo-1544078755-9a8492027b1f"}
+                                <img
+                                    src={item.imageUrl || '/assets/images/placeholder-product.jpg'}
                                     alt={item.title}
-                                    fill
-                                    className="object-cover"
+                                    className="absolute inset-0 w-full h-full object-cover"
                                 />
                             </div>
                             <div className="flex flex-col flex-1">

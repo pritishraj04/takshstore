@@ -45,7 +45,7 @@ export default function StoryBlock() {
                 trigger: sectionRef.current,
                 start: "top 65%",
             },
-            defaults: { ease: "power2.inOut", duration: 1.6 }
+            defaults: { ease: "power2.inOut", duration: 0.4 }
         });
 
         imgTl.fromTo(
@@ -128,7 +128,7 @@ export default function StoryBlock() {
                         style={{ clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0 100%)" }} // Initial state for JS-disabled fallback prevention
                     >
                         <Image
-                            src="https://images.unsplash.com/photo-1606800052052-a08af7148866?auto=format&fit=crop&q=90&w=2000&ixlib=rb-4.0.3"
+                            src="/main-website-assets/images/decor-items.webp"
                             alt="Artisan crafting a piece"
                             fill
                             sizes="(max-width: 768px) 100vw, 50vw"
@@ -143,7 +143,7 @@ export default function StoryBlock() {
                         style={{ clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0 100%)" }}
                     >
                         <Image
-                            src="https://images.unsplash.com/photo-1544078755-9a8492027b1f?auto=format&fit=crop&q=90&w=1500&ixlib=rb-4.0.3"
+                            src="/main-website-assets/images/decor.webp"
                             alt="Detail of the masterpiece"
                             fill
                             sizes="(max-width: 768px) 50vw, 25vw"

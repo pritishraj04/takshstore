@@ -132,7 +132,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 wrapper.classList.add("absolute");
 
                 const img = document.createElement("img");
-                img.src = "/assets/images/lantern.png";
+                img.src = "/themes/royal-wedding/assets/images/lantern.png";
                 img.classList.add("w-full", "block");
 
                 wrapper.appendChild(img);
@@ -239,14 +239,14 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap');
                 @font-face {
                     font-family: "Bellefair";
-                    src: url("/assets/fonts/Bellefair-Regular.ttf") format("truetype");
+                    src: url("/themes/royal-wedding/assets/fonts/Bellefair-Regular.ttf") format("truetype");
                     font-weight: normal;
                     font-style: normal;
                     font-display: swap;
                 }
                 @font-face {
                     font-family: "Lancelot";
-                    src: url("/assets/fonts/Lancelot-Regular.ttf") format("truetype");
+                    src: url("/themes/royal-wedding/assets/fonts/Lancelot-Regular.ttf") format("truetype");
                     font-weight: normal;
                     font-style: normal;
                     font-display: swap;
@@ -367,7 +367,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
 
             {/* 1. HERO SECTION */}
             <section id="hero" className="relative w-full overflow-hidden min-h-auto p-0 m-0 block">
-                <img src="/assets/images/bg-palace-full.webp" alt="Wedding Celebration" className="w-full h-auto min-h-[140svh] min-[380px]:min-h-[160svh] md:min-h-svh object-cover object-top block" />
+                <img src="/themes/royal-wedding/assets/images/bg-palace-full.webp" alt="Wedding Celebration" className="w-full h-auto min-h-[140svh] min-[380px]:min-h-[160svh] md:min-h-svh object-cover object-top block" />
 
                 <div className="absolute inset-0 z-10 flex flex-col justify-between items-center pointer-events-none">
                     {/* Lanterns placeholder */}
@@ -400,11 +400,11 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
 
             {/* 2. SEGUE SECTION */}
             <section id="invite" className="relative w-full min-h-auto p-0 m-0 block -mt-px h-220 md:h-260">
-                <img src="/assets/images/bg-palace-segue.png" alt="Invitation" className="w-full h-auto min-h-[140svh] min-[380px]:min-h-[160svh] md:min-h-svh object-cover object-top block" />
+                <img src="/themes/royal-wedding/assets/images/bg-palace-segue.png" alt="Invitation" className="w-full h-auto min-h-[140svh] min-[380px]:min-h-[160svh] md:min-h-svh object-cover object-top block" />
 
                 <div className="absolute inset-0 z-10 flex justify-center items-start pt-[5vh] pb-0 pointer-events-none">
                     <div className="px-12 max-w-[700px] text-center opacity-100 pointer-events-auto fade-in-section">
-                        <img src="/assets/images/lord.png" alt="Decoration" className="block w-full max-w-[120px] h-auto mx-auto mb-10" />
+                        <img src="/themes/royal-wedding/assets/images/lord.png" alt="Decoration" className="block w-full max-w-[120px] h-auto mx-auto mb-10" />
                         <p className="font-body text-base md:text-[1rem] text-[#f3ecba] mb-6">
                             {data?.messages?.inviteText || "With joyful hearts, we invite you to share in our happiness as we begin our new life together. Join us for an evening of love, laughter, and celebration."}
                         </p>
@@ -427,12 +427,12 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 </div>
 
                 <div className="absolute -bottom-20 left-0 w-full flex justify-center py-8 z-20">
-                    <img src="/assets/images/divider.png" alt="Section Divider" className="w-full h-auto block" />
+                    <img src="/themes/royal-wedding/assets/images/divider.png" alt="Section Divider" className="w-full h-auto block" />
                 </div>
             </section>
 
             {/* 3. PATHWAY SCENE */}
-            <div className="relative w-full bg-[url('/assets/images/bg-pathway-tile.png')] bg-repeat-y bg-top bg-size-[100%_auto] -mt-px pb-16">
+            <div className="relative w-full bg-[url('/themes/royal-wedding/assets/images/bg-pathway-tile.png')] bg-repeat-y bg-top bg-size-[100%_auto] -mt-px pb-16">
 
                 {/* Events Section */}
                 <section id="events" className="relative p-8 flex flex-col items-center justify-center min-h-auto">
@@ -460,7 +460,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 </section>
 
                 <div className="w-full flex justify-center py-8">
-                    <img src="/assets/images/divider.png" alt="Decorative Divider" className="w-full h-auto block" />
+                    <img src="/themes/royal-wedding/assets/images/divider.png" alt="Decorative Divider" className="w-full h-auto block" />
                 </div>
 
                 {/* Route Section */}
@@ -475,7 +475,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                                         <div key={i} className="flex flex-col items-center w-full md:w-auto relative">
                                             <div className="flex flex-col items-center fade-in-section w-full">
                                                 <div className="relative w-full max-w-[520px] mx-auto text-center mb-8">
-                                                    <img src={ev.mapImage ? `/${ev.mapImage}` : "/assets/images/map.png"} alt="Map" className="w-full h-auto rounded-[18px] bg-[#fff3db] p-[14px] border border-[rgba(190,150,95,0.6)] shadow-[0_18px_40px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.4)]" />
+                                                    <img src={ev.mapImage ? `/${ev.mapImage}` : "/themes/royal-wedding/assets/images/map.webp"} alt="Map" className="w-full h-auto rounded-[18px] bg-[#fff3db] p-[14px] border border-[rgba(190,150,95,0.6)] shadow-[0_18px_40px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.4)]" />
                                                 </div>
 
                                                 <h4 className="font-heading text-[1.5rem] md:text-[2rem] text-[#f4e4bc] mt-4 mb-2 text-center tracking-[0.15em] uppercase font-extralight">{ev.name || "Special Event"}</h4>
@@ -497,7 +497,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                         </section>
 
                         <div className="w-full flex justify-center py-8">
-                            <img src="/assets/images/divider.png" alt="Decorative Divider" className="w-full h-auto block" />
+                            <img src="/themes/royal-wedding/assets/images/divider.png" alt="Decorative Divider" className="w-full h-auto block" />
                         </div>
                     </>
                 )}
@@ -509,7 +509,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                         <div className="flex justify-center my-8 md:my-12 mx-0 relative z-10 px-4">
                             <div className="relative p-[14px] rounded-[22px] bg-linear-to-br from-[rgba(215,180,120,0.9)] to-[rgba(150,110,60,0.9)] shadow-[0_20px_40px_rgba(0,0,0,0.35),inset_0_0_0_1px_rgba(255,255,255,0.3)] 
                                             after:content-[''] after:absolute after:-inset-[25px] after:bg-[radial-gradient(circle,rgba(215,180,120,0.15),transparent_70%)] after:-z-10 w-full max-w-[320px] mx-auto">
-                                <img src={data?.couple?.image || "/assets/images/couple.png"} alt="Couple" className="block w-full h-auto rounded-[18px] border border-[rgba(255,255,255,0.45)] bg-[#fff8ec]" />
+                                <img src={data?.couple?.image || "/themes/royal-wedding/assets/images/couple.webp"} alt="Couple" className="block w-full h-auto rounded-[18px] border border-[rgba(255,255,255,0.45)] bg-[#fff8ec]" />
                             </div>
                         </div>
                         <p className="mt-[1.6rem] font-body italic text-[1.2rem] tracking-[0.08em] text-[rgba(243,230,200,0.75)] mb-2 text-center">{data?.messages?.coupleQuote || "Two souls, one heart."}</p>
@@ -517,7 +517,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 </section>
 
                 <div className="w-full flex justify-center py-8">
-                    <img src="/assets/images/divider.png" alt="Decorative Divider" className="w-full h-auto block" />
+                    <img src="/themes/royal-wedding/assets/images/divider.png" alt="Decorative Divider" className="w-full h-auto block" />
                 </div>
 
                 {/* RSVP Placeholder Grid (Phase 4) */}
@@ -538,7 +538,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
             <footer id="footer" className="relative flex flex-col w-full bg-none min-h-auto items-center">
                 <div className="w-full max-w-[980px] mx-auto relative bg-[#1a0f0f]">
                     <div className="relative w-full bg-[#1a0f0f] min-h-[960px]">
-                        <img src="/assets/images/footer.png" alt="Royal Footer" className="absolute top-0 left-0 w-full h-full object-cover object-bottom z-0 opacity-100" />
+                        <img src="/themes/royal-wedding/assets/images/footer.png" alt="Royal Footer" className="absolute top-0 left-0 w-full h-full object-cover object-bottom z-0 opacity-100" />
 
                         <div className="relative w-full min-h-full flex flex-col justify-center items-center z-10 px-8 pt-24 pb-16">
 
@@ -576,7 +576,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                 </div>
             </footer>
 
-            <AudioPlayer audioSrc={data?.music?.url || '/assets/music/music.mp3'} autoPlay={data?.music?.autoplay ?? true} isPreviewMode={isPreviewMode} />
+            <AudioPlayer audioSrc={data?.music?.url || '/themes/royal-wedding/assets/music/music.mp3'} autoPlay={data?.music?.autoplay ?? true} isPreviewMode={isPreviewMode} />
         </div>
     );
 

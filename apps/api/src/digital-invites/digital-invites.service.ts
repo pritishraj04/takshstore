@@ -222,7 +222,7 @@ export class DigitalInvitesService {
                         parents: { mother: "", father: "", order: 'FATHER_FIRST' }
                     },
                     hashtag: "",
-                    image: ""
+                    image: "/main-website-assets/images/placeholder.webp"
                 },
                 wedding: {
                     displayDate: ""

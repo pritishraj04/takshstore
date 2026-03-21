@@ -138,12 +138,15 @@ export default function ContactInquiry() {
                                     key={type}
                                     type="button"
                                     onClick={() => handleInquiryChange(type as InquiryType)}
-                                    className={`text-[10px] uppercase tracking-widest pb-2 border-b transition-colors duration-300 ${inquiryType === type
-                                            ? 'border-[#1A1A1A] text-[#1A1A1A]'
-                                            : 'border-transparent text-[#8D8A80] hover:text-[#1A1A1A]'
+                                    className={`flex items-center gap-3 text-[10px] uppercase tracking-widest transition-colors duration-300 ${inquiryType === type
+                                            ? 'text-[#1A1A1A]'
+                                            : 'text-[#8D8A80] hover:text-[#1A1A1A]'
                                         }`}
                                     style={{ fontFamily: 'var(--font-inter)' }}
                                 >
+                                    <div className={`w-4 h-4 rounded-full border flex items-center justify-center transition-colors ${inquiryType === type ? 'border-[#1A1A1A]' : 'border-[#8D8A80]'}`}>
+                                        {inquiryType === type && <div className="w-2 h-2 rounded-full bg-[#1A1A1A]" />}
+                                    </div>
                                     {type}
                                 </button>
                             ))}
