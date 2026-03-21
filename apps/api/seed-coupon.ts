@@ -8,13 +8,14 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 const adapter = new PrismaPg(pool);
 const prisma = new PrismaClient({ adapter });
 
-async function seedCoupon() {
+  async function seedCoupon() {
   await prisma.coupon.upsert({
     where: { code: 'FOREVER20' },
     update: {},
     create: {
       code: 'FOREVER20',
-      discountPercentage: 20,
+      discountType: 'PERCENTAGE',
+      discountValue: 20,
       isActive: true,
     },
   });

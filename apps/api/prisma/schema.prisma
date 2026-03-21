@@ -98,6 +98,7 @@ model Order {
   shippingAddress Json?
   developerNotes  String?
   razorpayOrderId String?     @unique
+  isManual        Boolean     @default(false)
   items           OrderItem[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt

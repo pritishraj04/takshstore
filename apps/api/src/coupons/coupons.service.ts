@@ -18,12 +18,21 @@ export class CouponsService {
       throw new BadRequestException('This coupon is no longer active');
     }
 
-    if (coupon.expiresAt && new Date() > coupon.expiresAt) {
+    if (coupon.validUntil && new Date() > coupon.validUntil) {
       throw new BadRequestException('This coupon has expired');
     }
 
+    if (coupon.validFrom && new Date() < coupon.validFrom) {
+      throw new BadRequestException('This coupon is not yet valid');
+    }
+
+    if (coupon.maxUses && coupon.currentUses >= coupon.maxUses) {
+      throw new BadRequestException('This coupon has reached its usage limit');
+    }
+
     return {
-      discountPercentage: coupon.discountPercentage,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
       code: coupon.code,
     };
   }

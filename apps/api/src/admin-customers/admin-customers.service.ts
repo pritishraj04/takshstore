@@ -1,6 +1,7 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserAccountStatus } from '@prisma/client';
+import { CreateCustomerDto } from './dto/create-customer.dto';
 
 @Injectable()
 export class AdminCustomersService {
@@ -82,6 +83,33 @@ export class AdminCustomersService {
           email: true,
           status: true
       }
+    });
+  }
+
+  async createCustomer(dto: CreateCustomerDto) {
+    // 1. Check if a customer with this email already exists
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('A customer with this email already exists.');
+    }
+
+    // 2. Create the user
+    // Generate a placeholder password to satisfy Prisma schema (since User.password is required)
+    // The user can reset it via "Forgot Password" later
+    const crypto = require('crypto');
+    const placeholderPassword = crypto.randomBytes(16).toString('hex');
+    const hashed = require('bcrypt').hashSync(placeholderPassword, 10);
+
+    return this.prisma.user.create({
+      data: {
+        name: dto.name,
+        email: dto.email,
+        phone: dto.phone,
+        password: hashed
+      },
     });
   }
 }

@@ -1,24 +1,26 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AdminStatus, PermissionLevel } from '@prisma/client';
+import { InviteSubAdminDto, AdminLoginDto, SetupPasswordDto } from './dto/admin-auth.dto';
+import { Response } from 'express';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AdminAuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    private readonly mailService: MailService,
   ) {}
 
   async inviteSubAdmin(email: string, name: string, permissions: Record<string, PermissionLevel>) {
-    // Check if user exists
     const existing = await this.prisma.adminUser.findUnique({ where: { email } });
     if (existing) {
-      throw new BadRequestException('Admin user with this email already exists.');
+      throw new ForbiddenException('Admin user with this email already exists.');
     }
 
-    // Create user and permissions
     const user = await this.prisma.adminUser.create({
       data: {
         email,
@@ -26,14 +28,14 @@ export class AdminAuthService {
         status: AdminStatus.PENDING,
         permissions: {
           create: {
-            orders: permissions.orders || PermissionLevel.NONE,
-            customers: permissions.customers || PermissionLevel.NONE,
-            categories: permissions.categories || PermissionLevel.NONE,
-            products: permissions.products || PermissionLevel.NONE,
-            subAdmins: permissions.subAdmins || PermissionLevel.NONE,
-            articles: permissions.articles || PermissionLevel.NONE,
-            cms: permissions.cms || PermissionLevel.NONE,
-            coupons: permissions.coupons || PermissionLevel.NONE,
+            orders: permissions?.orders || PermissionLevel.NONE,
+            customers: permissions?.customers || PermissionLevel.NONE,
+            categories: permissions?.categories || PermissionLevel.NONE,
+            products: permissions?.products || PermissionLevel.NONE,
+            subAdmins: permissions?.subAdmins || PermissionLevel.NONE,
+            articles: permissions?.articles || PermissionLevel.NONE,
+            cms: permissions?.cms || PermissionLevel.NONE,
+            coupons: permissions?.coupons || PermissionLevel.NONE,
           },
         },
       },
@@ -45,10 +47,10 @@ export class AdminAuthService {
       { expiresIn: '24h', secret: process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod' }
     );
 
-    const inviteLink = `https://admin.takshstore.com/onboarding?token=${token}`;
-    console.log(`[MOCK EMAIL] Invite link for ${email}: ${inviteLink}`);
+    // Trigger explicit SMTP
+    await this.mailService.sendAdminInvite(email, token);
 
-    return { message: 'Invitation sent', token }; // Returning token natively simplifies dev testing
+    return { message: 'Invitation deployed', token };
   }
 
   async setupPassword(token: string, newPassword: string) {

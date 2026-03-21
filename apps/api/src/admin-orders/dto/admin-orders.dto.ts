@@ -1,5 +1,5 @@
-import { IsDateString, IsEnum, IsOptional, IsString } from 'class-validator';
-import { OrderStatus } from '@prisma/client';
+import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsBoolean, IsObject } from 'class-validator';
+import { OrderStatus, ProductType } from '@prisma/client';
 
 export class ForceUpdateInviteDto {
   @IsString()
@@ -18,4 +18,28 @@ export class ForceUpdateInviteDto {
 export class UpdateOrderStatusDto {
   @IsEnum(OrderStatus)
   status: OrderStatus;
+}
+
+export class CreateManualOrderDto {
+  @IsString()
+  userId: string;
+  
+  @IsString()
+  productId: string;
+
+  @IsEnum(ProductType)
+  orderType: ProductType;
+
+  @IsNumber()
+  customPrice: number;
+
+  @IsEnum(OrderStatus)
+  paymentStatus: OrderStatus;
+
+  @IsBoolean()
+  sendEmailReceipt: boolean;
+
+  @IsOptional()
+  @IsObject()
+  shippingAddress?: any;
 }

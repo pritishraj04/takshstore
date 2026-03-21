@@ -2,10 +2,62 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
 import { ForceUpdateInviteDto, UpdateOrderStatusDto } from './dto/admin-orders.dto';
+import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class AdminOrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+      private readonly prisma: PrismaService,
+      private readonly paymentsService: PaymentsService
+  ) {}
+
+  async createManualOrder(dto: import('./dto/admin-orders.dto').CreateManualOrderDto) {
+    const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+    if (!user) throw new NotFoundException('Customer not found.');
+
+    const product = await this.prisma.product.findUnique({ where: { id: dto.productId } });
+    if (!product) throw new NotFoundException('Product not found.');
+
+    // 1. Create the Order
+    const order = await this.prisma.order.create({
+      data: {
+        userId: user.id,
+        status: dto.paymentStatus,
+        totalAmount: dto.customPrice,
+        shippingAddress: dto.shippingAddress || null,
+        isManual: true,
+        items: {
+          create: [{
+            productId: product.id,
+            quantity: 1,
+            priceAtPurchase: dto.customPrice,
+          }]
+        }
+      },
+      include: { items: true }
+    });
+
+    const orderItem = order.items[0];
+
+    // 2. Attach DigitalInvite if it's DIGITAL
+    if (dto.orderType === 'DIGITAL') {
+      await this.prisma.digitalInvite.create({
+        data: {
+          orderItemId: orderItem.id,
+          inviteData: {},
+          status: 'DRAFT'
+        }
+      });
+    }
+
+    // 3. Trigger receipt generation logic if PAID and requested
+    if (dto.paymentStatus === 'PAID' && dto.sendEmailReceipt) {
+      // The payments API requires order ID execution explicitly mapping items naturally
+      await this.paymentsService.processOrderSuccess(order.id);
+    }
+
+    return order;
+  }
 
   async findAllOrders(search: string = '', status: string = '', page: number = 1, limit: number = 50) {
     const skip = (page - 1) * limit;
