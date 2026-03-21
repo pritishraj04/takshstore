@@ -30,9 +30,9 @@ export class PaymentsService {
             merchantTransactionId: orderId.replace(/-/g, ''),
             merchantUserId: userId.replace(/-/g, ''),
             amount: Math.round(amount * 100), // in paise
-            redirectUrl: 'http://localhost:3000/api/payment/callback',
+            redirectUrl: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/api/payment/callback`,
             redirectMode: 'POST',
-            callbackUrl: 'http://localhost:4000/api/payments/webhook', // Server-to-server webhook
+            callbackUrl: `${process.env.API_URL || 'http://localhost:4000/api'}/payments/webhook`, // Server-to-server webhook
             mobileNumber: mobileNumber || '9097785207', // PhonePe often requires a valid 10-digit number
             paymentInstrument: {
                 type: 'PAY_PAGE',

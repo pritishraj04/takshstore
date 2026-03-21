@@ -1,9 +1,10 @@
 import axios from 'axios';
 import { getSession, signOut } from 'next-auth/react';
 import { toast } from 'sonner';
+import { API_URL } from '@/config/env';
 
 export const apiClient = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api',
+    baseURL: API_URL,
 });
 
 apiClient.interceptors.request.use(

@@ -8,6 +8,7 @@ import { User, Mail, Key } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import axios from "axios";
+import { API_URL } from "@/config/env";
 
 export default function RegisterForm() {
     const router = useRouter();
@@ -33,7 +34,7 @@ export default function RegisterForm() {
 
         try {
             await axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:4000/api"}/auth/register`,
+                `${API_URL}/auth/register`,
                 { name, email, password }
             );
 

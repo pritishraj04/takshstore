@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { API_URL } from '@/config/env';
 
 export async function POST(req: Request) {
     try {
@@ -13,7 +14,7 @@ export async function POST(req: Request) {
         if (code) {
             try {
                 console.log(`Attempting to sync PhonePe Status [${code}] for TxID: ${transactionId} in NestJS...`);
-                const nestResponse = await fetch('http://localhost:4000/api/payments/verify-local', {
+                const nestResponse = await fetch(`${API_URL}/payments/verify-local`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

@@ -9,9 +9,10 @@ import { PaymentsModule } from './payments/payments.module';
 import { DigitalInvitesModule } from './digital-invites/digital-invites.module';
 import { StorageModule } from './storage/storage.module';
 import { CouponsModule } from './coupons/coupons.module';
+import { ArticlesModule } from './articles/articles.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, DigitalInvitesModule, StorageModule, CouponsModule],
+  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule],
   controllers: [AppController],
   providers: [AppService],
 })

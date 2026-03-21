@@ -8,7 +8,6 @@ import gsap from "gsap";
 import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/apiClient";
 import { useDebounce } from "use-debounce";
-import { MOCK_ARTICLES } from "@/components/features/InsightsList";
 
 // Generic Search Result Type
 type SearchResultItem = {
@@ -42,11 +41,12 @@ export default function SearchOverlay() {
                 categoryLabel: p.type === 'DIGITAL' ? 'Digital Suite' : 'Physical Collection'
             }));
 
-            // 2. Filter Static Journal Entries
+            // 2. Filter Dynamic Journal Entries
+            const { data: journalData } = await apiClient.get('/articles');
             const queryLower = debouncedQuery.toLowerCase();
-            const journalResults: SearchResultItem[] = MOCK_ARTICLES
-                .filter(a => a.title.toLowerCase().includes(queryLower) || a.category.toLowerCase().includes(queryLower))
-                .map(a => ({
+            const journalResults: SearchResultItem[] = (journalData || [])
+                .filter((a: any) => a.title.toLowerCase().includes(queryLower) || a.category.toLowerCase().includes(queryLower))
+                .map((a: any) => ({
                     id: a.id,
                     title: a.title,
                     type: 'JOURNAL',

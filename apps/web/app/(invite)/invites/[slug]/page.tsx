@@ -1,6 +1,7 @@
 import { Metadata, ResolvingMetadata } from 'next';
 import { notFound } from 'next/navigation';
 import { getTemplate } from '../../../../components/templates/TemplateRegistry';
+import { API_URL } from '@/config/env';
 
 interface InvitePageProps {
     params: Promise<{ slug: string }>;
@@ -8,7 +9,7 @@ interface InvitePageProps {
 
 async function getInviteData(slug: string) {
     try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api'}/digital-invites/${slug}`);
+        const response = await fetch(`${API_URL}/digital-invites/${slug}`);
         if (!response.ok) return null;
         return await response.json();
     } catch (error) {

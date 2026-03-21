@@ -145,8 +145,8 @@ export function RSVPForm({ targetNumber, brideName, groomName }: RSVPFormProps) 
 
             {/* RSVP Success Modal - Rendered via Portal to escape GSAP contexts */}
             {showModal && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-[#1a0f0f]/90 backdrop-blur-md animate-in fade-in duration-300 pointer-events-auto">
-                    <div className="w-full max-w-[420px] p-[2.5rem] rounded-[18px] bg-[rgba(255,248,235,0.98)] border border-[rgba(190,150,95,0.6)] shadow-[0_20px_40px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.4)] flex flex-col items-center text-center relative overflow-hidden text-[#3b2a1a]">
+                <div className="fixed inset-0 z-99999 flex items-center justify-center p-4 bg-[#1a0f0f]/90 backdrop-blur-md animate-in fade-in duration-300 pointer-events-auto">
+                    <div className="w-full max-w-[420px] p-10 rounded-[18px] bg-[rgba(255,248,235,0.98)] border border-[rgba(190,150,95,0.6)] shadow-[0_20px_40px_rgba(0,0,0,0.4),inset_0_0_0_1px_rgba(255,255,255,0.4)] flex flex-col items-center text-center relative overflow-hidden text-[#3b2a1a]">
 
                         {/* Decorative background element */}
                         <div className="absolute top-0 inset-x-0 h-1 bg-linear-to-r from-transparent via-[#d4af37] to-transparent opacity-50"></div>
