@@ -27,40 +27,80 @@ enum InviteStatus {
   PUBLISHED
 }
 
+enum AdminStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum PermissionLevel {
+  NONE
+  READ
+  WRITE
+}
+
+enum UserAccountStatus {
+  ACTIVE
+  SUSPENDED
+  BANNED
+}
+
 model User {
-  id        String   @id @default(uuid())
-  email     String   @unique
+  id        String            @id @default(uuid())
+  email     String            @unique
   password  String
   name      String?
+  phone     String?
+  status    UserAccountStatus @default(ACTIVE)
   orders    Order[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
 }
 
 model Product {
-  id         String       @id @default(uuid())
-  title      String
-  price      Float
-  type       ProductType
-  imageUrl   String?
-  images     String[]
-  orderItems OrderItem[]
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
+  id              String        @id @default(uuid())
+  title           String
+  description     String?       @db.Text
+  price           Float
+  discountedPrice Float?
+  type            ProductType
+  status          ProductStatus @default(ACTIVE)
+  imageUrl        String?
+  images          String[]
+  
+  // Physical Triggers
+  stockCount      Int?
+  weight          Float?
+  width           Float?
+  height          Float?
+  
+  // Digital Triggers
+  templateSlug    String?
+  defaultAudioUrl String?
+  isCustomizable  Boolean       @default(true)
+
+  orderItems      OrderItem[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
 
 model Order {
-  id              String       @id @default(uuid())
+  id              String      @id @default(uuid())
   userId          String
-  user            User         @relation(fields: [userId], references: [id])
-  status          OrderStatus  @default(PENDING)
+  user            User        @relation(fields: [userId], references: [id])
+  status          OrderStatus @default(PENDING)
   totalAmount     Float
   shippingAddress Json?
   developerNotes  String?
-  razorpayOrderId String?      @unique
+  razorpayOrderId String?     @unique
   items           OrderItem[]
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
 }
 
 model OrderItem {
@@ -75,11 +115,11 @@ model OrderItem {
 }
 
 model DigitalInvite {
-  id          String       @id @default(uuid())
-  orderItemId String       @unique
-  orderItem   OrderItem    @relation(fields: [orderItemId], references: [id])
-  inviteData  Json
-  websiteUrl  String?
+  id                String       @id @default(uuid())
+  orderItemId       String       @unique
+  orderItem         OrderItem    @relation(fields: [orderItemId], references: [id])
+  inviteData        Json
+  websiteUrl        String?
   slug              String?      @unique
   status            InviteStatus @default(DRAFT)
   originalEventDate DateTime?
@@ -89,14 +129,27 @@ model DigitalInvite {
   updatedAt         DateTime     @updatedAt
 }
 
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
 model Coupon {
-  id                 String    @id @default(uuid())
-  code               String    @unique
-  discountPercentage Int
-  isActive           Boolean   @default(true)
-  expiresAt          DateTime?
-  createdAt          DateTime  @default(now())
-  updatedAt          DateTime  @updatedAt
+  id            String       @id @default(uuid())
+  code          String       @unique
+  description   String?
+  discountType  DiscountType @default(PERCENTAGE)
+  discountValue Float        @default(0)
+  
+  isActive      Boolean      @default(true)
+  maxUses       Int?
+  currentUses   Int          @default(0)
+  
+  validFrom     DateTime     @default(now())
+  validUntil    DateTime?
+
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 }
 
 model Article {
@@ -111,4 +164,68 @@ model Article {
   metaDescription String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+}
+
+model AdminUser {
+  id       String      @id @default(uuid())
+  email    String      @unique
+  password String?
+  name     String
+  status   AdminStatus @default(PENDING)
+  isSuper  Boolean     @default(false)
+
+  permissions AdminPermissions?
+  auditLogs   AdminAuditLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model AdminPermissions {
+  id      String    @id @default(uuid())
+  adminId String    @unique
+  admin   AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+
+  orders     PermissionLevel @default(NONE)
+  customers  PermissionLevel @default(NONE)
+  categories PermissionLevel @default(NONE)
+  products   PermissionLevel @default(NONE)
+  subAdmins  PermissionLevel @default(NONE)
+  articles   PermissionLevel @default(NONE)
+  cms        PermissionLevel @default(NONE)
+  coupons    PermissionLevel @default(NONE)
+}
+
+model AdminAuditLog {
+  id      String     @id @default(uuid())
+  adminId String?
+  admin   AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+
+  action    String
+  entity    String
+  entityId  String
+  details   Json?
+  ipAddress String?
+
+  createdAt DateTime @default(now())
+}
+
+model CmsDocument {
+  id            String   @id @default(uuid())
+  slug          String   @unique
+  title         String
+  content       String   @db.Text
+  lastUpdatedBy String? // AdminUser ID reference
+  updatedAt     DateTime @updatedAt
+  createdAt     DateTime @default(now())
+}
+
+model Faq {
+  id           String   @id @default(uuid())
+  question     String
+  answer       String   @db.Text
+  displayOrder Int      @default(0)
+  isActive     Boolean  @default(true)
+  updatedAt    DateTime @updatedAt
+  createdAt    DateTime @default(now())
 }

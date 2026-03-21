@@ -1,35 +1,38 @@
-export default function TermsPage() {
+export const revalidate = 3600;
+
+async function getDocument(slug: string) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    try {
+        const res = await fetch(`${API_URL}/cms/documents/${slug}`, { next: { revalidate: 3600 } });
+        if (!res.ok) return null;
+        return res.json();
+    } catch {
+        return null;
+    }
+}
+
+export default async function TermsPage() {
+    const doc = await getDocument('terms-of-service');
+
+    if (!doc) {
+        return (
+            <main className="w-full min-h-screen bg-[#FBFBF9] text-[#1A1A1A] pt-40 pb-32 px-6 md:px-16 text-center flex flex-col items-center justify-center">
+                <h1 className="text-4xl" style={{ fontFamily: 'var(--font-playfair)' }}>Terms of Service</h1>
+                <p className="mt-8 text-gray-400">Content currently offline. Standby.</p>
+            </main>
+        );
+    }
+
     return (
         <main className="w-full min-h-screen bg-[#FBFBF9] text-[#1A1A1A] pt-40 pb-32 px-6 md:px-16 selection:bg-[#1A1A1A] selection:text-[#FBFBF9]">
-
             <h1 className="text-4xl md:text-6xl text-center mb-16" style={{ fontFamily: 'var(--font-playfair)' }}>
-                Terms & Conditions
+                {doc.title}
             </h1>
 
-            <article className="max-w-3xl mx-auto">
-
-                <h2 className="text-xl mt-12 mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>1. Intellectual Property & Artistry</h2>
-                <p className="text-sm leading-loose text-[#5A5A5A] mb-8" style={{ fontFamily: 'var(--font-inter)' }}>
-                    All artwork, designs, code bases, and digital structures presented on the Taksh Store platform remain the exclusive intellectual property of Taksh Studio and our parent entity, Polardot. When you purchase a physical canvas, you acquire the physical piece but not reproduction rights. When purchasing a digital layout, you acquire a limited license strictly for personal event use.
-                </p>
-
-                <h2 className="text-xl mt-12 mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>2. Digital Blueprint Revisions</h2>
-                <p className="text-sm leading-loose text-[#5A5A5A] mb-8" style={{ fontFamily: 'var(--font-inter)' }}>
-                    Upon utilizing our online Customizer to secure a digital product, you acknowledge that the input acts as the foundational blueprint. Following the delivery of your initial staging link, you are entitled to two (2) comprehensive rounds of revisions. Any architectural changes beyond this designated scope may incur supplemental bespoke layout fees.
-                </p>
-
-                <h2 className="text-xl mt-12 mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>3. Physical Commissions & Shipping</h2>
-                <p className="text-sm leading-loose text-[#5A5A5A] mb-8" style={{ fontFamily: 'var(--font-inter)' }}>
-                    Physical artwork is shipped explicitly via tracked, insured art couriers. Due to the bespoke, abstract nature of our heavy-body acrylic applications, slight variances from any preliminary sketches or digital mockups are to be expected and celebrated as part of the human, non-templated creative process.
-                </p>
-
-                <h2 className="text-xl mt-12 mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>4. Order Cancellation</h2>
-                <p className="text-sm leading-loose text-[#5A5A5A] mb-8" style={{ fontFamily: 'var(--font-inter)' }}>
-                    Given the highly personalized nature of our physical canvases and automated staging environments, orders cannot be completely canceled once our studio production or engineering deployment has commenced.
-                </p>
-
-            </article>
-
+            <article 
+                className="max-w-3xl mx-auto prose prose-sm md:prose-base prose-headings:font-playfair prose-headings:font-normal prose-p:font-inter prose-p:text-[#5A5A5A] prose-p:leading-loose prose-a:text-[#1A1A1A] prose-a:underline"
+                dangerouslySetInnerHTML={{ __html: doc.content }}
+            />
         </main>
     );
 }

@@ -1,35 +1,38 @@
-export default function PrivacyPage() {
+export const revalidate = 3600;
+
+async function getDocument(slug: string) {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    try {
+        const res = await fetch(`${API_URL}/cms/documents/${slug}`, { next: { revalidate: 3600 } });
+        if (!res.ok) return null;
+        return res.json();
+    } catch {
+        return null;
+    }
+}
+
+export default async function PrivacyPage() {
+    const doc = await getDocument('privacy-policy');
+    
+    if (!doc) {
+        return (
+            <main className="w-full min-h-screen bg-[#FBFBF9] text-[#1A1A1A] pt-40 pb-32 px-6 md:px-16 text-center flex flex-col items-center justify-center">
+                <h1 className="text-4xl" style={{ fontFamily: 'var(--font-playfair)' }}>Privacy Policy</h1>
+                <p className="mt-8 text-gray-400">Content currently offline. Standby.</p>
+            </main>
+        );
+    }
+
     return (
         <main className="w-full min-h-screen bg-[#FBFBF9] text-[#1A1A1A] pt-40 pb-32 px-6 md:px-16 selection:bg-[#1A1A1A] selection:text-[#FBFBF9]">
-
             <h1 className="text-4xl md:text-6xl text-center mb-16" style={{ fontFamily: 'var(--font-playfair)' }}>
-                Privacy Policy
+                {doc.title}
             </h1>
 
-            <article className="max-w-3xl mx-auto">
-
-                <h2 className="text-xl mt-12 mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>1. Data Collection Architecture</h2>
-                <p className="text-sm leading-loose text-[#5A5A5A] mb-8" style={{ fontFamily: 'var(--font-inter)' }}>
-                    At Taksh Store, operated in tandem with Polardot, we collect explicit information critical to the engineering and delivery of your commissions. This includes names, addresses, and encrypted payment details required for logistical execution, as well as nuanced event details supplied through our Customizer platform.
-                </p>
-
-                <h2 className="text-xl mt-12 mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>2. Digital Invitation Data Integrity</h2>
-                <p className="text-sm leading-loose text-[#5A5A5A] mb-8" style={{ fontFamily: 'var(--font-inter)' }}>
-                    The personal details regarding your wedding or life event (such as parent names, venues, and schedules) are stored securely and utilized strictly for the generation of your Next.js-powered digital invitation. We do not aggregate this data for external marketing lists.
-                </p>
-
-                <h2 className="text-xl mt-12 mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>3. Analytics & the Edge</h2>
-                <p className="text-sm leading-loose text-[#5A5A5A] mb-8" style={{ fontFamily: 'var(--font-inter)' }}>
-                    Our digital environments utilize completely anonymized edge-analytics to monitor hosting performance and assure low-latency delivery across geographical regions.
-                </p>
-
-                <h2 className="text-xl mt-12 mb-4" style={{ fontFamily: 'var(--font-playfair)' }}>4. Third-Party Transactions</h2>
-                <p className="text-sm leading-loose text-[#5A5A5A] mb-8" style={{ fontFamily: 'var(--font-inter)' }}>
-                    Taksh Store relies on industry-standard, rigorous payment gateways. At no point does our primary server infrastructure store your raw credit card information.
-                </p>
-
-            </article>
-
+            <article 
+                className="max-w-3xl mx-auto prose prose-sm md:prose-base prose-headings:font-playfair prose-headings:font-normal prose-p:font-inter prose-p:text-[#5A5A5A] prose-p:leading-loose prose-a:text-[#1A1A1A] prose-a:underline"
+                dangerouslySetInnerHTML={{ __html: doc.content }}
+            />
         </main>
     );
 }
