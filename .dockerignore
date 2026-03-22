@@ -1,0 +1,35 @@
+# Dependencies
+node_modules
+**/node_modules
+
+# Build outputs (will be rebuilt inside Docker)
+**/dist
+**/.next
+**/.turbo
+
+# Dev/local files
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+
+# Git
+.git
+.gitignore
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Only include the web app source if we add a web stage later
+apps/web
+
+# Test files
+**/*.spec.ts
+**/*.test.ts
+**/test/
