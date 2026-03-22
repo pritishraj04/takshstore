@@ -86,16 +86,8 @@ export class OrdersService {
             });
         });
 
-        // Step 2: Initialize PhonePe Order
-        const phonePeResponse = await this.paymentsService.createPhonePeOrder(
-            orderRecord!.totalAmount,
-            orderRecord!.id,
-            userId
-        );
-
         return {
             order: orderRecord,
-            redirectUrl: phonePeResponse.redirectUrl,
         };
     }
 

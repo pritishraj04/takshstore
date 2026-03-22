@@ -7,7 +7,9 @@ export interface MyInvite {
     status: 'DRAFT' | 'DEVELOPMENT' | 'PUBLISHED';
     inviteData: any;
     orderItem: {
+        orderId: string;
         order: {
+            id: string;
             status: string;
         };
     };

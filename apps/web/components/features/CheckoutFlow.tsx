@@ -8,6 +8,7 @@ import { Lock, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "../../lib/apiClient";
+import { toast } from "sonner";
 
 export default function CheckoutFlow() {
     const { items, clearCollection } = useCollectionStore();
@@ -16,6 +17,8 @@ export default function CheckoutFlow() {
     const { data: session } = useSession();
     const [mounted, setMounted] = useState(false);
     const [checkoutError, setCheckoutError] = useState<string | null>(null);
+    const [isProcessing, setIsProcessing] = useState(false);
+
 
     // Coupon State
     const [couponCode, setCouponCode] = useState('');
@@ -121,16 +124,64 @@ export default function CheckoutFlow() {
                             onSuccess: (data: any) => {
                                 console.log('2. Mutation Success, Data:', data);
                                 setCheckoutError(null);
-                                // Once order is created in DB, redirect to PhonePe
-                                if (data?.redirectUrl) {
-                                    window.location.href = data.redirectUrl;
+                                setIsProcessing(true);
+                                
+                                if (data?.razorpayOrderId) {
+                                    const script = document.createElement('script');
+                                    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                                    script.onload = () => {
+                                        const options = {
+                                            key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+                                            amount: data.amount,
+                                            currency: data.currency,
+                                            name: "Taksh Store",
+                                            description: "Wedding Invitation & Canvas",
+                                            order_id: data.razorpayOrderId,
+                                            handler: async function (response: any) {
+                                                toast.loading('Verifying your payment securely...', { id: 'payment-toast' });
+                                                try {
+                                                    await apiClient.post('/checkout/verify', {
+                                                        razorpayPaymentId: response.razorpay_payment_id,
+                                                        razorpayOrderId: response.razorpay_order_id,
+                                                        razorpaySignature: response.razorpay_signature
+                                                    });
+                                                    toast.success('Payment successful! Your order is confirmed.', { id: 'payment-toast' });
+                                                    clearCollection();
+                                                    router.push(`/dashboard/orders/${data.orderId || data.id}`); 
+                                                } catch (err: any) {
+                                                    setCheckoutError(err.response?.data?.message || 'Payment verification failed.');
+                                                    toast.error('Payment verification failed. Please contact support.', { id: 'payment-toast' });
+                                                    router.push(`/dashboard/orders/${data.orderId || data.id}`); 
+                                                }
+                                            },
+                                            prefill: { name: session?.user?.name || name, email: session?.user?.email || email, contact: '' },
+                                            theme: { color: "#111827" },
+                                            modal: {
+                                                ondismiss: function () {
+                                                    setIsProcessing(false);
+                                                    toast.error('Payment was cancelled.');
+                                                }
+                                            }
+                                        };
+                                        const rzp = new (window as any).Razorpay(options);
+                                        rzp.on('payment.failed', function (response: any) {
+                                            setIsProcessing(false);
+                                            setCheckoutError(response.error.description || 'Payment failed');
+                                            toast.error(`Payment failed: ${response.error.description}`);
+                                        });
+                                        rzp.open();
+                                    };
+                                    document.body.appendChild(script);
                                 } else {
-                                    console.error('Missing redirectUrl in response');
-                                    setCheckoutError('Payment URL not received from server.');
+                                    console.error('Missing razorpayOrderId in response');
+                                    setIsProcessing(false);
+                                    setCheckoutError('Payment details not received from server.');
+                                    toast.error('Failed to initiate secure checkout. Please try again.');
                                 }
                             },
                             onError: (err: any) => {
                                 setCheckoutError(err.response?.data?.message || 'An error occurred during checkout. Please try again.');
+                                toast.error('An error occurred during checkout.');
                             }
                         });
                     }}
@@ -254,11 +305,11 @@ export default function CheckoutFlow() {
 
                     <button
                         type="submit"
-                        disabled={isCheckingOut}
+                        disabled={isCheckingOut || isProcessing}
                         className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 mt-4 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center disabled:opacity-70 disabled:cursor-not-allowed"
                         style={{ fontFamily: 'var(--font-inter)' }}
                     >
-                        {isCheckingOut ? (
+                        {isCheckingOut || isProcessing ? (
                             <><Loader2 size={14} className="mr-2 animate-spin" strokeWidth={1.5} /> PROCESSING...</>
                         ) : (
                             <><Lock size={14} className="mr-2" strokeWidth={1.5} /> COMPLETE PURCHASE</>

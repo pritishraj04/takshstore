@@ -26,17 +26,11 @@ export function useCheckout() {
 
     return useMutation({
         mutationFn: async (payload: CreateOrderPayload) => {
-            const { data } = await apiClient.post('/orders', payload);
+            const { data } = await apiClient.post('/checkout/initiate', payload);
             return data;
         },
         onSuccess: (data) => {
-            // Check if there's a redirectUrl for PhonePe
-            if (data?.redirectUrl) {
-                // We'll let the component handle the actual redirect or we can do it here.
-                // The prompt says "In your checkout component, inside the onSuccess callback of the mutation..."
-                // So here we do nothing or clear the cart.
-                clearCollection();
-            }
+            // Handled by the component
         },
         onError: (error) => {
             console.error('CHECKOUT MUTATION FAILED:', error);

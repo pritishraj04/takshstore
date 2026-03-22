@@ -20,8 +20,10 @@ import { AdminProductsModule } from './admin-products/admin-products.module';
 import { AdminCouponsModule } from './admin-coupons/admin-coupons.module';
 import { MailModule } from './mail/mail.module';
 
+import { CheckoutModule } from './checkout/checkout.module';
+
 @Module({
-  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule, AdminAuthModule, AdminOrdersModule, AdminMediaModule, AdminUsersModule, AdminCmsModule, AdminCustomersModule, AdminProductsModule, AdminCouponsModule, MailModule],
+  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, CheckoutModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule, AdminAuthModule, AdminOrdersModule, AdminMediaModule, AdminUsersModule, AdminCmsModule, AdminCustomersModule, AdminProductsModule, AdminCouponsModule, MailModule],
   controllers: [AppController],
   providers: [AppService],
 })

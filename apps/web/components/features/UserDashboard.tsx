@@ -214,6 +214,15 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                                 Edit
                                             </Link>
 
+                                            {invite.orderItem?.orderId && (
+                                                <Link
+                                                    href={`/dashboard/orders/${invite.orderItem.orderId}`}
+                                                    className="bg-transparent text-[#1A1A1A] font-inter text-xs tracking-widest uppercase py-2 px-4 hover:bg-[#F2F1EC] border border-transparent hover:border-[#E5E4DF] transition-colors flex items-center gap-2"
+                                                >
+                                                    Order Details
+                                                </Link>
+                                            )}
+
                                             {invite.slug && (
                                                 <>
                                                     <a
