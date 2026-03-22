@@ -20,12 +20,15 @@ export default function AdminMediaGalleryPage() {
         setIsLoading(true);
         try {
             const res = await adminApiFetch('/admin/media');
-            if (res.ok) {
-                const data = await res.json();
-                setAssets(data);
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.message || `Server error: ${res.status}`);
             }
-        } catch (error) {
+            const data = await res.json();
+            setAssets(data);
+        } catch (error: any) {
             console.error(error);
+            toast.error(`Failed to load S3 media: ${error.message}`);
         } finally {
             setIsLoading(false);
         }

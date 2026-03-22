@@ -15,14 +15,16 @@ export default function middleware(req: NextRequest, event: any) {
 
     // Handle Admin Portal specifically
     if (pathname.startsWith('/admin')) {
-        // Public admin routes
-        if (pathname === '/admin/login' || pathname === '/admin/onboarding') {
-            return NextResponse.next();
+        const adminToken = req.cookies.get('admin_session')?.value;
+        const isAuthPage = pathname === '/admin/login' || pathname.startsWith('/admin/onboarding');
+
+        // If they HAVE a token and try to go to Login/Onboarding -> Bounce to Dashboard
+        if (adminToken && isAuthPage) {
+            return NextResponse.redirect(new URL('/admin', req.url));
         }
 
-        // Vaulted admin routes
-        const adminToken = req.cookies.get('admin_session')?.value;
-        if (!adminToken) {
+        // If they DO NOT have a token and try to go anywhere else in /admin -> Bounce to Login
+        if (!adminToken && !isAuthPage) {
             return NextResponse.redirect(new URL('/admin/login', req.url));
         }
 

@@ -15,8 +15,25 @@ const navItems = [
   { name: 'Global Settings', href: '/admin/settings', icon: Settings },
 ];
 
+import { jwtDecode } from 'jwt-decode';
+import Cookies from 'js-cookie';
+import { useState, useEffect } from 'react';
+
 export function AdminSidebar() {
   const pathname = usePathname();
+  const [isSuper, setIsSuper] = useState(false);
+
+  useEffect(() => {
+    const token = Cookies.get('admin_session');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token) as { isSuper: boolean };
+        setIsSuper(decoded.isSuper);
+      } catch (e) {
+        console.error("Invalid token");
+      }
+    }
+  }, []);
 
   return (
     <div className="h-full py-6 flex flex-col bg-white overflow-hidden">
@@ -27,6 +44,9 @@ export function AdminSidebar() {
         {navItems.map((item) => {
           // Exact match for /admin to prevent all routes triggering the root dashboard active state
           const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
+
+          // If the item is the Team module, and the user is NOT super, do not render it.
+          if (item.name === 'Team & Access' && !isSuper) return null;
 
           return (
             <Link

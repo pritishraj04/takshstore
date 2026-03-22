@@ -1,19 +1,40 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { UserPlus, Shield } from 'lucide-react';
 import { adminApiFetch } from '@/lib/admin-api';
 import { InviteAdminModal } from '@/components/admin/InviteAdminModal';
 import { AdminUserActionMenu } from '@/components/admin/AdminUserActionMenu';
+import { jwtDecode } from 'jwt-decode';
+import Cookies from 'js-cookie';
 
 export default function AdminTeamPage() {
+    const router = useRouter();
     const [users, setUsers] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
     useEffect(() => {
+        const token = Cookies.get('admin_session');
+        if (token) {
+          try {
+            const decoded = jwtDecode(token) as { isSuper: boolean };
+            if (!decoded.isSuper) {
+              router.replace('/admin');
+              return;
+            }
+          } catch (e) {
+            router.replace('/admin');
+            return;
+          }
+        } else {
+            router.replace('/admin/login');
+            return;
+        }
+
         fetchUsers();
-    }, []);
+    }, [router]);
 
     const fetchUsers = async () => {
         setIsLoading(true);

@@ -9,7 +9,8 @@ export function AdminHeader() {
 
   const handleLogout = () => {
     Cookies.remove('admin_session');
-    router.push('/admin/login');
+    // Force a hard window location replace to completely clear the Next.js client-side cache
+    window.location.replace('/admin/login');
   };
 
   return (

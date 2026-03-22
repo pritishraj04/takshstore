@@ -21,11 +21,12 @@ import { AdminCouponsModule } from './admin-coupons/admin-coupons.module';
 import { MailModule } from './mail/mail.module';
 import { AdminUploadModule } from './admin-upload/admin-upload.module';
 import { AdminSettingsModule } from './admin-settings/admin-settings.module';
+import { AdminDashboardModule } from './admin-dashboard/admin-dashboard.module';
 
 import { CheckoutModule } from './checkout/checkout.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, CheckoutModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule, AdminAuthModule, AdminOrdersModule, AdminMediaModule, AdminUsersModule, AdminCmsModule, AdminCustomersModule, AdminProductsModule, AdminCouponsModule, MailModule, AdminUploadModule, AdminSettingsModule],
+  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, CheckoutModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule, AdminAuthModule, AdminOrdersModule, AdminMediaModule, AdminUsersModule, AdminCmsModule, AdminCustomersModule, AdminProductsModule, AdminCouponsModule, MailModule, AdminUploadModule, AdminSettingsModule, AdminDashboardModule],
   controllers: [AppController],
   providers: [AppService],
 })
