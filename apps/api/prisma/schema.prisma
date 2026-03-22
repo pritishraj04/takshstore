@@ -96,7 +96,8 @@ model Order {
   status          OrderStatus @default(PENDING)
   totalAmount     Float
   shippingAddress Json?
-  developerNotes    String?
+  developerNotes  String?
+  trackingUrl     String?
   razorpayOrderId   String?     @unique
   razorpayPaymentId String?     @unique
   razorpaySignature String?
@@ -231,4 +232,10 @@ model Faq {
   isActive     Boolean  @default(true)
   updatedAt    DateTime @updatedAt
   createdAt    DateTime @default(now())
+}
+
+model StoreSetting {
+  key       String   @id
+  value     String   @db.Text
+  updatedAt DateTime @updatedAt
 }

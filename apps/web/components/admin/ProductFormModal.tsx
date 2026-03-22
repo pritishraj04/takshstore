@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { adminApiFetch } from '@/lib/admin-api';
 import { toast } from 'sonner';
-import { X, Package, RadioReceiver, UploadCloud, Link as LinkIcon, Trash2, Plus } from 'lucide-react';
+import { X, Package, RadioReceiver, UploadCloud, Link as LinkIcon, Trash2, Plus, AlertTriangle } from 'lucide-react';
+import { AVAILABLE_TEMPLATES } from '@/config/templates';
 
 export function ProductFormModal({
     isOpen,
@@ -27,6 +28,8 @@ export function ProductFormModal({
 
     // Media Array controls
     const [imageUrl, setImageUrl] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [images, setImages] = useState<string[]>([]);
 
     // Physical specifics
@@ -37,8 +40,27 @@ export function ProductFormModal({
 
     // Digital specifics
     const [templateSlug, setTemplateSlug] = useState('');
+    const [templateWarning, setTemplateWarning] = useState<string | null>(null);
     const [defaultAudioUrl, setDefaultAudioUrl] = useState('');
     const [isCustomizable, setIsCustomizable] = useState(true);
+
+    const handleTemplateChange = async (slug: string) => {
+        setTemplateSlug(slug);
+        setTemplateWarning(null);
+        if (!slug) return;
+        
+        try {
+            const res = await adminApiFetch(`admin/products/check-template/${slug}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.isUsed && data.productName !== title) {
+                    setTemplateWarning(`Warning: This template is already used by the product '${data.productName}'. Creating this will result in two products selling the exact same design.`);
+                }
+            }
+        } catch (e) {
+            console.error('Template check failed', e);
+        }
+    };
 
     useEffect(() => {
         if (isOpen && initialData) {
@@ -58,12 +80,18 @@ export function ProductFormModal({
             setTemplateSlug(initialData.templateSlug || '');
             setDefaultAudioUrl(initialData.defaultAudioUrl || '');
             setIsCustomizable(initialData.isCustomizable ?? true);
+            setTemplateWarning(null);
+            setSelectedFile(null);
+            setPreviewUrl(initialData.imageUrl || null);
         } else if (isOpen) {
             // Reset state for new entry
             setTitle(''); setDescription(''); setPrice(''); setDiscountedPrice('');
             setImageUrl(''); setImages([]); setStockCount(''); setWeight(''); setWidth(''); setHeight('');
             setTemplateSlug(''); setDefaultAudioUrl(''); setIsCustomizable(true);
             setType('PHYSICAL');
+            setTemplateWarning(null);
+            setSelectedFile(null);
+            setPreviewUrl(null);
         }
     }, [isOpen, initialData]);
 
@@ -85,13 +113,34 @@ export function ProductFormModal({
         e.preventDefault();
         setIsSubmitting(true);
 
+        let finalImageUrl = imageUrl;
+        if (selectedFile) {
+            toast.loading('Uploading image...', { id: 'upload-toast' });
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                const uploadRes = await adminApiFetch('admin/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (!uploadRes.ok) throw new Error('Image upload failed');
+                const uploadData = await uploadRes.json();
+                finalImageUrl = uploadData.url;
+                toast.success('Image uploaded successfully', { id: 'upload-toast' });
+            } catch (err) {
+                toast.error('Image upload failed. Cannot save product.', { id: 'upload-toast' });
+                setIsSubmitting(false);
+                return;
+            }
+        }
+
         const payload: any = {
             title,
             description,
             price: parseFloat(price),
             discountedPrice: discountedPrice ? parseFloat(discountedPrice) : undefined,
             type,
-            imageUrl,
+            imageUrl: finalImageUrl,
             images: images.filter(i => i.trim() !== '') // Clean empty frames natively
         };
 
@@ -204,8 +253,31 @@ export function ProductFormModal({
                             </h4>
                             <div className="p-5 border border-gray-200 bg-gray-50/50 rounded-xl space-y-5">
                                 <div>
-                                    <label className="text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-2"><UploadCloud className="w-3.5 h-3.5" /> Thumbnail URI</label>
-                                    <input type="url" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none focus:border-pink-400 text-sm" placeholder="https://..." />
+                                    <label className="text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-2"><UploadCloud className="w-3.5 h-3.5" /> Thumbnail Art</label>
+                                    <div className="flex flex-col gap-3">
+                                        <div className="relative group cursor-pointer border-2 border-dashed border-gray-300 hover:border-pink-400 rounded-xl p-6 flex flex-col items-center justify-center bg-white transition-all overflow-hidden h-40">
+                                            <input type="file" accept="image/*" onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setSelectedFile(file);
+                                                    setPreviewUrl(URL.createObjectURL(file));
+                                                    setImageUrl(''); // Clear manual URL
+                                                }
+                                            }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                            {previewUrl || imageUrl ? (
+                                                <img src={previewUrl || imageUrl} alt="Preview" className="h-full object-contain" />
+                                            ) : (
+                                                <div className="text-center group-hover:scale-105 transition-transform duration-300">
+                                                    <UploadCloud className="w-8 h-8 text-gray-400 mx-auto mb-2 group-hover:text-pink-400 transition-colors" />
+                                                    <p className="text-xs font-medium text-gray-500">Drag & drop or click to upload</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest block shrink-0">OR URI:</span>
+                                            <input type="url" value={imageUrl} onChange={e => { setImageUrl(e.target.value); setSelectedFile(null); setPreviewUrl(null); }} className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none focus:border-pink-400 text-sm" placeholder="https://..." />
+                                        </div>
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">Secondary Gallery Sequence
@@ -261,8 +333,19 @@ export function ProductFormModal({
                                 <div className="space-y-4">
                                     <div>
                                         <label className="block text-xs font-bold text-gray-700 mb-1.5">React Component Wrapper Slug</label>
-                                        <input type="text" value={templateSlug} onChange={e => setTemplateSlug(e.target.value)} required className="w-full px-4 py-3 bg-white border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-sm font-mono text-emerald-800" placeholder="e.g. royal-heritage-01" />
+                                        <select value={templateSlug} onChange={e => handleTemplateChange(e.target.value)} required className="w-full px-4 py-3 bg-white border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-sm font-mono text-emerald-800">
+                                            <option value="">Select a template...</option>
+                                            {AVAILABLE_TEMPLATES.map(t => (
+                                                <option key={t.id} value={t.id}>{t.name} ({t.id})</option>
+                                            ))}
+                                        </select>
                                         <p className="text-[10px] font-medium text-gray-500 mt-1.5 uppercase tracking-wide">Must explicitly map identical string values tracking NextJS file blocks natively.</p>
+                                        {templateWarning && (
+                                            <div className="mt-3 bg-yellow-50 border border-yellow-400 text-yellow-800 p-3 rounded-lg flex gap-3 items-start animate-in fade-in">
+                                                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+                                                <p className="text-xs font-medium leading-relaxed">{templateWarning}</p>
+                                            </div>
+                                        )}
                                     </div>
                                     <div>
                                         <label className="text-xs font-bold text-gray-700 mb-1.5 flex items-center justify-between">Baseline Ambient Audio URI</label>

@@ -19,11 +19,13 @@ import { AdminCustomersModule } from './admin-customers/admin-customers.module';
 import { AdminProductsModule } from './admin-products/admin-products.module';
 import { AdminCouponsModule } from './admin-coupons/admin-coupons.module';
 import { MailModule } from './mail/mail.module';
+import { AdminUploadModule } from './admin-upload/admin-upload.module';
+import { AdminSettingsModule } from './admin-settings/admin-settings.module';
 
 import { CheckoutModule } from './checkout/checkout.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, CheckoutModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule, AdminAuthModule, AdminOrdersModule, AdminMediaModule, AdminUsersModule, AdminCmsModule, AdminCustomersModule, AdminProductsModule, AdminCouponsModule, MailModule],
+  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, CheckoutModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule, AdminAuthModule, AdminOrdersModule, AdminMediaModule, AdminUsersModule, AdminCmsModule, AdminCustomersModule, AdminProductsModule, AdminCouponsModule, MailModule, AdminUploadModule, AdminSettingsModule],
   controllers: [AppController],
   providers: [AppService],
 })

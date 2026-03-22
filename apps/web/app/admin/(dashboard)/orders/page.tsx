@@ -122,7 +122,9 @@ export default function AdminOrdersPage() {
                                 return (
                                 <tr key={order.id} className="hover:bg-gray-50/50 transition-colors group">
                                     <td className="px-6 py-4 font-medium text-gray-900 tracking-tight">
-                                        #{order.id.slice(0, 8).toUpperCase()}
+                                        <Link href={`/admin/orders/${order.id}`} className="hover:text-indigo-600 hover:underline transition-colors">
+                                            #{order.id.slice(0, 8).toUpperCase()}
+                                        </Link>
                                     </td>
                                     <td className="px-6 py-4">
                                         <Link href={`/admin/customers/${order.user.id}`} className="font-semibold text-gray-900 transition-colors hover:text-indigo-600 hover:underline">{order.user.name || 'Anonymous'}</Link>

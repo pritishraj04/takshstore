@@ -19,6 +19,12 @@ export class AdminOrdersController {
     return this.adminOrdersService.findAllOrders(search, status, Number(page) || 1, Number(limit) || 50);
   }
 
+  @Get(':id')
+  @RequirePermission('orders', 'READ')
+  async getOrderById(@Param('id') id: string) {
+    return this.adminOrdersService.getOrderById(id);
+  }
+
   @Patch(':id/status')
   @RequirePermission('orders', 'WRITE')
   async updateStatus(@Param('id') id: string, @Body() dto: UpdateOrderStatusDto) {

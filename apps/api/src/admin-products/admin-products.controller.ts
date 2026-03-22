@@ -31,4 +31,10 @@ export class AdminProductsController {
   async toggleStatus(@Param('id') id: string) {
     return this.service.toggleStatus(id);
   }
+
+  @Get('check-template/:slug')
+  @RequirePermission('products', 'READ')
+  async checkTemplate(@Param('slug') slug: string) {
+    return this.service.checkTemplate(slug);
+  }
 }

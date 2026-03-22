@@ -1,6 +1,6 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import { AdminInviteTemplate, CanvasOrderReceipt, DigitalInviteAccess } from './templates/email.templates';
+import { AdminInviteTemplate, CanvasOrderReceipt, DigitalInviteAccess, OrderShippedNotification } from './templates/email.templates';
 
 @Injectable()
 export class MailService implements OnModuleInit {
@@ -83,6 +83,22 @@ export class MailService implements OnModuleInit {
       if (testUrl) this.logger.log(`Preview Email: ${testUrl}`);
     } catch (e: any) {
       this.logger.error(`Digital URL link failure: ${e.message}`);
+    }
+  }
+
+  async sendShippingNotification(email: string, trackingUrl: string | null) {
+    try {
+      const info = await this.transporter.sendMail({
+        from: '"Taksh Dispatch" <shipping@taksh.store>',
+        to: email,
+        subject: 'En Route: Your Frame Has Shipped',
+        html: OrderShippedNotification(trackingUrl),
+      });
+      this.logger.log(`Shipping vector dispatched actively to ${email}`);
+      const testUrl = nodemailer.getTestMessageUrl(info);
+      if (testUrl) this.logger.log(`Preview Email: ${testUrl}`);
+    } catch (e: any) {
+      this.logger.error(`Shipping vector failure: ${e.message}`);
     }
   }
 }

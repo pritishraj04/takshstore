@@ -3,12 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
 import { ForceUpdateInviteDto, UpdateOrderStatusDto } from './dto/admin-orders.dto';
 import { PaymentsService } from '../payments/payments.service';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AdminOrdersService {
   constructor(
       private readonly prisma: PrismaService,
-      private readonly paymentsService: PaymentsService
+      private readonly paymentsService: PaymentsService,
+      private readonly mailService: MailService
   ) {}
 
   async createManualOrder(dto: import('./dto/admin-orders.dto').CreateManualOrderDto) {
@@ -97,12 +99,56 @@ export class AdminOrdersService {
     return { data: orders, total, page, limit };
   }
 
-  async updateOrderStatus(id: string, dto: UpdateOrderStatusDto) {
-    const order = await this.prisma.order.update({
+  async getOrderById(id: string) {
+    const order = await this.prisma.order.findUnique({
       where: { id },
-      data: { status: dto.status },
+      include: {
+        user: { select: { id: true, name: true, email: true, phone: true } },
+        items: {
+          include: {
+            product: true,
+            digitalInvite: true,
+          },
+        },
+      },
     });
+
+    if (!order) throw new NotFoundException('Order not found');
     return order;
+  }
+
+  async updateOrderStatus(id: string, dto: UpdateOrderStatusDto) {
+    const existing = await this.prisma.order.findUnique({
+        where: { id },
+        include: {
+            user: true,
+            items: {
+                include: { product: true }
+            }
+        }
+    });
+
+    if (!existing) throw new NotFoundException('Order not found');
+
+    const updateData: any = { status: dto.status };
+    if (dto.trackingUrl) {
+        updateData.trackingUrl = dto.trackingUrl;
+    }
+
+    const updated = await this.prisma.order.update({
+      where: { id },
+      data: updateData,
+    });
+
+    // Check bonus trigger explicitly mapping if PHYSICAL canvas
+    if (dto.status === 'SHIPPED') {
+        const isCanvas = existing.items.some(item => item.product.type === 'PHYSICAL');
+        if (isCanvas && existing.user?.email) {
+            await this.mailService.sendShippingNotification(existing.user.email, dto.trackingUrl || null);
+        }
+    }
+
+    return updated;
   }
 
   async forceUpdateInvite(orderId: string, dto: ForceUpdateInviteDto) {

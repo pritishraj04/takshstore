@@ -9,11 +9,7 @@ export const useUploadFile = () => {
             formData.append('file', file);
             formData.append('folder', folder);
 
-            const { data } = await apiClient.post('/storage/upload', formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            const { data } = await apiClient.post('/storage/upload', formData);
             return data.url;
         },
         onError: (error) => {

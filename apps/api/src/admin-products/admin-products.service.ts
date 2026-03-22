@@ -50,4 +50,15 @@ export class AdminProductsService {
       data: { status: newStatus as ProductStatus }
     });
   }
+
+  async checkTemplate(slug: string) {
+    const existingProduct = await this.prisma.product.findFirst({
+        where: { templateSlug: slug, type: 'DIGITAL' }
+    });
+
+    return {
+        isUsed: !!existingProduct,
+        productName: existingProduct?.title || null
+    };
+  }
 }

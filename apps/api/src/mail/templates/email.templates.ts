@@ -78,3 +78,29 @@ export const DigitalInviteAccess = (customizerLink: string) => `
 </body>
 </html>
 `;
+
+export const OrderShippedNotification = (trackingUrl: string | null) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+    .btn { display: inline-block; padding: 12px 24px; background-color: #000; color: #fff; text-decoration: none; border-radius: 8px; font-weight: bold; margin: 20px 0; }
+    .footer { font-size: 12px; color: #888; margin-top: 40px; }
+    .box { background: #f9fafb; padding: 20px; border-radius: 12px; margin: 20px 0; border: 1px solid #eee; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Your Canvas is on the way!</h2>
+    <p>Great news! Your abstract physical canvas has officially shipped from our facility and is en route to your destination.</p>
+    ${trackingUrl ? `<a href="${trackingUrl}" target="_blank" class="btn">Track Your Package</a><p>Alternatively, copy constraints directly:<br/><span style="color:#666; font-size:12px;">${trackingUrl}</span></p>` : `<div class="box"><p>Tracking details will be updated shortly or dispatched by local courier routing.</p></div>`}
+    <p>If you encounter any logistical issues, simply reply directly to this thread.</p>
+    <div class="footer">
+      &copy; ${new Date().getFullYear()} Taksh Store. Abstract structural paintings shipped globally.
+    </div>
+  </div>
+</body>
+</html>
+`;

@@ -18,6 +18,10 @@ export class ForceUpdateInviteDto {
 export class UpdateOrderStatusDto {
   @IsEnum(OrderStatus)
   status: OrderStatus;
+
+  @IsString()
+  @IsOptional()
+  trackingUrl?: string;
 }
 
 export class CreateManualOrderDto {

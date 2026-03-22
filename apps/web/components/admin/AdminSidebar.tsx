@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, Mail, Palette, Users, Tag, Image as ImageIcon, Shield, Package } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Mail, Palette, Users, Tag, Image as ImageIcon, Shield, Package, Settings } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
@@ -12,6 +12,7 @@ const navItems = [
   { name: 'Coupons', href: '/admin/coupons', icon: Tag },
   { name: 'S3 Media', href: '/admin/media', icon: ImageIcon },
   { name: 'Team & Access', href: '/admin/team', icon: Shield },
+  { name: 'Global Settings', href: '/admin/settings', icon: Settings },
 ];
 
 export function AdminSidebar() {
