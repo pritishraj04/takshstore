@@ -3,8 +3,12 @@ runtime: nodejs22
 build:
   commands:
     build:
-      - npm install
+      - npm install -g pnpm
+      - pnpm install --frozen-lockfile
       - cd apps/api && npx prisma generate
-      - npm run build --workspace=apps/api
+      - pnpm --filter api build
 run:
-  command: npm run start:prod --workspace=apps/api
+  command: node apps/api/dist/main.js
+  env:
+    - name: NODE_ENV
+      value: production
