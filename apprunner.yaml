@@ -8,7 +8,11 @@ build:
       - cd apps/api && npx prisma generate
       - pnpm --filter api build
 run:
-  command: node apps/api/dist/main.js
+  command: node apps/api/dist/src/main.js
+  network:
+    port: 8080
   env:
     - name: NODE_ENV
       value: production
+    - name: PORT
+      value: "8080"
