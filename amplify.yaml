@@ -5,14 +5,12 @@ applications:
       phases:
         preBuild:
           commands:
-            # Enable Node's native package manager handler
-            - corepack enable
-            - corepack prepare pnpm@latest --activate
+            - npm install -g pnpm
             - pnpm install
         build:
           commands:
-            # Force pnpm to run the build instead of npx
-            - pnpm run build
+            # Bypass Turborepo and run the Next.js compiler directly
+            - npx next build
       artifacts:
         baseDirectory: .next
         files:
