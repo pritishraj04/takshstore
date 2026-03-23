@@ -1,9 +1,12 @@
-export const revalidate = 3600;
+export const dynamic = 'force-dynamic';
 
 async function getDocument(slug: string) {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     try {
-        const res = await fetch(`${API_URL}/cms/documents/${slug}`, { next: { revalidate: 3600 } });
+        const res = await fetch(`${API_URL}/cms/documents/${slug}`, { 
+            next: { revalidate: 3600 },
+            signal: AbortSignal.timeout(10000) // 10s timeout
+        });
         if (!res.ok) return null;
         return res.json();
     } catch {
