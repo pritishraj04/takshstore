@@ -3,16 +3,17 @@ import { Metadata } from "next";
 import { API_URL } from "@/config/env";
 
 async function getArticle(slug: string) {
-    const res = await fetch(`${API_URL}/articles/${slug}`, {
-        next: { revalidate: 60 }
-    });
-    
-    if (!res.ok) {
-        if (res.status === 404) return null;
-        throw new Error("Failed to fetch article");
+    try {
+        const res = await fetch(`${API_URL}/articles/${slug}`, {
+            next: { revalidate: 60 }
+        });
+
+        if (!res.ok) return null;
+
+        return res.json();
+    } catch {
+        return null;
     }
-    
-    return res.json();
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> } | { params: { slug: string } }): Promise<Metadata> {
