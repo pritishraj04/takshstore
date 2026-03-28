@@ -11,7 +11,7 @@ import { ReviewStatus, OrderStatus } from '@prisma/client';
 
 @Injectable()
 export class ReviewService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   // --- Customer Methods ---
 
@@ -32,32 +32,33 @@ export class ReviewService {
     });
     if (!product) throw new NotFoundException('Product not found');
 
+    // 1. Find the specific OrderItem BEFORE checking status
+    const orderItem = order.items.find(
+      (item) => item.productId === dto.productId,
+    );
+    if (!orderItem) {
+      throw new ForbiddenException('Product not found in this order');
+    }
+
+    // 2. Check the ITEM status, not the parent Order status
     if (product.type === 'PHYSICAL' || !product.isDigital) {
-      const allowedPhysical: OrderStatus[] = [
-        OrderStatus.DELIVERED,
-        OrderStatus.COMPLETED,
-        OrderStatus.SHIPPED,
-      ];
-      if (!allowedPhysical.includes(order.status)) {
+      const allowedPhysical = ['DELIVERED', 'COMPLETED', 'SHIPPED'];
+
+      if (!allowedPhysical.includes(orderItem.status)) {
         throw new ForbiddenException(
-          'Can only review delivered physical orders',
+          'Can only review delivered physical products',
         );
       }
     } else {
-      // Digital Product: Must be PUBLISHED to be reviewed
-      if (order.status !== OrderStatus.PUBLISHED) {
+      // Digital Product: Item must be PUBLISHED to be reviewed
+      if (orderItem.status !== 'PUBLISHED') {
         throw new ForbiddenException(
-          'Can only review published digital orders',
+          'Can only review published digital products',
         );
       }
     }
 
-    const hasProduct = order.items.some(
-      (item) => item.productId === dto.productId,
-    );
-    if (!hasProduct)
-      throw new ForbiddenException('Product not found in this order');
-
+    // 3. Prevent duplicate reviews
     const existing = await this.prisma.review.findFirst({
       where: { userId, orderId: dto.orderId, productId: dto.productId },
     });
@@ -67,6 +68,7 @@ export class ReviewService {
         'You have already reviewed this product for this order',
       );
 
+    // 4. Create the review
     return this.prisma.review.create({
       data: {
         userId,

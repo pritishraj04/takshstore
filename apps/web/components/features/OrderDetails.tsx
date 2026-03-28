@@ -65,9 +65,9 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
     const { data: order, isLoading, isError } = useOrder(orderId) as { data: Order, isLoading: boolean, isError: boolean };
     const { mutate: retryPayment, isPending: isRetrying } = useRetryPayment();
     const { data: orderReviews = [] } = useOrderReviews(orderId);
-    
+
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
-    const [selectedProduct, setSelectedProduct] = useState<{id: string, name: string} | null>(null);
+    const [selectedProduct, setSelectedProduct] = useState<{ id: string, name: string } | null>(null);
 
     const isDelivered = order && (order.status === 'COMPLETED' || order.status === 'SHIPPED' || order.status === 'DELIVERED');
 
@@ -191,9 +191,8 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                         {item.hasPaidEternity && (
                                             <span className="text-[#C5B39A] font-bold">Eternity Hosting: Active</span>
                                         )}
-                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                            item.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
-                                        }`}>
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${item.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                                            }`}>
                                             {item.status || 'PENDING'}
                                         </span>
                                     </div>
@@ -202,22 +201,27 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                     {item.product.type === "DIGITAL" && item.digitalInvite && (
                                         <div className="mt-4 pt-4 border-t border-light/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                             <div>
-                                                {order.status === 'PUBLISHED' && item.digitalInvite.websiteUrl ? (
+                                                {item.status === 'PUBLISHED' && item.digitalInvite.websiteUrl ? (
                                                     <a href={item.digitalInvite.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-inter tracking-wide text-[#C5B39A] hover:underline flex items-center gap-2 mb-2 md:mb-0">
                                                         View Live Invitation →
                                                     </a>
                                                 ) : (
                                                     <p className="text-[11px] font-inter tracking-widest uppercase text-secondary flex items-center gap-2 mb-2 md:mb-0">
-                                                        <span className={`h-1.5 w-1.5 rounded-full ${item.digitalInvite.status === 'DEVELOPMENT' ? 'bg-amber-500' : 'bg-gray-400'}`} />
-                                                        Status: {item.digitalInvite.status === 'DEVELOPMENT' ? 'Awaiting Deployment' : 'Draft'}
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${item.digitalInvite.status === 'PAID' ? 'bg-green-500' :
+                                                            item.digitalInvite.status === 'DEVELOPMENT' ? 'bg-amber-500' : 'bg-gray-400'
+                                                            }`} />
+                                                        Status: {
+                                                            item.digitalInvite.status === 'PAID' ? 'Ready to Publish' :
+                                                                item.digitalInvite.status === 'DEVELOPMENT' ? 'Awaiting Deployment' : 'Draft'
+                                                        }
                                                     </p>
                                                 )}
                                             </div>
-                                            
+
                                             {(() => {
                                                 const invite = item.digitalInvite;
                                                 const isExpired = invite.marriageDate && new Date() > new Date(invite.marriageDate) && !invite.isEternity;
-                                                
+
                                                 return isExpired ? (
                                                     <div className="bg-gray-300 text-gray-500 font-inter text-[10px] tracking-widest uppercase py-2 px-4 flex items-center group w-fit cursor-not-allowed">
                                                         <span className="mr-2">🔒</span>
@@ -254,12 +258,12 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                             ₹{item.priceAtPurchase.toLocaleString()}
                                         </div>
                                     )}
-                                    
+
                                     {(() => {
-                                        const isItemDelivered = item.product.type === 'DIGITAL' 
-                                            ? order.status === 'PUBLISHED' 
-                                            : isDelivered;
-                                            
+                                        const isItemDelivered = item.product.type === 'DIGITAL'
+                                            ? item.status === 'PUBLISHED'
+                                            : ['DELIVERED', 'COMPLETED'].includes(item.status);
+
                                         if (isItemDelivered) {
                                             return (
                                                 <div className="print:hidden">
@@ -274,7 +278,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                                             );
                                                         }
                                                         return (
-                                                            <button 
+                                                            <button
                                                                 onClick={() => {
                                                                     setSelectedProduct({ id: item.product.id, name: item.product.title });
                                                                     setReviewModalOpen(true);
@@ -333,7 +337,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
             </div>
 
             {selectedProduct && (
-                <ReviewModal 
+                <ReviewModal
                     isOpen={reviewModalOpen}
                     onClose={() => {
                         setReviewModalOpen(false);

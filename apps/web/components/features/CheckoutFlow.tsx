@@ -36,8 +36,8 @@ export default function CheckoutFlow() {
     if (!mounted) return null;
 
     const getEffectivePrice = (item: any) => {
-        let basePrice = (item.discountedPrice && Number(item.discountedPrice) > 0) 
-            ? Number(item.discountedPrice) 
+        let basePrice = (item.discountedPrice && Number(item.discountedPrice) > 0)
+            ? Number(item.discountedPrice)
             : Number(item.price);
         if (item.isEternity && item.eternityAddonPrice) {
             basePrice += Number(item.eternityAddonPrice);
@@ -47,13 +47,13 @@ export default function CheckoutFlow() {
 
     const requiresShipping = items.some(item => item.type === 'PHYSICAL');
     const subtotal = items.reduce((total, item) => total + (getEffectivePrice(item) * Number(item.quantity)), 0) || 0;
-    
+
     // Calculate the actual discount amount based on type
     const calculatedDiscountAmount = discountType === 'PERCENTAGE'
-        ? Math.round((subtotal * discountValue) / 100) 
+        ? Math.round((subtotal * discountValue) / 100)
         : discountValue;
     const discountAmount = calculatedDiscountAmount || 0;
-    
+
     const shippingCost = requiresShipping ? 150 : 0; // Flat luxury shipping rate or free
     const total = Math.max((subtotal - discountAmount + shippingCost) || 0, 0);
 
@@ -131,10 +131,10 @@ export default function CheckoutFlow() {
                                 quantity: Number(item.quantity),
                                 priceAtPurchase: getEffectivePrice(item),
                                 type: item.type,
-                                inviteData: item.type === 'DIGITAL'
-                                    ? item.inviteData
-                                    : undefined,
-                                draftId: item.draftId
+                                inviteData: item.type === 'DIGITAL' ? item.inviteData : undefined,
+                                draftId: item.draftId,
+                                isEternity: item.isEternity === true, // <--- THIS WAS MISSING
+                                marriageDate: item.marriageDate       // <--- AND THIS WAS MISSING
                             })),
                             totalAmount: total,
                             shippingAddress: requiresShipping ? { address, city, postalCode } : undefined
@@ -143,7 +143,7 @@ export default function CheckoutFlow() {
                                 console.log('2. Mutation Success, Data:', data);
                                 setCheckoutError(null);
                                 setIsProcessing(true);
-                                
+
                                 if (data?.razorpayOrderId) {
                                     const script = document.createElement('script');
                                     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -165,11 +165,11 @@ export default function CheckoutFlow() {
                                                     });
                                                     toast.success('Payment successful! Your order is confirmed.', { id: 'payment-toast' });
                                                     clearCollection();
-                                                    router.push(`/dashboard/orders/${data.orderId || data.id}`); 
+                                                    router.push(`/dashboard/orders/${data.orderId || data.id}`);
                                                 } catch (err: any) {
                                                     setCheckoutError(err.response?.data?.message || 'Payment verification failed.');
                                                     toast.error('Payment verification failed. Please contact support.', { id: 'payment-toast' });
-                                                    router.push(`/dashboard/orders/${data.orderId || data.id}`); 
+                                                    router.push(`/dashboard/orders/${data.orderId || data.id}`);
                                                 }
                                             },
                                             prefill: { name: session?.user?.name || name, email: session?.user?.email || email, contact: '' },
