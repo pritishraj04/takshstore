@@ -6,7 +6,7 @@ import { useDigitalInvite, useUpdateInvite, useDeleteDraft } from "../../hooks/u
 import { useInviteStore } from "../../store/useInviteStore";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { useProducts } from "../../hooks/useProducts";
-import { Loader2, ShoppingBag, ExternalLink, User, CalendarHeart, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, CheckCircle, XCircle, Save, Globe, UploadCloud, PlayCircle, Music, Edit3, Type, Images, Key, FileText, Search, AlertTriangle, Trash2, Shield, ChevronDown } from "lucide-react";
+import { Loader2, ShoppingBag, ExternalLink, User, CalendarHeart, MapPin, Clock, Users, Tag, Upload, Plus, Link as LinkIcon, CheckCircle, XCircle, Save, Globe, UploadCloud, PlayCircle, Music, Edit3, Type, Images, Key, FileText, Search, AlertTriangle, Trash2, Shield, ChevronDown, ChevronUp, ArrowUpDown } from "lucide-react";
 import { apiClient } from "../../lib/apiClient";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
@@ -54,8 +54,11 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             const hydratedData = { ...data.inviteData };
             if (!hydratedData.celebrations || hydratedData.celebrations.length === 0) {
                 hydratedData.celebrations = [
-                    { id: Date.now().toString(), name: "Wedding", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "", showLocation: false, highlight: true }
+                    { id: Date.now().toString(), name: "Wedding", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "", showLocation: false, highlight: true, isPrimary: true }
                 ];
+            } else if (!hydratedData.celebrations.some((c: any) => c.isPrimary)) {
+                // Ensure legacy drafts have a primary event
+                hydratedData.celebrations[0].isPrimary = true;
             }
             setAllData(hydratedData);
         }
@@ -153,17 +156,32 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             return;
         }
 
-        if (!celebrations || celebrations.length === 0 || !celebrations[0].date) {
+        // Finder logic that explicitly looks for the main wedding event or fallback to the latest date
+        const getMarriageDateObj = (events: any[]) => {
+            const weddingEvent = events.find(
+                (c) => c.isPrimary || (c.highlight && !events.some(x => x.isPrimary))
+            );
+
+            if (weddingEvent?.date) {
+                const d = new Date(weddingEvent.date);
+                if (!isNaN(d.getTime())) return d;
+            }
+
+            if (events.length > 0) {
+                const allDates = events
+                    .map(c => new Date(c.date).getTime())
+                    .filter(time => !isNaN(time));
+                if (allDates.length > 0) {
+                    return new Date(Math.max(...allDates));
+                }
+            }
+            return null;
+        };
+
+        const parsedMarriageDate = getMarriageDateObj(celebrations || []);
+
+        if (!parsedMarriageDate) {
             toast.error("Please set a valid date for your Wedding celebration.");
-            return;
-        }
-
-        // Validate the primary wedding date to prevent Prisma Invalid Date errors
-        const primaryDateStr = celebrations[0].date;
-        const parsedMarriageDate = new Date(primaryDateStr);
-
-        if (isNaN(parsedMarriageDate.getTime())) {
-            toast.error("The selected wedding date is invalid.");
             return;
         }
 
@@ -302,17 +320,38 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     const updateEvent = (id: string, field: string, value: string | boolean) => {
         if (!currentDraft) return;
 
-        const updatedCelebrations = currentDraft.celebrations.map(ev =>
+        const celebrations = currentDraft?.celebrations || [];
+        
+        let updatedCelebrations = celebrations.map(ev =>
             ev.id === id ? { ...ev, [field]: value } : ev
         );
 
+        // If setting one as primary, unset others to ensure only one is active
+        if (field === 'isPrimary' && value === true) {
+            updatedCelebrations = updatedCelebrations.map(ev =>
+                ev.id === id ? { ...ev, isPrimary: true } : { ...ev, isPrimary: false }
+            );
+        }
+
         let updatedDraft = { ...currentDraft, celebrations: updatedCelebrations };
 
-        // If the primary wedding date changes, automatically update the display date
-        if (updatedCelebrations[0].id === id && field === 'date') {
+        // If the wedding/primary event date changes, automatically update the display date and primary date
+        const weddingEvent = updatedCelebrations.find(c => c.isPrimary) || updatedCelebrations.find(c => c.highlight) || updatedCelebrations[0];
+        
+        if (weddingEvent?.id === id && field === 'date') {
             updatedDraft.wedding = {
                 ...updatedDraft.wedding,
+                date: value as string,
                 displayDate: formatDisplayDate(value as string)
+            };
+        }
+        
+        // Also update display date if we just changed WHICH event is primary
+        if (field === 'isPrimary' && value === true && weddingEvent?.date) {
+            updatedDraft.wedding = {
+                ...updatedDraft.wedding,
+                date: weddingEvent.date,
+                displayDate: formatDisplayDate(weddingEvent.date)
             };
         }
 
@@ -338,17 +377,56 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     };
 
     const addEvent = () => {
-        if (currentDraft) setAllData({
+        if (!currentDraft) return;
+        const celebrations = currentDraft.celebrations || [];
+        setAllData({
             ...currentDraft,
             celebrations: [
-                ...currentDraft.celebrations,
-                { id: Date.now().toString(), name: "New Event", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "", showLocation: false, highlight: false }
+                ...celebrations,
+                { id: Date.now().toString(), name: "New Event", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "", showLocation: false, highlight: false, isPrimary: false }
             ]
         });
     };
 
+    const moveCelebrationUp = (index: number) => {
+        if (!currentDraft || !currentDraft.celebrations || index === 0) return;
+        const newCelebrations = [...currentDraft.celebrations];
+        const temp = newCelebrations[index];
+        newCelebrations[index] = newCelebrations[index - 1];
+        newCelebrations[index - 1] = temp;
+        setAllData({ ...currentDraft, celebrations: newCelebrations });
+    };
+
+    const moveCelebrationDown = (index: number) => {
+        if (!currentDraft || !currentDraft.celebrations || index === currentDraft.celebrations.length - 1) return;
+        const newCelebrations = [...currentDraft.celebrations];
+        const temp = newCelebrations[index];
+        newCelebrations[index] = newCelebrations[index + 1];
+        newCelebrations[index + 1] = temp;
+        setAllData({ ...currentDraft, celebrations: newCelebrations });
+    };
+
+    const sortByDate = () => {
+        if (!currentDraft || !currentDraft.celebrations) return;
+        const sorted = [...currentDraft.celebrations].sort((a, b) => {
+            if (!a.date) return 1;
+            if (!b.date) return -1;
+            return new Date(a.date).getTime() - new Date(b.date).getTime();
+        });
+        setAllData({ ...currentDraft, celebrations: sorted });
+        toast.success("Events sorted chronologically!");
+    };
+
     const removeCelebration = (index: number) => {
-        if (currentDraft && currentDraft.celebrations.length > 1 && index !== 0) {
+        if (currentDraft && currentDraft.celebrations && currentDraft.celebrations.length > 1) {
+            const ev = currentDraft.celebrations[index];
+            const isPrimary = ev.isPrimary || (ev.highlight && !currentDraft.celebrations.some(c => c.isPrimary));
+            
+            if (isPrimary && index === 0) {
+                 toast.error("The main wedding event cannot be removed.");
+                 return;
+            }
+
             const newCelebrations = [...currentDraft.celebrations];
             newCelebrations.splice(index, 1);
             setAllData({ ...currentDraft, celebrations: newCelebrations });
@@ -668,19 +746,48 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                             <span className="text-lg font-light leading-none">{openSection === 'events' ? '−' : '+'}</span>
                         </button>
                         <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'events' ? 'max-h-[2000px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
-                            <div className="flex flex-col gap-10 pt-4 border-t border-[#E5E4DF]">
-                                {currentDraft?.celebrations?.map((ev, i) => (
-                                    <div key={ev.id} className="flex flex-col gap-4">
-                                        <div className="flex items-center justify-between">
-                                            <h4 className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>
-                                                {i === 0 ? "Main Wedding Event" : (ev.name || `Event ${i + 1}`)}
-                                            </h4>
-                                            {i !== 0 && currentDraft.celebrations.length > 1 && (
-                                                <button onClick={() => removeCelebration(i)} className="text-red-500 hover:text-red-700 p-1">
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            )}
-                                        </div>
+                                <div className="flex flex-col gap-10 pt-4 border-t border-[#E5E4DF]">
+                                    {(currentDraft?.celebrations?.length || 0) > 1 && (
+                                        <button
+                                            onClick={sortByDate}
+                                            className="flex items-center justify-center gap-2 py-2 text-[10px] uppercase tracking-widest text-[#5A5A5A] border border-[#E5E4DF] hover:bg-[#F2F1EC] transition-colors"
+                                            style={{ fontFamily: 'var(--font-inter)' }}
+                                        >
+                                            <ArrowUpDown size={12} /> Sort Chronologically
+                                        </button>
+                                    )}
+                                    {currentDraft?.celebrations?.map((ev, i) => (
+                                        <div key={ev.id} className="flex flex-col gap-4">
+                                            <div className="flex items-center justify-between">
+                                                <div className="flex items-center gap-2">
+                                                    <h4 className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                        {ev.isPrimary ? "Main Wedding Event" : (ev.name || `Event ${i + 1}`)}
+                                                    </h4>
+                                                    <div className="flex items-center gap-1">
+                                                        <button
+                                                            disabled={i === 0}
+                                                            onClick={() => moveCelebrationUp(i)}
+                                                            className="p-1 hover:bg-[#F2F1EC] disabled:opacity-30 rounded transition-colors"
+                                                            title="Move Up"
+                                                        >
+                                                            <ChevronUp size={14} className="text-[#5A5A5A]" />
+                                                        </button>
+                                                        <button
+                                                            disabled={i === (currentDraft?.celebrations?.length || 0) - 1}
+                                                            onClick={() => moveCelebrationDown(i)}
+                                                            className="p-1 hover:bg-[#F2F1EC] disabled:opacity-30 rounded transition-colors"
+                                                            title="Move Down"
+                                                        >
+                                                            <ChevronDown size={14} className="text-[#5A5A5A]" />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                {i !== 0 && (currentDraft?.celebrations?.length || 0) > 1 && (
+                                                    <button onClick={() => removeCelebration(i)} className="text-red-500 hover:text-red-700 p-1">
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                )}
+                                            </div>
                                         <input
                                             type="text" value={ev.name || ''} onChange={(e) => updateEvent(ev.id, 'name', e.target.value)} placeholder="Event Name"
                                             className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors font-semibold"
@@ -705,8 +812,34 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                             </div>
                                         </div>
 
+                                        {/* Main Event Selection Toggle */}
+                                        <div className="flex items-center gap-3 mt-4">
+                                            <div className="relative inline-flex items-center cursor-pointer">
+                                                <input
+                                                    type="checkbox"
+                                                    checked={ev.isPrimary || false}
+                                                    onChange={(e) => updateEvent(ev.id, 'isPrimary', e.target.checked)}
+                                                    className="w-4 h-4 accent-[#1A1A1A] cursor-pointer"
+                                                    id={`primary-${ev.id}`}
+                                                />
+                                            </div>
+                                            <label htmlFor={`primary-${ev.id}`} className="text-[10px] uppercase tracking-widest text-[#1A1A1A] font-bold cursor-pointer" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                Mark as Main Wedding Event
+                                            </label>
+                                        </div>
+
+                                        <div className="flex items-center gap-3 mt-2">
+                                            <input
+                                                type="checkbox" checked={ev.highlight || false} onChange={(e) => updateEvent(ev.id, 'highlight', e.target.checked)} id={`highlight-${ev.id}`}
+                                                className="w-4 h-4 accent-[#1A1A1A] cursor-pointer"
+                                            />
+                                            <span className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                Highlight/Sparkle this event card
+                                            </span>
+                                        </div>
+
                                         {/* Dynamic Eternity Checkbox Placed Exactly Under Primary Wedding Date */}
-                                        {i === 0 && !isPurchased && digitalProduct?.isDigital && (digitalProduct?.eternityAddonPrice || 0) > 0 && (
+                                        {ev.isPrimary && !isPurchased && digitalProduct?.isDigital && (digitalProduct?.eternityAddonPrice || 0) > 0 && (
                                             <div className="mt-2 mb-2 p-4 bg-[#F2F1EC] rounded-sm border border-[#E5E4DF]">
                                                 <label className="flex items-start gap-4 cursor-pointer group">
                                                     <div className="pt-1">

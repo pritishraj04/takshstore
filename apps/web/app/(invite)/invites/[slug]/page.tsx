@@ -17,12 +17,21 @@ async function getInviteData(slug: string) {
     }
 }
 
+export const viewport = {
+    themeColor: '#1a0f0f',
+    width: 'device-width',
+    initialScale: 1.0,
+};
+
 export async function generateMetadata(
     { params }: InvitePageProps,
     parent: ResolvingMetadata
 ): Promise<Metadata> {
     const resolvedParams = await params;
     const invite = await getInviteData(resolvedParams.slug);
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+    const currentUrl = `${baseUrl}/invites/${resolvedParams.slug}`;
 
     if (!invite) {
         return {
@@ -40,12 +49,13 @@ export async function generateMetadata(
     const name1 = couple?.primaryOrder === 'GROOM_FIRST' ? groomName : brideName;
     const name2 = couple?.primaryOrder === 'GROOM_FIRST' ? brideName : groomName;
 
-    const title = `${name1} Weds ${name2} | The Royal Invitation`;
-    const description = messages?.socialShareText || messages?.inviteText || 'Join us in celebrating our wedding.';
+    // Use requested title format
+    const title = `${name1} Weds ${name2} | A Royal Wedding Invite`;
+    const weddingDate = inviteData?.wedding?.displayDate || inviteData?.wedding?.date || (inviteData?.celebrations || [])[0]?.date || '';
+    const description = messages?.socialShareText || messages?.inviteText || `With joyful hearts, we invite you to share in our happiness as we begin our new life together. Join us for an evening of love, laughter, and celebration. Join us on ${weddingDate}.`;
 
-    // Fallback to a default image if they haven't uploaded one yet
-    const ogImage = couple?.image || '/main-website-assets/images/placeholder.webp';
-    const currentUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/invites/${resolvedParams.slug}`;
+    // Fallback to the requested social share image
+    const ogImage = couple?.image || `${baseUrl}/assets/images/social-share.jpg`;
 
     return {
         title,
@@ -54,10 +64,11 @@ export async function generateMetadata(
         authors: [{ name: `${name1} & ${name2}` }],
         openGraph: {
             type: 'website',
-            url: currentUrl,
+            url: baseUrl,
             title,
             description,
             siteName: `${name1} & ${name2} Wedding`,
+            locale: 'en_US',
             images: [
                 {
                     url: ogImage,
@@ -66,7 +77,6 @@ export async function generateMetadata(
                     alt: `${name1} & ${name2} Wedding Invitation`,
                 },
             ],
-            locale: 'en_US',
         },
         twitter: {
             card: 'summary_large_image',
@@ -74,6 +84,15 @@ export async function generateMetadata(
             description,
             images: [ogImage],
         },
+        icons: {
+            icon: '/assets/images/favicon.png',
+            apple: '/assets/images/apple-touch-icon.png',
+        },
+        other: {
+            'og:image:type': 'image/jpeg',
+            'twitter:url': baseUrl,
+            'twitter:image:alt': `${name1} & ${name2} Wedding Invitation`,
+        }
     };
 }
 

@@ -40,6 +40,7 @@ export interface EventDetails {
     highlight?: boolean;
     showLocation?: boolean;
     dressCode: string;
+    isPrimary?: boolean;
     calendarUrl?: string;
 }
 

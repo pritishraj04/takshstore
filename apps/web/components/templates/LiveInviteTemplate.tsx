@@ -516,21 +516,24 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                     </div>
                 </section>
 
-                <div className="w-full flex justify-center py-8">
-                    <img src="/themes/royal-wedding/assets/images/divider.png" alt="Decorative Divider" className="w-full h-auto block" />
-                </div>
-
                 {/* RSVP Placeholder Grid (Phase 4) */}
-                <section id="rsvp" className="relative p-8 flex flex-col items-center justify-center min-h-auto">
-                    <div className="w-full max-w-[1200px] mx-auto text-center relative z-10 fade-in-section">
-                        <h2 className="font-heading text-[2.5rem] md:text-[3.5rem] text-[#d9fff2] mb-8 font-extralight uppercase tracking-widest inline-block relative">Please RSVP</h2>
-                        <RSVPForm
-                            targetNumber={data?.contact?.whatsapp}
-                            brideName={data?.couple?.bride?.name}
-                            groomName={data?.couple?.groom?.name}
-                        />
-                    </div>
-                </section>
+                {data?.contact?.whatsapp && (
+                    <>
+                        <div className="w-full flex justify-center py-8">
+                            <img src="/themes/royal-wedding/assets/images/divider.png" alt="Decorative Divider" className="w-full h-auto block" />
+                        </div>
+                        <section id="rsvp" className="relative p-8 flex flex-col items-center justify-center min-h-auto">
+                            <div className="w-full max-w-[1200px] mx-auto text-center relative z-10 fade-in-section">
+                                <h2 className="font-heading text-[2.5rem] md:text-[3.5rem] text-[#d9fff2] mb-8 font-extralight uppercase tracking-widest inline-block relative">Please RSVP</h2>
+                                <RSVPForm
+                                    targetNumber={data?.contact?.whatsapp}
+                                    brideName={data?.couple?.bride?.name}
+                                    groomName={data?.couple?.groom?.name}
+                                />
+                            </div>
+                        </section>
+                    </>
+                )}
 
             </div>
 
@@ -553,7 +556,9 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
                                 <div className="flex flex-col gap-[0.8rem] min-w-[150px]">
                                     <h3 className="font-body text-[1.3rem] font-bold text-white uppercase mb-2 border-b border-[#d4af37] pb-2 inline-block w-fit">Links</h3>
                                     <a href="#route" className="font-body text-[1.1rem] text-[#f3ecba] no-underline hover:text-[#d4af37] transition-colors">Venue location</a>
-                                    <a href="#rsvp" className="font-body text-[1.1rem] text-[#f3ecba] no-underline hover:text-[#d4af37] transition-colors">RSVP</a>
+                                    {data?.contact?.whatsapp && (
+                                        <a href="#rsvp" className="font-body text-[1.1rem] text-[#f3ecba] no-underline hover:text-[#d4af37] transition-colors">RSVP</a>
+                                    )}
                                     {data?.contact?.instagram && (
                                         <a href={data.contact.instagram} target="_blank" rel="noopener noreferrer" className="font-body text-[1.1rem] text-[#f3ecba] no-underline hover:text-[#d4af37] transition-colors">Instagram</a>
                                     )}
