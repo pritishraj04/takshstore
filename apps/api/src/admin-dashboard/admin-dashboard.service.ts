@@ -6,21 +6,38 @@ export class AdminDashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getOverview() {
+    const successStatuses = [
+      'PAID',
+      'PROCESSING',
+      'SHIPPED',
+      'DELIVERED',
+      'COMPLETED',
+      'PUBLISHED',
+    ] as any[];
+
     const [
       totalRevenueResult,
-      activeOrdersCount,
+      pipelineItemsCount,
+      completedItemsCount,
       totalCustomers,
       recentActivity,
     ] = await Promise.all([
-      // Sum the amount of all Orders where status === 'PAID'
+      // Sum the amount of all Orders where payment was successful
       this.prisma.order.aggregate({
-        where: { status: 'PAID' },
+        where: { status: { in: successStatuses } },
         _sum: { totalAmount: true },
       }),
-      // Count all Orders where status === 'PENDING' or 'PAID' (not shipped/delivered)
-      this.prisma.order.count({
+      // Count all items in the pipeline (Action Required)
+      this.prisma.orderItem.count({
         where: {
-          status: { in: ['PENDING', 'PAID', 'PROCESSING'] },
+          order: { status: { in: successStatuses } },
+          status: { notIn: ['DELIVERED', 'PUBLISHED'] },
+        },
+      }),
+      // Count all items that are completed
+      this.prisma.orderItem.count({
+        where: {
+          status: { in: ['DELIVERED', 'PUBLISHED'] },
         },
       }),
       // Count all User records
@@ -31,7 +48,12 @@ export class AdminDashboardService {
         orderBy: { createdAt: 'desc' },
         include: {
           user: { select: { name: true, email: true } },
-          items: { select: { product: { select: { title: true } } } },
+          items: {
+            select: {
+              quantity: true,
+              product: { select: { title: true } },
+            },
+          },
         },
       }),
     ]);
@@ -42,7 +64,7 @@ export class AdminDashboardService {
 
     const paidOrders = await this.prisma.order.findMany({
       where: {
-        status: 'PAID',
+        status: { in: successStatuses },
         createdAt: { gte: sixMonthsAgo },
       },
       select: {
@@ -77,7 +99,8 @@ export class AdminDashboardService {
 
     return {
       totalRevenue: totalRevenueResult._sum.totalAmount || 0,
-      activeOrders: activeOrdersCount,
+      pipelineItems: pipelineItemsCount,
+      completedItems: completedItemsCount,
       totalCustomers,
       recentActivity,
       revenueChart,

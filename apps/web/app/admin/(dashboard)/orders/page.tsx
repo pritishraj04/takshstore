@@ -116,7 +116,20 @@ export default function AdminOrdersPage() {
                                     </td>
                                 </tr>
                             ) : orders.map((order) => {
-                                const isDigital = order.items.some((i: any) => i.product.type === 'DIGITAL');
+                                const hasDigital = order.items.some((i: any) => i.product?.type === 'DIGITAL');
+                                const hasPhysical = order.items.some((i: any) => i.product?.type === 'PHYSICAL');
+                                
+                                let typeLabel = 'Canvas Art';
+                                let typeColorClass = 'bg-orange-50 text-orange-700';
+                                
+                                if (hasDigital && hasPhysical) {
+                                  typeLabel = 'Mixed Order';
+                                  typeColorClass = 'bg-teal-50 text-teal-700';
+                                } else if (hasDigital) {
+                                  typeLabel = 'Digital Invite';
+                                  typeColorClass = 'bg-indigo-50 text-indigo-700';
+                                }
+
                                 const invite = order.items.find((i: any) => i.digitalInvite)?.digitalInvite;
 
                                 return (
@@ -131,9 +144,12 @@ export default function AdminOrdersPage() {
                                         <div className="text-xs text-gray-500 mt-0.5">{order.user.email}</div>
                                     </td>
                                     <td className="px-6 py-4">
-                                        <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${isDigital ? 'bg-indigo-50 text-indigo-700' : 'bg-orange-50 text-orange-700'}`}>
-                                            {isDigital ? 'Digital Invite' : 'Canvas Art'}
+                                        <span className={`inline-flex px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider ${typeColorClass}`}>
+                                            {typeLabel}
                                         </span>
+                                        <div className="text-[10px] text-gray-500 mt-1 max-w-[180px] truncate font-medium">
+                                            {order.items.map((i: any) => `${i.quantity}x ${i.product?.title || 'Unknown'}`).join(', ')}
+                                        </div>
                                     </td>
                                     <td className="px-6 py-4 font-bold text-gray-900">
                                         ₹{order.totalAmount.toLocaleString()}

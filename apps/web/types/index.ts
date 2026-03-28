@@ -3,6 +3,7 @@ export type ProductType = 'PHYSICAL' | 'DIGITAL';
 export interface Product {
     id: string;
     title: string;
+    description?: string;
     price: number;
     discountedPrice?: number;
     eternityAddonPrice?: number;
@@ -10,6 +11,10 @@ export interface Product {
     images?: string[];
     type: ProductType;
     isDigital: boolean;
+    weight?: number;
+    width?: number;
+    height?: number;
+    stockCount?: number;
 }
 
 export interface CollectionItem extends Product {

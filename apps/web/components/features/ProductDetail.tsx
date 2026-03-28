@@ -129,7 +129,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                             className="text-[10px] uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors mb-8 inline-flex items-center gap-2"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            <span>←</span> COLLECTION / {product.type}
+                            <span>←</span> COLLECTION / {product.type === 'PHYSICAL' ? 'Physical Print' : 'Digital Invite'}
                         </Link>
 
                         <h1
@@ -154,13 +154,13 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                         </p>
 
                         <p
-                            className="mt-8 text-base text-[#5A5A5A] leading-loose font-light"
+                            className="mt-8 text-base text-[#5A5A5A] leading-loose font-light whitespace-pre-wrap"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            {product.type === 'PHYSICAL'
+                            {product.description || (product.type === 'PHYSICAL'
                                 ? "This bespoke canvas embodies the interplay between memory and movement. Every brushstroke is intentionally curated to capture the ephemeral beauty of the moment, creating a timeless heirloom for the modern collector."
                                 : "A masterfully crafted digital suite. Blending elegant typography with sweeping digital textures, this asset offers unparalleled aesthetic distinction for the discerning individual."
-                            }
+                            )}
                         </p>
 
                         <button
@@ -181,7 +181,31 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                         {/* Accordion Details */}
                         <div className="mt-16 flex flex-col border-t border-[#E5E4DF]">
 
-                            {/* Accordion 1: Delivery */}
+                            {/* Accordion 1: Specs (Conditional for Physical) */}
+                            {product.type === 'PHYSICAL' && (product.width || product.height) && (
+                                <div className="border-b border-[#E5E4DF]">
+                                    <button
+                                        onClick={() => toggleAccordion('specs')}
+                                        className="w-full py-6 flex justify-between items-center text-xs uppercase tracking-widest text-[#1A1A1A]"
+                                        style={{ fontFamily: 'var(--font-inter)' }}
+                                    >
+                                        <span>Artisan Specs</span>
+                                        <span className="text-lg font-light">{openAccordion === 'specs' ? '−' : '+'}</span>
+                                    </button>
+                                    <div
+                                        className={`overflow-hidden transition-all duration-500 ease-in-out ${openAccordion === 'specs' ? 'max-h-40 opacity-100 pb-6' : 'max-h-0 opacity-0'}`}
+                                    >
+                                        <ul className="text-sm text-[#5A5A5A] leading-loose font-light list-none" style={{ fontFamily: 'var(--font-inter)' }}>
+                                            {product.width && product.height && <li>Dimensions: {product.width}" x {product.height}"</li>}
+                                            {product.weight && <li>Weight: {product.weight} kg</li>}
+                                            <li>Material: Premium Museum-Quality Canvas</li>
+                                            <li>Finish: Hand-applied Protective Varnish</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Accordion 2: Delivery */}
                             <div className="border-b border-[#E5E4DF]">
                                 <button
                                     onClick={() => toggleAccordion('delivery')}
@@ -203,7 +227,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                                 </div>
                             </div>
 
-                            {/* Accordion 2: Authenticity */}
+                            {/* Accordion 3: Authenticity */}
                             <div className="border-b border-[#E5E4DF]">
                                 <button
                                     onClick={() => toggleAccordion('auth')}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { IndianRupee, ShoppingCart, Users, Package, Clock } from 'lucide-react';
 import { MetricCard } from '@/components/admin/MetricCard';
 import { adminApiFetch } from '@/lib/admin-api';
@@ -10,34 +10,24 @@ import {
 
 interface DashboardData {
   totalRevenue: number;
-  activeOrders: number;
+  pipelineItems: number;
+  completedItems: number;
   totalCustomers: number;
   recentActivity: any[];
   revenueChart: { name: string; total: number }[];
 }
 
 export default function AdminDashboardPage() {
-  const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchMetrics() {
-      try {
-        const res = await adminApiFetch('/admin/dashboard/overview');
-        if (res.ok) {
-          const json = await res.json();
-          setData(json);
-        }
-      } catch (error) {
-        console.error("Failed to fetch dashboard metrics", error);
-      } finally {
-        setLoading(false);
-      }
+  const { data, isLoading } = useQuery<DashboardData>({
+    queryKey: ['admin-stats'],
+    queryFn: async () => {
+      const res = await adminApiFetch('/admin/dashboard/overview');
+      if (!res.ok) throw new Error('Failed to fetch dashboard metrics');
+      return res.json();
     }
-    fetchMetrics();
-  }, []);
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-8 animate-pulse">
         <div>
@@ -74,11 +64,11 @@ export default function AdminDashboardPage() {
           trendLabel="from paid orders"
         />
         <MetricCard
-          title="Active Orders"
-          value={String(data?.activeOrders || 0)}
-          icon={ShoppingCart}
+          title="Fulfillment Queue"
+          value={String(data?.pipelineItems || 0)}
+          icon={Clock}
           trend={0}
-          trendLabel="pending + processing"
+          trendLabel="items awaiting action"
         />
         <MetricCard
           title="Total Customers"
@@ -88,11 +78,11 @@ export default function AdminDashboardPage() {
           trendLabel="registered accounts"
         />
         <MetricCard
-          title="Orders In Pipeline"
-          value={String(data?.activeOrders || 0)}
+          title="Completed Items"
+          value={String(data?.completedItems || 0)}
           icon={Package}
           trend={0}
-          trendLabel="awaiting fulfillment"
+          trendLabel="delivered & published"
         />
       </div>
 
@@ -142,7 +132,9 @@ export default function AdminDashboardPage() {
           <div className="space-y-5 pl-2">
             {data.recentActivity.map((order: any, index: number) => {
               const isLast = index === data.recentActivity.length - 1;
-              const productTitle = order.items?.[0]?.product?.title || 'Product';
+              const productTitle = (order.items || []).map((item: any) => 
+                `${item.quantity}x ${item.product?.title || 'Unknown Product'}`
+              ).join(', ') || 'Custom Order';
               const customerName = order.user?.name || order.user?.email || 'Customer';
               const timeAgo = formatTimeAgo(new Date(order.createdAt));
 
@@ -157,7 +149,7 @@ export default function AdminDashboardPage() {
                     </div>
                   </div>
                   <div className="pt-2 pb-4 flex-1">
-                    <p className="text-[15px] font-medium text-gray-900 tracking-tight">
+                    <p className="text-[15px] font-medium text-gray-900 tracking-tight line-clamp-1">
                       New order by <span className="font-bold">{customerName}</span> — {productTitle}
                     </p>
                     <div className="flex items-center gap-2 mt-0.5">

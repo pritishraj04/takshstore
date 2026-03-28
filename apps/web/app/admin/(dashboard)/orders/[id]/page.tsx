@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { adminApiFetch } from '@/lib/admin-api';
 import { toast } from 'sonner';
 import { ArrowLeft, Package, User, Clock, CheckCircle, Truck, FileCheck, Anchor, ShieldAlert } from 'lucide-react';
@@ -10,10 +11,9 @@ import Link from 'next/link';
 export default function AdminOrderDetailsPage() {
     const { id } = useParams() as { id: string };
     const router = useRouter();
+    const queryClient = useQueryClient();
     const [order, setOrder] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
-
-
 
     const fetchOrder = async () => {
         setIsLoading(true);
@@ -44,8 +44,12 @@ export default function AdminOrderDetailsPage() {
                 body: JSON.stringify({ status: newStatus }),
             });
             if (!res.ok) throw new Error('Item status update failed');
+            
+            // Invalidate admin stats to update dashboard numbers
+            queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+            
             toast.success('Item status updated!');
-            await fetchOrder(); // refresh data
+            await fetchOrder(); // refresh local order state
         } catch (error: any) {
             toast.error(error.message);
         }
@@ -58,6 +62,10 @@ export default function AdminOrderDetailsPage() {
                 body: JSON.stringify({ isEternity: !currentVal }),
             });
             if (!res.ok) throw new Error();
+            
+            // Invalidate admin stats
+            queryClient.invalidateQueries({ queryKey: ['admin-stats'] });
+            
             toast.success('Eternity flag toggled');
             await fetchOrder();
         } catch {
@@ -126,13 +134,24 @@ export default function AdminOrderDetailsPage() {
                                         </div>
                                         
                                         {item.product.type === 'DIGITAL' && item.digitalInvite && (
-                                            <div className="mt-3 flex flex-col gap-2">
+                                            <div className="mt-4 p-3 bg-blue-50/50 border border-blue-100 rounded-lg text-[13px] text-blue-900 space-y-2">
+                                                <div className="flex items-center justify-between">
+                                                   <p><strong>Invite Status:</strong> <span className="uppercase font-bold text-[11px] ml-1 bg-blue-100 px-1.5 py-0.5 rounded">{item.digitalInvite.status}</span></p>
+                                                   {item.digitalInvite.websiteUrl && (
+                                                       <a href={item.digitalInvite.websiteUrl} target="_blank" className="text-blue-600 hover:text-blue-800 underline font-semibold transition-colors flex items-center gap-1">
+                                                           View Live Invite <span>↗</span>
+                                                       </a>
+                                                   )}
+                                                </div>
+                                                
                                                 {item.hasPaidEternity && (
-                                                    <span className="w-fit px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold uppercase rounded flex items-center gap-1 mb-1 shadow-sm">
-                                                        <CheckCircle className="w-3 h-3" /> PAID: Eternity Add-on
-                                                    </span>
+                                                    <div className="flex items-center gap-2 pt-1 border-t border-blue-100/50 mt-1">
+                                                        <CheckCircle className="w-3.5 h-3.5 text-green-600" />
+                                                        <span className="font-bold text-green-700 text-[11px] uppercase">Eternity Hosting Paid</span>
+                                                    </div>
                                                 )}
-                                                <div className="flex items-center gap-2">
+
+                                                <div className="flex items-center gap-2 pt-1">
                                                     <input
                                                         type="checkbox"
                                                         id={`eternity-${item.id}`}
@@ -141,10 +160,10 @@ export default function AdminOrderDetailsPage() {
                                                         className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
                                                     />
                                                     <label htmlFor={`eternity-${item.id}`} className="text-xs font-semibold text-gray-700 cursor-pointer flex items-center gap-2">
-                                                        Host Site for Eternity
+                                                        Enable Eternity Hosting
                                                         {item.hasPaidEternity && !item.digitalInvite.isEternity && (
                                                             <span className="text-[10px] text-amber-600 font-medium flex items-center gap-1">
-                                                                <ShieldAlert className="w-3 h-3" /> Warning: Customer paid for this
+                                                                <ShieldAlert className="w-3 h-3" /> Customer paid for this
                                                             </span>
                                                         )}
                                                     </label>
