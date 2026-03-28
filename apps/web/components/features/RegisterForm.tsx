@@ -133,6 +133,19 @@ export default function RegisterForm() {
                 >
                     Already have an account? Sign in.
                 </Link>
+                <div className="mt-8 text-center">
+                    <p className="text-sm text-gray-500 pb-4">
+                        By continuing, you agree to our{" "}
+                        <Link href="/terms" className="text-gray-700 hover:text-gray-900 hover:underline">
+                            Terms and Conditions
+                        </Link>{" "}
+                        and{" "}
+                        <Link href="/privacy" className="text-gray-700 hover:text-gray-900 hover:underline">
+                            Privacy Policy
+                        </Link>
+                        .
+                    </p>
+                </div>
             </div>
         </div>
     );

@@ -147,6 +147,8 @@ model Coupon {
   discountValue Float        @default(0)
   
   isActive      Boolean      @default(true)
+  isFeaturedOnHome Boolean   @default(false)
+  homeBannerImage String?
   maxUses       Int?
   currentUses   Int          @default(0)
   

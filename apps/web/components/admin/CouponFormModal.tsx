@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { adminApiFetch } from '@/lib/admin-api';
 import { toast } from 'sonner';
-import { Tag, Plus, Settings2, Trash2, Power, PowerOff, Sparkles } from 'lucide-react';
+import { Tag, Plus, Settings2, Trash2, Power, PowerOff, Sparkles, UploadCloud } from 'lucide-react';
 
 export function CouponFormModal({
     isOpen,
@@ -28,6 +28,11 @@ export function CouponFormModal({
     const [maxUses, setMaxUses] = useState('');
     const [validUntil, setValidUntil] = useState('');
 
+    const [isFeaturedOnHome, setIsFeaturedOnHome] = useState(false);
+    const [homeBannerImage, setHomeBannerImage] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
     useEffect(() => {
         if (isOpen && initialData) {
             setCode(initialData.code || '');
@@ -43,11 +48,16 @@ export function CouponFormModal({
             } else {
                 setValidUntil('');
             }
+            setIsFeaturedOnHome(initialData.isFeaturedOnHome || false);
+            setHomeBannerImage(initialData.homeBannerImage || '');
+            setPreviewUrl(initialData.homeBannerImage || null);
+            setSelectedFile(null);
 
         } else if (isOpen) {
             // Reset state
             setCode(''); setDescription(''); setDiscountType('PERCENTAGE'); setDiscountValue('');
             setMaxUses(''); setValidUntil('');
+            setIsFeaturedOnHome(false); setHomeBannerImage(''); setSelectedFile(null); setPreviewUrl(null);
         }
     }, [isOpen, initialData]);
 
@@ -71,11 +81,34 @@ export function CouponFormModal({
             return;
         }
 
+        let finalImageUrl = homeBannerImage;
+        if (selectedFile) {
+            toast.loading('Uploading banner...', { id: 'upload-toast' });
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                const uploadRes = await adminApiFetch('admin/upload', {
+                    method: 'POST',
+                    body: formData,
+                });
+                if (!uploadRes.ok) throw new Error('Image upload failed');
+                const uploadData = await uploadRes.json();
+                finalImageUrl = uploadData.url;
+                toast.success('Banner uploaded successfully', { id: 'upload-toast' });
+            } catch (err) {
+                toast.error('Banner upload failed. Cannot save vector.', { id: 'upload-toast' });
+                setIsSubmitting(false);
+                return;
+            }
+        }
+
         const payload: any = {
             code,
             description: description || undefined,
             discountType,
             discountValue: val,
+            isFeaturedOnHome,
+            homeBannerImage: finalImageUrl,
         };
 
         if (maxUses) payload.maxUses = parseInt(maxUses, 10);
@@ -164,6 +197,46 @@ export function CouponFormModal({
                                 <label className="text-[11px] font-bold text-gray-600 mb-1.5 flex justify-between">Demise Protocol <span className="text-[9px] text-gray-400">Blank = Immunity</span></label>
                                 <input type="date" value={validUntil} onChange={e => setValidUntil(e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none focus:border-amber-400 text-sm font-mono text-gray-600 uppercase" />
                             </div>
+                        </div>
+                    </div>
+
+                    <div>
+                        <h4 className="text-[10px] font-extrabold text-teal-500 uppercase tracking-widest flex items-center gap-3 mb-4"><span className="h-px bg-teal-100 w-6 flex"></span> Homepage Spotlight</h4>
+                        <div className="p-5 border border-teal-100 bg-teal-50/30 rounded-xl space-y-5">
+                            <div className="flex items-center gap-3">
+                                <input type="checkbox" id="isFeatured" checked={isFeaturedOnHome} onChange={e => setIsFeaturedOnHome(e.target.checked)} className="w-4 h-4 text-teal-600 rounded border-gray-300 focus:ring-teal-500 cursor-pointer" />
+                                <label htmlFor="isFeatured" className="text-sm font-bold text-gray-700 cursor-pointer select-none">Feature this promo on the storefront homepage (displaces any existing featured promo).</label>
+                            </div>
+                            
+                            {isFeaturedOnHome && (
+                                <div>
+                                    <label className="text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-2"><UploadCloud className="w-3.5 h-3.5" /> Spotlight Banner Graphic</label>
+                                    <div className="flex flex-col gap-3">
+                                        <div className="relative group cursor-pointer border-2 border-dashed border-gray-300 hover:border-teal-400 rounded-xl p-6 flex flex-col items-center justify-center bg-white transition-all overflow-hidden h-40">
+                                            <input type="file" accept="image/*" onChange={(e) => {
+                                                const file = e.target.files?.[0];
+                                                if (file) {
+                                                    setSelectedFile(file);
+                                                    setPreviewUrl(URL.createObjectURL(file));
+                                                    setHomeBannerImage(''); 
+                                                }
+                                            }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                                            {previewUrl || homeBannerImage ? (
+                                                <img src={previewUrl || homeBannerImage} alt="Banner Preview" className="h-full object-contain" />
+                                            ) : (
+                                                <div className="text-center group-hover:scale-105 transition-transform duration-300">
+                                                    <UploadCloud className="w-8 h-8 text-gray-400 mx-auto mb-2 group-hover:text-teal-400 transition-colors" />
+                                                    <p className="text-xs font-medium text-gray-500">Drag & drop wide banner graphic</p>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[10px] uppercase font-bold text-gray-400 tracking-widest block shrink-0">OR URI:</span>
+                                            <input type="url" value={homeBannerImage} onChange={e => { setHomeBannerImage(e.target.value); setSelectedFile(null); setPreviewUrl(null); }} className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none focus:border-teal-400 text-sm" placeholder="https://..." />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </form>

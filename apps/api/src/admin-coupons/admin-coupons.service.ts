@@ -21,6 +21,13 @@ export class AdminCouponsService {
     const exists = await this.prisma.coupon.findUnique({ where: { code: cleanedCode } });
     if (exists) throw new BadRequestException('Unique structural block compromised.');
 
+    if (dto.isFeaturedOnHome) {
+      await this.prisma.coupon.updateMany({
+        where: { isFeaturedOnHome: true },
+        data: { isFeaturedOnHome: false },
+      });
+    }
+
     return this.prisma.coupon.create({
       data: {
           ...dto,
@@ -39,6 +46,13 @@ export class AdminCouponsService {
 
     const exists = await this.prisma.coupon.findUnique({ where: { id }});
     if (!exists) throw new NotFoundException('Block mapping unresolved');
+
+    if (dto.isFeaturedOnHome) {
+      await this.prisma.coupon.updateMany({
+        where: { isFeaturedOnHome: true, id: { not: id } },
+        data: { isFeaturedOnHome: false },
+      });
+    }
 
     return this.prisma.coupon.update({
       where: { id },

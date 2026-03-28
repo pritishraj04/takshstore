@@ -36,4 +36,13 @@ export class CouponsService {
       code: coupon.code,
     };
   }
+
+  async getFeatured() {
+    return this.prisma.coupon.findFirst({
+      where: { 
+        isFeaturedOnHome: true,
+        isActive: true,
+      },
+    });
+  }
 }

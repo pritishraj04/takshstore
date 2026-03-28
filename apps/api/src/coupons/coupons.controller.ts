@@ -5,6 +5,11 @@ import { CouponsService } from './coupons.service';
 export class CouponsController {
   constructor(private readonly couponsService: CouponsService) {}
 
+  @Get('featured')
+  getFeatured() {
+    return this.couponsService.getFeatured();
+  }
+
   @Get('validate/:code')
   validateCoupon(@Param('code') code: string) {
     return this.couponsService.validateCoupon(code);

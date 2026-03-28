@@ -12,6 +12,9 @@ export class CreateCouponDto {
   
   @IsDateString() @IsOptional() validFrom?: string;
   @IsDateString() @IsOptional() validUntil?: string;
+
+  @IsBoolean() @IsOptional() isFeaturedOnHome?: boolean;
+  @IsString() @IsOptional() homeBannerImage?: string;
 }
 
 export class UpdateCouponDto extends CreateCouponDto {}
