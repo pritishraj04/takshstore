@@ -1,9 +1,19 @@
-import { Injectable, UnauthorizedException, ForbiddenException, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  ForbiddenException,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { AdminStatus, PermissionLevel } from '@prisma/client';
-import { InviteSubAdminDto, AdminLoginDto, SetupPasswordDto } from './dto/admin-auth.dto';
+import {
+  InviteSubAdminDto,
+  AdminLoginDto,
+  SetupPasswordDto,
+} from './dto/admin-auth.dto';
 import { Response } from 'express';
 import { MailService } from '../mail/mail.service';
 
@@ -15,10 +25,18 @@ export class AdminAuthService {
     private readonly mailService: MailService,
   ) {}
 
-  async inviteSubAdmin(email: string, name: string, permissions: Record<string, PermissionLevel>) {
-    const existing = await this.prisma.adminUser.findUnique({ where: { email } });
+  async inviteSubAdmin(
+    email: string,
+    name: string,
+    permissions: Record<string, PermissionLevel>,
+  ) {
+    const existing = await this.prisma.adminUser.findUnique({
+      where: { email },
+    });
     if (existing) {
-      throw new ForbiddenException('Admin user with this email already exists.');
+      throw new ForbiddenException(
+        'Admin user with this email already exists.',
+      );
     }
 
     const user = await this.prisma.adminUser.create({
@@ -44,7 +62,11 @@ export class AdminAuthService {
 
     const token = this.jwtService.sign(
       { id: user.id, type: 'SETUP' },
-      { expiresIn: '24h', secret: process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod' }
+      {
+        expiresIn: '24h',
+        secret:
+          process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod',
+      },
     );
 
     // Trigger explicit SMTP
@@ -56,7 +78,10 @@ export class AdminAuthService {
   async setupPassword(token: string, newPassword: string) {
     let payload;
     try {
-      payload = this.jwtService.verify(token, { secret: process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod' });
+      payload = this.jwtService.verify(token, {
+        secret:
+          process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod',
+      });
     } catch (e) {
       throw new BadRequestException('Invalid or expired setup token.');
     }
@@ -65,7 +90,9 @@ export class AdminAuthService {
       throw new BadRequestException('Invalid token type.');
     }
 
-    const user = await this.prisma.adminUser.findUnique({ where: { id: payload.id } });
+    const user = await this.prisma.adminUser.findUnique({
+      where: { id: payload.id },
+    });
     if (!user) {
       throw new BadRequestException('User not found.');
     }
@@ -119,19 +146,20 @@ export class AdminAuthService {
     };
 
     const token = this.jwtService.sign(payload, {
-      secret: process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod',
+      secret:
+        process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod',
       expiresIn: '12h',
     });
 
-    return { 
-      token, 
-      user: { 
-        id: user.id, 
-        email: user.email, 
-        name: user.name, 
-        isSuper: user.isSuper, 
-        permissions: user.permissions 
-      } 
+    return {
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        isSuper: user.isSuper,
+        permissions: user.permissions,
+      },
     };
   }
 }

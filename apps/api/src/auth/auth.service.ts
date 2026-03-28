@@ -14,7 +14,7 @@ export class AuthService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
-  ) { }
+  ) {}
 
   async register(dto: RegisterDto) {
     try {
@@ -41,7 +41,9 @@ export class AuthService {
       return result;
     } catch (error: any) {
       console.error('ERROR IN REGISTER:', error);
-      throw new BadRequestException(error?.message || 'Unknown error during register');
+      throw new BadRequestException(
+        error?.message || 'Unknown error during register',
+      );
     }
   }
 

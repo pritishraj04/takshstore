@@ -3,5 +3,5 @@ import { PaymentsService } from './payments.service';
 
 @Controller('payments')
 export class PaymentsController {
-    constructor(private readonly paymentsService: PaymentsService) { }
+  constructor(private readonly paymentsService: PaymentsService) {}
 }

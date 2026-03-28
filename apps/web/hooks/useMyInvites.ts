@@ -13,6 +13,8 @@ export interface MyInvite {
             status: string;
         };
     };
+    isEternity?: boolean;
+    marriageDate?: string;
     createdAt: string;
     updatedAt: string;
 }

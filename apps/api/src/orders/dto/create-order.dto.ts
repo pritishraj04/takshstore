@@ -1,48 +1,55 @@
 import { Type } from 'class-transformer';
 import {
-    IsArray,
-    IsEnum,
-    IsNumber,
-    IsOptional,
-    IsString,
-    ValidateNested,
+  IsArray,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  ValidateNested,
 } from 'class-validator';
 import { ProductType } from '@prisma/client';
 
 export class OrderItemDto {
-    @IsString()
-    productId: string;
+  @IsString()
+  productId: string;
 
-    @IsNumber()
-    quantity: number;
+  @IsNumber()
+  quantity: number;
 
-    @IsNumber()
-    priceAtPurchase: number;
+  @IsNumber()
+  priceAtPurchase: number;
 
-    @IsEnum(ProductType)
-    type: ProductType;
+  @IsEnum(ProductType)
+  type: ProductType;
 
-    @IsOptional()
-    inviteData?: any;
+  @IsOptional()
+  inviteData?: any;
 
-    @IsOptional()
-    @IsString()
-    draftId?: string;
+  @IsOptional()
+  @IsString()
+  draftId?: string;
+
+  @IsOptional()
+  isEternity?: boolean;
+
+  @IsOptional()
+  @IsString()
+  marriageDate?: string;
 }
 
 export class CreateOrderDto {
-    @IsNumber()
-    totalAmount: number;
+  @IsNumber()
+  totalAmount: number;
 
-    @IsOptional()
-    shippingAddress?: any;
+  @IsOptional()
+  shippingAddress?: any;
 
-    @IsOptional()
-    @IsString()
-    developerNotes?: string;
+  @IsOptional()
+  @IsString()
+  developerNotes?: string;
 
-    @IsArray()
-    @ValidateNested({ each: true })
-    @Type(() => OrderItemDto)
-    items: OrderItemDto[];
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  items: OrderItemDto[];
 }

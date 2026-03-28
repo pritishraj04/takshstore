@@ -16,26 +16,26 @@ export class AdminProductsService {
       where: whereClause,
       orderBy: { createdAt: 'desc' },
       include: {
-          _count: {
-              select: { orderItems: true }
-          }
-      }
+        _count: {
+          select: { orderItems: true },
+        },
+      },
     });
   }
 
   async createProduct(dto: CreateProductDto) {
     return this.prisma.product.create({
-      data: dto
+      data: dto,
     });
   }
 
   async updateProduct(id: string, dto: UpdateProductDto) {
-    const exists = await this.prisma.product.findUnique({ where: { id }});
+    const exists = await this.prisma.product.findUnique({ where: { id } });
     if (!exists) throw new NotFoundException('Product mapping unresolved');
 
     return this.prisma.product.update({
       where: { id },
-      data: dto
+      data: dto,
     });
   }
 
@@ -47,18 +47,18 @@ export class AdminProductsService {
 
     return this.prisma.product.update({
       where: { id },
-      data: { status: newStatus as ProductStatus }
+      data: { status: newStatus as ProductStatus },
     });
   }
 
   async checkTemplate(slug: string) {
     const existingProduct = await this.prisma.product.findFirst({
-        where: { templateSlug: slug, type: 'DIGITAL' }
+      where: { templateSlug: slug, type: 'DIGITAL' },
     });
 
     return {
-        isUsed: !!existingProduct,
-        productName: existingProduct?.title || null
+      isUsed: !!existingProduct,
+      productName: existingProduct?.title || null,
     };
   }
 }

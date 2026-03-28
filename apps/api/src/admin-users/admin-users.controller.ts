@@ -1,7 +1,19 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { AdminUsersService } from './admin-users.service';
 import { InviteUserDto, UpdateUserStatusDto } from './dto/admin-users.dto';
-import { AdminPermissionsGuard, RequireSuperAdmin } from '../admin-auth/guards/rbac.guard';
+import {
+  AdminPermissionsGuard,
+  RequireSuperAdmin,
+} from '../admin-auth/guards/rbac.guard';
 
 @Controller('admin/users')
 @UseGuards(AdminPermissionsGuard)
@@ -20,7 +32,10 @@ export class AdminUsersController {
   }
 
   @Patch(':id/status')
-  async updateStatus(@Param('id') id: string, @Body() dto: UpdateUserStatusDto) {
+  async updateStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateUserStatusDto,
+  ) {
     return this.adminUsersService.updateStatus(id, dto);
   }
 

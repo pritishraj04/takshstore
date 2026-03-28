@@ -4,48 +4,48 @@ import { ProductType } from '@prisma/client';
 
 @Injectable()
 export class ProductsService {
-    constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
-    async findAll(query?: string) {
-        if (!query) {
-            return this.prisma.product.findMany({
-                where: { status: 'ACTIVE' }
-            });
-        }
-
-        return this.prisma.product.findMany({
-            where: {
-                status: 'ACTIVE',
-                title: {
-                    contains: query,
-                    mode: 'insensitive'
-                }
-            }
-        });
+  async findAll(query?: string) {
+    if (!query) {
+      return this.prisma.product.findMany({
+        where: { status: 'ACTIVE' },
+      });
     }
 
-    async seed() {
-        // Basic idempotent seed: clear existing to avoid duplicates during repeated seeds
-        await this.prisma.product.deleteMany();
+    return this.prisma.product.findMany({
+      where: {
+        status: 'ACTIVE',
+        title: {
+          contains: query,
+          mode: 'insensitive',
+        },
+      },
+    });
+  }
 
-        const physical = await this.prisma.product.create({
-            data: {
-                title: 'Premium Canvas Print',
-                price: 199.99,
-                type: ProductType.PHYSICAL,
-                imageUrl: '/main-website-assets/images/placeholder.webp',
-            },
-        });
+  async seed() {
+    // Basic idempotent seed: clear existing to avoid duplicates during repeated seeds
+    await this.prisma.product.deleteMany();
 
-        const digital = await this.prisma.product.create({
-            data: {
-                title: 'Customizer Base Invite',
-                price: 49.99,
-                type: ProductType.DIGITAL,
-                imageUrl: '/main-website-assets/images/placeholder.webp',
-            },
-        });
+    const physical = await this.prisma.product.create({
+      data: {
+        title: 'Premium Canvas Print',
+        price: 199.99,
+        type: ProductType.PHYSICAL,
+        imageUrl: '/main-website-assets/images/placeholder.webp',
+      },
+    });
 
-        return { message: 'Seeding complete', physical, digital };
-    }
+    const digital = await this.prisma.product.create({
+      data: {
+        title: 'Customizer Base Invite',
+        price: 49.99,
+        type: ProductType.DIGITAL,
+        imageUrl: '/main-website-assets/images/placeholder.webp',
+      },
+    });
+
+    return { message: 'Seeding complete', physical, digital };
+  }
 }

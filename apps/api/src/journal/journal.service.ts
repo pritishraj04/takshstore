@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateJournalDto, UpdateJournalDto } from './dto/journal.dto';
 
@@ -7,7 +11,7 @@ export class JournalService {
   constructor(private readonly prisma: PrismaService) {}
 
   // --- Admin Methods ---
-  
+
   async getAdminJournals() {
     return this.prisma.journal.findMany({
       orderBy: { createdAt: 'desc' },
@@ -15,7 +19,9 @@ export class JournalService {
   }
 
   async createJournal(dto: CreateJournalDto) {
-    const existing = await this.prisma.journal.findUnique({ where: { slug: dto.slug } });
+    const existing = await this.prisma.journal.findUnique({
+      where: { slug: dto.slug },
+    });
     if (existing) throw new ConflictException('Slug already in use.');
 
     return this.prisma.journal.create({
@@ -25,8 +31,11 @@ export class JournalService {
 
   async updateJournal(id: string, dto: UpdateJournalDto) {
     if (dto.slug) {
-        const existing = await this.prisma.journal.findUnique({ where: { slug: dto.slug } });
-        if (existing && existing.id !== id) throw new ConflictException('Slug already in use.');
+      const existing = await this.prisma.journal.findUnique({
+        where: { slug: dto.slug },
+      });
+      if (existing && existing.id !== id)
+        throw new ConflictException('Slug already in use.');
     }
     return this.prisma.journal.update({
       where: { id },
@@ -39,7 +48,7 @@ export class JournalService {
   }
 
   // --- Public Methods ---
-  
+
   async getPublishedJournals(limit?: number) {
     return this.prisma.journal.findMany({
       where: { isPublished: true },

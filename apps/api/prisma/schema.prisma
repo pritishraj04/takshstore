@@ -20,6 +20,7 @@ enum OrderStatus {
   PROCESSING
   SHIPPED
   COMPLETED
+  PUBLISHED
 }
 
 enum InviteStatus {
@@ -85,6 +86,8 @@ model Product {
   templateSlug    String?
   defaultAudioUrl String?
   isCustomizable  Boolean       @default(true)
+  isDigital       Boolean       @default(false)
+  eternityAddonPrice Float?
 
   orderItems      OrderItem[]
   reviews         Review[]
@@ -119,6 +122,7 @@ model OrderItem {
   product         Product        @relation(fields: [productId], references: [id])
   quantity        Int            @default(1)
   priceAtPurchase Float
+  hasPaidEternity Boolean        @default(false)
   digitalInvite   DigitalInvite?
 }
 
@@ -133,6 +137,9 @@ model DigitalInvite {
   originalEventDate DateTime?
   originalBrideName String?
   originalGroomName String?
+  marriageDate      DateTime?
+  isEternity        Boolean      @default(false)
+  inviteUrl         String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 }

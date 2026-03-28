@@ -6,8 +6,8 @@ import { AuthModule } from '../auth/auth.module'; // Import AuthModule if requir
 import { PaymentsModule } from '../payments/payments.module';
 
 @Module({
-    imports: [PrismaModule, AuthModule, PaymentsModule],
-    controllers: [OrdersController],
-    providers: [OrdersService],
+  imports: [PrismaModule, AuthModule, PaymentsModule],
+  controllers: [OrdersController],
+  providers: [OrdersService],
 })
-export class OrdersModule { }
+export class OrdersModule {}

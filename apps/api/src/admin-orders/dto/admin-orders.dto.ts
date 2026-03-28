@@ -1,4 +1,12 @@
-import { IsDateString, IsEnum, IsNumber, IsOptional, IsString, IsBoolean, IsObject } from 'class-validator';
+import {
+  IsDateString,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsBoolean,
+  IsObject,
+} from 'class-validator';
 import { OrderStatus, ProductType } from '@prisma/client';
 
 export class ForceUpdateInviteDto {
@@ -27,7 +35,7 @@ export class UpdateOrderStatusDto {
 export class CreateManualOrderDto {
   @IsString()
   userId: string;
-  
+
   @IsString()
   productId: string;
 

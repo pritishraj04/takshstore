@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UserAccountStatus } from '@prisma/client';
 import { CreateCustomerDto } from './dto/create-customer.dto';
@@ -22,25 +26,28 @@ export class AdminCustomersService {
       where: whereClause,
       include: {
         _count: {
-          select: { orders: true }
+          select: { orders: true },
         },
         orders: {
           where: { status: 'PAID' },
-          select: { totalAmount: true }
-        }
+          select: { totalAmount: true },
+        },
       },
-      orderBy: { createdAt: 'desc' }
+      orderBy: { createdAt: 'desc' },
     });
 
-    return users.map(u => {
-        const lifetimeValue = u.orders.reduce((sum, order) => sum + order.totalAmount, 0);
-        // Exclude raw orders array and password from the response
-        const { password, orders, ...safeUser } = u;
-        return {
-            ...safeUser,
-            lifetimeValue,
-            totalOrders: u._count.orders
-        }
+    return users.map((u) => {
+      const lifetimeValue = u.orders.reduce(
+        (sum, order) => sum + order.totalAmount,
+        0,
+      );
+      // Exclude raw orders array and password from the response
+      const { password, orders, ...safeUser } = u;
+      return {
+        ...safeUser,
+        lifetimeValue,
+        totalOrders: u._count.orders,
+      };
     });
   }
 
@@ -49,25 +56,25 @@ export class AdminCustomersService {
       where: { id },
       include: {
         _count: {
-          select: { orders: true }
+          select: { orders: true },
         },
         orders: {
           orderBy: { createdAt: 'desc' },
           include: {
-             items: {
-                 include: { 
-                     product: true, 
-                     digitalInvite: true 
-                 }
-             }
-          }
-        }
-      }
+            items: {
+              include: {
+                product: true,
+                digitalInvite: true,
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!user) throw new NotFoundException('Customer profile null');
 
-    const paidOrders = user.orders.filter(o => o.status === 'PAID');
+    const paidOrders = user.orders.filter((o) => o.status === 'PAID');
     const lifetimeValue = paidOrders.reduce((sum, o) => sum + o.totalAmount, 0);
 
     const { password, ...safeUser } = user;
@@ -79,10 +86,10 @@ export class AdminCustomersService {
       where: { id },
       data: { status },
       select: {
-          id: true,
-          email: true,
-          status: true
-      }
+        id: true,
+        email: true,
+        status: true,
+      },
     });
   }
 
@@ -108,7 +115,7 @@ export class AdminCustomersService {
         name: dto.name,
         email: dto.email,
         phone: dto.phone,
-        password: hashed
+        password: hashed,
       },
     });
   }

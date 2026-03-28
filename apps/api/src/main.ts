@@ -21,7 +21,9 @@ async function bootstrap() {
 
   const config = new DocumentBuilder()
     .setTitle('Taksh Store API')
-    .setDescription('Endpoints for physical canvases and digital SaaS invitations.')
+    .setDescription(
+      'Endpoints for physical canvases and digital SaaS invitations.',
+    )
     .setVersion('1.0')
     .addBearerAuth()
     .build();

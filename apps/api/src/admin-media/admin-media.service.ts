@@ -6,12 +6,18 @@ import { StorageService } from '../storage/storage.service';
 export class AdminMediaService {
   constructor(
     private readonly prisma: PrismaService,
-    private readonly storage: StorageService
+    private readonly storage: StorageService,
   ) {}
 
   async getAllMediaFiles() {
     const invites = await this.prisma.digitalInvite.findMany({
-      select: { id: true, slug: true, inviteData: true, createdAt: true, updatedAt: true },
+      select: {
+        id: true,
+        slug: true,
+        inviteData: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     const assets: any[] = [];
@@ -19,7 +25,10 @@ export class AdminMediaService {
     for (const invite of invites) {
       let inviteData: any = {};
       try {
-        inviteData = typeof invite.inviteData === 'string' ? JSON.parse(invite.inviteData) : (invite.inviteData || {});
+        inviteData =
+          typeof invite.inviteData === 'string'
+            ? JSON.parse(invite.inviteData)
+            : invite.inviteData || {};
       } catch {}
 
       if (inviteData.heroImage) {
@@ -44,7 +53,10 @@ export class AdminMediaService {
     }
 
     // Sort by most recent changes
-    return assets.sort((a, b) => new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime());
+    return assets.sort(
+      (a, b) =>
+        new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
+    );
   }
 
   async deleteMedia(inviteId: string, type: 'IMAGE' | 'AUDIO') {
@@ -56,7 +68,10 @@ export class AdminMediaService {
 
     let inviteData: any = {};
     try {
-      inviteData = typeof invite.inviteData === 'string' ? JSON.parse(invite.inviteData as string) : (invite.inviteData || {});
+      inviteData =
+        typeof invite.inviteData === 'string'
+          ? JSON.parse(invite.inviteData)
+          : invite.inviteData || {};
     } catch {}
 
     const url = type === 'IMAGE' ? inviteData.heroImage : inviteData.music?.url;
@@ -76,8 +91,8 @@ export class AdminMediaService {
       inviteData.heroImage = '';
     } else {
       if (inviteData.music) {
-         inviteData.music.url = '';
-         inviteData.music.name = ''; // Purge meta names as well 
+        inviteData.music.url = '';
+        inviteData.music.name = ''; // Purge meta names as well
       }
     }
 

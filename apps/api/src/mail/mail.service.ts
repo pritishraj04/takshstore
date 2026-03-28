@@ -1,6 +1,11 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import * as nodemailer from 'nodemailer';
-import { AdminInviteTemplate, CanvasOrderReceipt, DigitalInviteAccess, OrderShippedNotification } from './templates/email.templates';
+import {
+  AdminInviteTemplate,
+  CanvasOrderReceipt,
+  DigitalInviteAccess,
+  OrderShippedNotification,
+} from './templates/email.templates';
 
 @Injectable()
 export class MailService implements OnModuleInit {
@@ -19,9 +24,11 @@ export class MailService implements OnModuleInit {
         },
       });
     } else {
-      this.logger.warn('No SMTP credentials found in environment. Generating a dynamic Ethereal test account...');
+      this.logger.warn(
+        'No SMTP credentials found in environment. Generating a dynamic Ethereal test account...',
+      );
       const testAccount = await nodemailer.createTestAccount();
-      
+
       this.transporter = nodemailer.createTransport({
         host: 'smtp.ethereal.email',
         port: 587,
@@ -31,14 +38,15 @@ export class MailService implements OnModuleInit {
           pass: testAccount.pass,
         },
       });
-      this.logger.log(`Generated Ethereal account -> User: ${testAccount.user}`);
+      this.logger.log(
+        `Generated Ethereal account -> User: ${testAccount.user}`,
+      );
     }
   }
 
-
   async sendAdminInvite(email: string, setupToken: string) {
     const setupLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/admin/onboarding?token=${setupToken}`;
-    
+
     try {
       const info = await this.transporter.sendMail({
         from: '"Taksh Logistics" <noreply@taksh.store>',
@@ -50,7 +58,9 @@ export class MailService implements OnModuleInit {
       const testUrl = nodemailer.getTestMessageUrl(info);
       if (testUrl) this.logger.log(`Preview Email: ${testUrl}`);
     } catch (e: any) {
-      this.logger.error(`Transmission failure resolving admin invite: ${e.message}`);
+      this.logger.error(
+        `Transmission failure resolving admin invite: ${e.message}`,
+      );
     }
   }
 

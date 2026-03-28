@@ -35,6 +35,9 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [iframeLoaded, setIframeLoaded] = useState(false);
 
+    // Track Eternity add-on locally before adding to cart
+    const [isEternity, setIsEternity] = useState(false);
+
     // Storage Hooks
     const { mutateAsync: uploadFile, isPending: isUploading } = useUploadFile();
     const { mutateAsync: deleteFile } = useDeleteFile();
@@ -47,7 +50,14 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     // Hydrate store on mount once data is received
     useEffect(() => {
         if (data?.inviteData) {
-            setAllData(data.inviteData);
+            // Ensure there is always at least one celebration to act as the primary Wedding event
+            const hydratedData = { ...data.inviteData };
+            if (!hydratedData.celebrations || hydratedData.celebrations.length === 0) {
+                hydratedData.celebrations = [
+                    { id: Date.now().toString(), name: "Wedding", date: "", time: "", venue: "", googleMapsUrl: "", dressCode: "", showLocation: false, highlight: true }
+                ];
+            }
+            setAllData(hydratedData);
         }
     }, [data, setAllData]);
 
@@ -108,7 +118,6 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             } catch (error: any) {
                 const message = error.response?.data?.message || 'Update failed';
                 toast.error(message);
-                // Rollback local state
                 if (data?.inviteData) {
                     setAllData(data.inviteData);
                 }
@@ -123,7 +132,6 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             toast.error('Please claim a unique URL for your invite before proceeding.');
             return;
         }
-        // Local saving is handled by zustand automatically
         toast.success("Draft saved locally!");
     };
 
@@ -137,7 +145,6 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         }
     };
 
-    // Move the handleAddToBag below or keep here.
     const handleAddToBag = () => {
         const { couple, celebrations, slug } = currentDraft || {};
 
@@ -147,7 +154,16 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         }
 
         if (!celebrations || celebrations.length === 0 || !celebrations[0].date) {
-            toast.error("Please add at least one celebration with a valid date.");
+            toast.error("Please set a valid date for your Wedding celebration.");
+            return;
+        }
+
+        // Validate the primary wedding date to prevent Prisma Invalid Date errors
+        const primaryDateStr = celebrations[0].date;
+        const parsedMarriageDate = new Date(primaryDateStr);
+
+        if (isNaN(parsedMarriageDate.getTime())) {
+            toast.error("The selected wedding date is invalid.");
             return;
         }
 
@@ -167,10 +183,15 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                 title: digitalProduct.title,
                 price: digitalProduct.price,
                 discountedPrice: digitalProduct.discountedPrice,
+                eternityAddonPrice: digitalProduct.eternityAddonPrice || 0,
                 type: 'DIGITAL',
+                isDigital: true,
                 imageUrl: digitalProduct.imageUrl || "/main-website-assets/images/placeholder.webp",
                 inviteData: currentDraft,
-                draftId: inviteId
+                draftId: inviteId,
+                isEternity,
+                // Send the validated ISO string to prevent payload serialization issues
+                marriageDate: parsedMarriageDate.toISOString()
             } as any);
             toast.success('Invite added to your atelier bag.');
             router.push('/checkout');
@@ -187,7 +208,6 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
             return;
         }
 
-        // Skip check if slug hasn't changed from original data
         if (data?.slug && data.slug === currentSlug) {
             setSlugStatus({ loading: false, available: true, suggestions: [] });
             return;
@@ -266,15 +286,37 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         });
     };
 
-    const updateWedding = (field: string, value: string) => {
-        if (currentDraft) setAllData({ ...currentDraft, wedding: { ...currentDraft.wedding, [field]: value } });
+    // Helper to format date cleanly (e.g., "APRIL 17th, 2026")
+    const formatDisplayDate = (dateString: string) => {
+        if (!dateString) return "";
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return "";
+
+        const day = date.getDate();
+        const suffix = ["th", "st", "nd", "rd"][((day % 10 > 3) || Math.floor((day % 100) / 10) === 1) ? 0 : day % 10];
+        const month = date.toLocaleString('en-US', { month: 'long' }).toUpperCase();
+
+        return `${month} ${day}${suffix}, ${date.getFullYear()}`;
     };
 
     const updateEvent = (id: string, field: string, value: string | boolean) => {
-        if (currentDraft) setAllData({
-            ...currentDraft,
-            celebrations: currentDraft.celebrations.map(ev => ev.id === id ? { ...ev, [field]: value } : ev)
-        });
+        if (!currentDraft) return;
+
+        const updatedCelebrations = currentDraft.celebrations.map(ev =>
+            ev.id === id ? { ...ev, [field]: value } : ev
+        );
+
+        let updatedDraft = { ...currentDraft, celebrations: updatedCelebrations };
+
+        // If the primary wedding date changes, automatically update the display date
+        if (updatedCelebrations[0].id === id && field === 'date') {
+            updatedDraft.wedding = {
+                ...updatedDraft.wedding,
+                displayDate: formatDisplayDate(value as string)
+            };
+        }
+
+        setAllData(updatedDraft);
     };
 
     const updateContact = (field: string, value: string) => {
@@ -306,7 +348,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     };
 
     const removeCelebration = (index: number) => {
-        if (currentDraft && currentDraft.celebrations.length > 1) {
+        if (currentDraft && currentDraft.celebrations.length > 1 && index !== 0) {
             const newCelebrations = [...currentDraft.celebrations];
             newCelebrations.splice(index, 1);
             setAllData({ ...currentDraft, celebrations: newCelebrations });
@@ -321,10 +363,9 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
 
         const toastId = toast.loading(`Uploading ${type}...`);
         try {
-            // Delete old file if it's an AWS URL
             const oldUrl = type === 'image' ? currentDraft.couple?.image : currentDraft.music?.url;
             if (oldUrl && isAwsUrl(oldUrl)) {
-                await deleteFile(oldUrl).catch(console.error); // Best effort
+                await deleteFile(oldUrl).catch(console.error);
             }
 
             const newUrl = await uploadFile({ file, folder: 'invites' });
@@ -355,17 +396,15 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         }
 
         if (type === 'image') {
-            const placeholder = "";
             setAllData({
                 ...currentDraft,
-                couple: { ...currentDraft.couple, image: placeholder }
+                couple: { ...currentDraft.couple, image: "" }
             });
             toast.success("Image removed.");
         } else {
-            const placeholder = ""; // Assuming frontend audio player handles empty url properly or uses a fallback
             setAllData({
                 ...currentDraft,
-                music: { ...currentDraft.music, url: placeholder }
+                music: { ...currentDraft.music, url: "" }
             });
             toast.success("Music removed.");
         }
@@ -378,7 +417,6 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         }
     }, [isError, router]);
 
-    // Luxury Loading State
     if (isLoading && inviteId !== 'new') {
         return (
             <div className="bg-primary min-h-screen flex flex-col items-center justify-center font-playfair tracking-wide">
@@ -502,11 +540,6 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                 />
                                 <input
                                     type="text" value={currentDraft?.couple?.groom?.name || ''} onChange={(e) => updatePersonName('groom', e.target.value)} placeholder="Groom Name"
-                                    className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
-                                    style={{ fontFamily: 'var(--font-inter)' }}
-                                />
-                                <input
-                                    type="text" value={currentDraft?.wedding?.displayDate || ''} onChange={(e) => updateWedding('displayDate', e.target.value)} placeholder="Display Date"
                                     className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                                     style={{ fontFamily: 'var(--font-inter)' }}
                                 />
@@ -639,8 +672,10 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                 {currentDraft?.celebrations?.map((ev, i) => (
                                     <div key={ev.id} className="flex flex-col gap-4">
                                         <div className="flex items-center justify-between">
-                                            <h4 className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>{ev.name || `Event ${i + 1}`}</h4>
-                                            {currentDraft.celebrations.length > 1 && (
+                                            <h4 className="text-[10px] uppercase tracking-widest text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                {i === 0 ? "Main Wedding Event" : (ev.name || `Event ${i + 1}`)}
+                                            </h4>
+                                            {i !== 0 && currentDraft.celebrations.length > 1 && (
                                                 <button onClick={() => removeCelebration(i)} className="text-red-500 hover:text-red-700 p-1">
                                                     <Trash2 size={16} />
                                                 </button>
@@ -669,6 +704,31 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                                 />
                                             </div>
                                         </div>
+
+                                        {/* Dynamic Eternity Checkbox Placed Exactly Under Primary Wedding Date */}
+                                        {i === 0 && !isPurchased && digitalProduct?.isDigital && (digitalProduct?.eternityAddonPrice || 0) > 0 && (
+                                            <div className="mt-2 mb-2 p-4 bg-[#F2F1EC] rounded-sm border border-[#E5E4DF]">
+                                                <label className="flex items-start gap-4 cursor-pointer group">
+                                                    <div className="pt-1">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={isEternity}
+                                                            onChange={(e) => setIsEternity(e.target.checked)}
+                                                            className="w-5 h-5 border-[#E5E4DF] text-[#1A1A1A] focus:ring-[#1A1A1A] rounded transition-colors"
+                                                        />
+                                                    </div>
+                                                    <div className="flex flex-col text-left">
+                                                        <span className="text-sm font-medium text-[#1A1A1A] mb-1" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                            Host Site for Eternity (+ ₹{(digitalProduct?.eternityAddonPrice || 0).toLocaleString()})
+                                                        </span>
+                                                        <span className="text-[11px] leading-relaxed text-[#5A5A5A] font-light" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                            Keep your digital invite live forever instead of expiring after this date.
+                                                        </span>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        )}
+
                                         <div className="flex items-center gap-2">
                                             <MapPin size={12} strokeWidth={1} className="text-[#C5B39A]" />
                                             <input
@@ -862,8 +922,6 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                         </div>
                     </div>
                 </div>
-
-
 
                 {/* Sticky Action Footer */}
                 {isPurchased ? (

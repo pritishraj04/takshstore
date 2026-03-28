@@ -44,11 +44,22 @@ export class OrdersService {
                         productId: item.productId,
                         quantity: item.quantity,
                         priceAtPurchase: item.priceAtPurchase,
+                        hasPaidEternity: item.isEternity || false,
                     },
                 });
 
                 // Step D: Create DigitalInvite if type is DIGITAL
                 if (item.type === ProductType.DIGITAL && item.inviteData) {
+                    let validMarriageDate: Date | null = null;
+                    if (item.marriageDate) {
+                        const parsedDate = new Date(item.marriageDate);
+                        if (!isNaN(parsedDate.getTime())) {
+                            validMarriageDate = parsedDate;
+                        } else {
+                            throw new BadRequestException(`Invalid marriage date provided for digital product ${item.productId}`);
+                        }
+                    }
+
                     if (item.draftId) {
                         // Link the existing draft to the new OrderItem and update status
                         await tx.digitalInvite.update({
@@ -58,6 +69,8 @@ export class OrdersService {
                                 status: 'DEVELOPMENT',
                                 inviteData: item.inviteData,
                                 slug: (item.inviteData as any).slug || null,
+                                isEternity: item.isEternity || false,
+                                marriageDate: validMarriageDate,
                             }
                         });
                     } else {
@@ -66,6 +79,8 @@ export class OrdersService {
                                 orderItemId: orderItem.id,
                                 inviteData: item.inviteData,
                                 slug: (item.inviteData as any).slug || null,
+                                isEternity: item.isEternity || false,
+                                marriageDate: validMarriageDate,
                             },
                         });
                     }

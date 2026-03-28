@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminAuthService } from '../admin-auth/admin-auth.service';
 import { UpdateUserStatusDto, InviteUserDto } from './dto/admin-users.dto';
@@ -19,20 +23,25 @@ export class AdminUsersService {
     });
 
     // Cleanse password field symmetrically before emitting
-    return users.map(u => {
+    return users.map((u) => {
       const { password, ...safeUser } = u;
       return safeUser;
     });
   }
 
   async inviteUser(dto: InviteUserDto) {
-    return this.adminAuthService.inviteSubAdmin(dto.email, dto.name, dto.permissions);
+    return this.adminAuthService.inviteSubAdmin(
+      dto.email,
+      dto.name,
+      dto.permissions,
+    );
   }
 
   async updateStatus(id: string, dto: UpdateUserStatusDto) {
     const user = await this.prisma.adminUser.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('Sub-admin not found');
-    if (user.isSuper) throw new BadRequestException('Cannot suspend a master Super Admin');
+    if (user.isSuper)
+      throw new BadRequestException('Cannot suspend a master Super Admin');
 
     return this.prisma.adminUser.update({
       where: { id },
@@ -44,13 +53,14 @@ export class AdminUsersService {
   async deleteUser(id: string) {
     const user = await this.prisma.adminUser.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('Sub-admin not found');
-    if (user.isSuper) throw new BadRequestException('Cannot delete a master Super Admin');
+    if (user.isSuper)
+      throw new BadRequestException('Cannot delete a master Super Admin');
 
-    // Permissions cascade is handled solidly by Prisma schema relations using ON DELETE CASCADE 
+    // Permissions cascade is handled solidly by Prisma schema relations using ON DELETE CASCADE
     await this.prisma.adminUser.delete({
       where: { id },
     });
-    
+
     return { message: 'Sub-admin permanently deleted.' };
   }
 }

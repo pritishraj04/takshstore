@@ -21,10 +21,13 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
         "Together with their families, invite you to celebrate their marriage. Dinner and dancing to follow."
     );
 
+
+
     const handleSaveAndAdd = () => {
-        // In a real app, this data would be saved to a database or passed in the item payload
-        // For now, we add the base product type to the bag
-        addItem(product);
+        addItem({
+            ...product,
+            inviteData: { wedding: { displayDate: eventDate } }
+        } as any);
         setIsOpen(true);
     };
 
@@ -105,7 +108,7 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
                         />
                     </div>
 
-                    {/* Event Date */}
+                    {/* Event/Marriage Date */}
                     <div className="mb-8">
                         <label
                             className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#5A5A5A] mb-4"
@@ -114,10 +117,10 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
                             <Calendar size={14} strokeWidth={1} /> Event Date
                         </label>
                         <input
-                            type="text"
-                            value={eventDate}
-                            onChange={(e) => setEventDate(e.target.value)}
-                            placeholder="e.g. October 14, 2026"
+                            type="date"
+                            onChange={(e) => {
+                                setEventDate(new Date(e.target.value).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' }));
+                            }}
                             className="w-full bg-transparent border-b border-[#E5E4DF] pb-3 text-sm placeholder:text-[#E5E4DF] text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         />
@@ -158,6 +161,8 @@ export default function InviteCustomizer({ product }: InviteCustomizerProps) {
                             style={{ fontFamily: 'var(--font-inter)' }}
                         />
                     </div>
+
+
 
                 </div>
 

@@ -32,6 +32,10 @@ interface DigitalInvite {
     inviteData: InviteData;
     status: InviteStatus;
     websiteUrl: string | null;
+    isEternity?: boolean;
+    marriageDate?: string;
+    orderItem?: any;
+    slug?: string;
 }
 
 interface OrderItem {
@@ -204,15 +208,25 @@ export default function UserDashboard({ name }: UserDashboardProps) {
 
                                         {/* Action Row */}
                                         <div className="mt-8 md:mt-12 flex flex-wrap gap-3 md:gap-4 items-center pt-4 border-t border-[#E5E4DF]">
-                                            <Link
-                                                href={`/customizer/${invite.id}`}
-                                                className="bg-[#1A1A1A] text-white font-inter text-xs tracking-widest uppercase py-2 px-6 hover:bg-black transition-colors flex items-center group w-fit"
-                                            >
-                                                <span className="mr-2 transition-transform group-hover:translate-x-1">
-                                                    <ArrowRight size={14} strokeWidth={1.5} />
-                                                </span>
-                                                Edit
-                                            </Link>
+                                            {(() => {
+                                                const isExpired = invite.marriageDate && new Date() > new Date(invite.marriageDate) && !invite.isEternity;
+                                                return isExpired ? (
+                                                    <div className="bg-gray-300 text-gray-500 font-inter text-xs tracking-widest uppercase py-2 px-6 flex items-center group w-fit cursor-not-allowed">
+                                                        <span className="mr-2">🔒</span>
+                                                        Locked (Date Passed)
+                                                    </div>
+                                                ) : (
+                                                    <Link
+                                                        href={`/customizer/${invite.id}`}
+                                                        className="bg-[#1A1A1A] text-white font-inter text-xs tracking-widest uppercase py-2 px-6 hover:bg-black transition-colors flex items-center group w-fit"
+                                                    >
+                                                        <span className="mr-2 transition-transform group-hover:translate-x-1">
+                                                            <ArrowRight size={14} strokeWidth={1.5} />
+                                                        </span>
+                                                        Edit
+                                                    </Link>
+                                                );
+                                            })()}
 
                                             {invite.orderItem?.orderId && (
                                                 <Link

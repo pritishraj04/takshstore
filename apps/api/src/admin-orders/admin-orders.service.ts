@@ -1,23 +1,32 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { OrderStatus } from '@prisma/client';
-import { ForceUpdateInviteDto, UpdateOrderStatusDto } from './dto/admin-orders.dto';
+import {
+  ForceUpdateInviteDto,
+  UpdateOrderStatusDto,
+} from './dto/admin-orders.dto';
 import { PaymentsService } from '../payments/payments.service';
 import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class AdminOrdersService {
   constructor(
-      private readonly prisma: PrismaService,
-      private readonly paymentsService: PaymentsService,
-      private readonly mailService: MailService
+    private readonly prisma: PrismaService,
+    private readonly paymentsService: PaymentsService,
+    private readonly mailService: MailService,
   ) {}
 
-  async createManualOrder(dto: import('./dto/admin-orders.dto').CreateManualOrderDto) {
-    const user = await this.prisma.user.findUnique({ where: { id: dto.userId } });
+  async createManualOrder(
+    dto: import('./dto/admin-orders.dto').CreateManualOrderDto,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: dto.userId },
+    });
     if (!user) throw new NotFoundException('Customer not found.');
 
-    const product = await this.prisma.product.findUnique({ where: { id: dto.productId } });
+    const product = await this.prisma.product.findUnique({
+      where: { id: dto.productId },
+    });
     if (!product) throw new NotFoundException('Product not found.');
 
     // 1. Create the Order
@@ -29,14 +38,16 @@ export class AdminOrdersService {
         shippingAddress: dto.shippingAddress || null,
         isManual: true,
         items: {
-          create: [{
-            productId: product.id,
-            quantity: 1,
-            priceAtPurchase: dto.customPrice,
-          }]
-        }
+          create: [
+            {
+              productId: product.id,
+              quantity: 1,
+              priceAtPurchase: dto.customPrice,
+            },
+          ],
+        },
       },
-      include: { items: true }
+      include: { items: true },
     });
 
     const orderItem = order.items[0];
@@ -47,8 +58,8 @@ export class AdminOrdersService {
         data: {
           orderItemId: orderItem.id,
           inviteData: {},
-          status: 'DRAFT'
-        }
+          status: 'DRAFT',
+        },
       });
     }
 
@@ -61,7 +72,12 @@ export class AdminOrdersService {
     return order;
   }
 
-  async findAllOrders(search: string = '', status: string = '', page: number = 1, limit: number = 50) {
+  async findAllOrders(
+    search: string = '',
+    status: string = '',
+    page: number = 1,
+    limit: number = 50,
+  ) {
     const skip = (page - 1) * limit;
 
     const where: any = {};
@@ -119,20 +135,20 @@ export class AdminOrdersService {
 
   async updateOrderStatus(id: string, dto: UpdateOrderStatusDto) {
     const existing = await this.prisma.order.findUnique({
-        where: { id },
-        include: {
-            user: true,
-            items: {
-                include: { product: true }
-            }
-        }
+      where: { id },
+      include: {
+        user: true,
+        items: {
+          include: { product: true },
+        },
+      },
     });
 
     if (!existing) throw new NotFoundException('Order not found');
 
     const updateData: any = { status: dto.status };
     if (dto.trackingUrl) {
-        updateData.trackingUrl = dto.trackingUrl;
+      updateData.trackingUrl = dto.trackingUrl;
     }
 
     const updated = await this.prisma.order.update({
@@ -142,10 +158,15 @@ export class AdminOrdersService {
 
     // Check bonus trigger explicitly mapping if PHYSICAL canvas
     if (dto.status === 'SHIPPED') {
-        const isCanvas = existing.items.some(item => item.product.type === 'PHYSICAL');
-        if (isCanvas && existing.user?.email) {
-            await this.mailService.sendShippingNotification(existing.user.email, dto.trackingUrl || null);
-        }
+      const isCanvas = existing.items.some(
+        (item) => item.product.type === 'PHYSICAL',
+      );
+      if (isCanvas && existing.user?.email) {
+        await this.mailService.sendShippingNotification(
+          existing.user.email,
+          dto.trackingUrl || null,
+        );
+      }
     }
 
     return updated;
@@ -176,13 +197,18 @@ export class AdminOrdersService {
     }
 
     if (!targetInvite) {
-      throw new NotFoundException('No Digital Invite found for this order. Only digital orders have invites.');
+      throw new NotFoundException(
+        'No Digital Invite found for this order. Only digital orders have invites.',
+      );
     }
 
     // Force update the JSON payload specifically bypassing regular logic locks
     let inviteData: any = {};
     try {
-      inviteData = typeof targetInvite.inviteData === 'string' ? JSON.parse(targetInvite.inviteData as string) : targetInvite.inviteData || {};
+      inviteData =
+        typeof targetInvite.inviteData === 'string'
+          ? JSON.parse(targetInvite.inviteData as string)
+          : targetInvite.inviteData || {};
     } catch {}
 
     if (dto.brideName) inviteData.brideName = dto.brideName;
@@ -195,11 +221,28 @@ export class AdminOrdersService {
       data: {
         originalBrideName: dto.brideName || targetInvite.originalBrideName,
         originalGroomName: dto.groomName || targetInvite.originalGroomName,
-        originalEventDate: dto.eventDate ? new Date(dto.eventDate) : targetInvite.originalEventDate,
+        originalEventDate: dto.eventDate
+          ? new Date(dto.eventDate)
+          : targetInvite.originalEventDate,
         inviteData,
       },
     });
 
     return updated;
+  }
+
+  async toggleEternity(id: string, isEternity: boolean) {
+    const invite = await this.prisma.digitalInvite.findUnique({
+      where: { orderItemId: id },
+    });
+    if (!invite)
+      throw new NotFoundException(
+        'Digital invite not found for this order item',
+      );
+
+    return this.prisma.digitalInvite.update({
+      where: { id: invite.id },
+      data: { isEternity },
+    });
   }
 }

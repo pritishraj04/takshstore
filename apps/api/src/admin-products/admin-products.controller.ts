@@ -1,6 +1,19 @@
-import { Controller, Get, Post, Put, Patch, Param, Body, Query, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Patch,
+  Param,
+  Body,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { AdminProductsService } from './admin-products.service';
-import { AdminPermissionsGuard, RequirePermission } from '../admin-auth/guards/rbac.guard';
+import {
+  AdminPermissionsGuard,
+  RequirePermission,
+} from '../admin-auth/guards/rbac.guard';
 import { CreateProductDto, UpdateProductDto } from './dto/admin-products.dto';
 
 @Controller('admin/products')

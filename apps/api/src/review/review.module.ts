@@ -9,12 +9,19 @@ import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
-    PrismaModule, 
-    AdminAuthModule, 
+    PrismaModule,
+    AdminAuthModule,
     AuthModule,
-    JwtModule.register({ secret: process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod' })
+    JwtModule.register({
+      secret:
+        process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod',
+    }),
   ],
-  controllers: [ReviewController, ProductReviewController, AdminReviewController],
+  controllers: [
+    ReviewController,
+    ProductReviewController,
+    AdminReviewController,
+  ],
   providers: [ReviewService],
   exports: [ReviewService],
 })

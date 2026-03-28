@@ -1,4 +1,10 @@
-import { IsEmail, IsNotEmpty, IsObject, IsString, MinLength } from 'class-validator';
+import {
+  IsEmail,
+  IsNotEmpty,
+  IsObject,
+  IsString,
+  MinLength,
+} from 'class-validator';
 import { PermissionLevel } from '@prisma/client';
 
 export class InviteSubAdminDto {

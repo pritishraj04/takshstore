@@ -1,4 +1,10 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsObject, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsObject,
+  IsString,
+} from 'class-validator';
 import { AdminStatus, PermissionLevel } from '@prisma/client';
 
 export class InviteUserDto {

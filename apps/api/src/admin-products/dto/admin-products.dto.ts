@@ -1,4 +1,11 @@
-import { IsArray, IsBoolean, IsEnum, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsEnum,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 import { ProductType, ProductStatus } from '@prisma/client';
 
 export class CreateProductDto {
@@ -8,7 +15,7 @@ export class CreateProductDto {
   @IsNumber() @IsOptional() discountedPrice?: number;
   @IsEnum(ProductType) type: ProductType;
   @IsEnum(ProductStatus) @IsOptional() status?: ProductStatus;
-  
+
   @IsString() @IsOptional() imageUrl?: string;
   @IsArray() @IsString({ each: true }) @IsOptional() images?: string[];
 
@@ -22,6 +29,8 @@ export class CreateProductDto {
   @IsString() @IsOptional() templateSlug?: string;
   @IsString() @IsOptional() defaultAudioUrl?: string;
   @IsBoolean() @IsOptional() isCustomizable?: boolean;
+  @IsBoolean() @IsOptional() isDigital?: boolean;
+  @IsNumber() @IsOptional() eternityAddonPrice?: number;
 }
 
 export class UpdateProductDto extends CreateProductDto {}

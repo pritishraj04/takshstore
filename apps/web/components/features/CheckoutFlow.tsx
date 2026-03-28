@@ -36,9 +36,13 @@ export default function CheckoutFlow() {
     if (!mounted) return null;
 
     const getEffectivePrice = (item: any) => {
-        return (item.discountedPrice && Number(item.discountedPrice) > 0) 
+        let basePrice = (item.discountedPrice && Number(item.discountedPrice) > 0) 
             ? Number(item.discountedPrice) 
             : Number(item.price);
+        if (item.isEternity && item.eternityAddonPrice) {
+            basePrice += Number(item.eternityAddonPrice);
+        }
+        return basePrice;
     };
 
     const requiresShipping = items.some(item => item.type === 'PHYSICAL');
@@ -365,6 +369,11 @@ export default function CheckoutFlow() {
                                 >
                                     {item.type} {item.quantity > 1 && `(x${item.quantity})`}
                                 </p>
+                                {item.isEternity && (
+                                    <p className="text-[9px] text-[#C5B39A] uppercase tracking-tighter mt-1 font-medium">
+                                        + Eternity Hosting Included
+                                    </p>
+                                )}
                             </div>
                             <div className="text-right">
                                 {getEffectivePrice(item) < Number(item.price) ? (

@@ -8,10 +8,15 @@ import { AdminAuthModule } from '../admin-auth/admin-auth.module';
 import { Reflector } from '@nestjs/core';
 
 @Module({
-  imports: [PrismaModule, AdminAuthModule, JwtModule.register({ secret: process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod' })],
+  imports: [
+    PrismaModule,
+    AdminAuthModule,
+    JwtModule.register({
+      secret:
+        process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod',
+    }),
+  ],
   controllers: [JournalController, AdminJournalController],
   providers: [JournalService, Reflector],
 })
 export class JournalModule {}
-
-

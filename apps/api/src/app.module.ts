@@ -29,8 +29,33 @@ import { JournalModule } from './journal/journal.module';
 import { ReviewModule } from './review/review.module';
 
 @Module({
-  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, CheckoutModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule, AdminAuthModule, AdminOrdersModule, AdminMediaModule, AdminUsersModule, AdminCmsModule, AdminCustomersModule, AdminProductsModule, AdminCouponsModule, MailModule, AdminUploadModule, AdminSettingsModule, AdminDashboardModule, JournalModule, ReviewModule],
+  imports: [
+    AuthModule,
+    PrismaModule,
+    ProductsModule,
+    OrdersModule,
+    PaymentsModule,
+    CheckoutModule,
+    DigitalInvitesModule,
+    StorageModule,
+    CouponsModule,
+    ArticlesModule,
+    AdminAuthModule,
+    AdminOrdersModule,
+    AdminMediaModule,
+    AdminUsersModule,
+    AdminCmsModule,
+    AdminCustomersModule,
+    AdminProductsModule,
+    AdminCouponsModule,
+    MailModule,
+    AdminUploadModule,
+    AdminSettingsModule,
+    AdminDashboardModule,
+    JournalModule,
+    ReviewModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

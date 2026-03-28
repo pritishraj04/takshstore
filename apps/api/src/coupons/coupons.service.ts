@@ -39,7 +39,7 @@ export class CouponsService {
 
   async getFeatured() {
     return this.prisma.coupon.findFirst({
-      where: { 
+      where: {
         isFeaturedOnHome: true,
         isActive: true,
       },

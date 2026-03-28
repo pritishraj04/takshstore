@@ -9,7 +9,8 @@ import { Reflector } from '@nestjs/core';
   imports: [
     PrismaModule,
     JwtModule.register({
-      secret: process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod',
+      secret:
+        process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod',
       signOptions: { expiresIn: '12h' },
     }),
   ],

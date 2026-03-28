@@ -4,8 +4,8 @@ import { DigitalInvitesController } from './digital-invites.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
-    imports: [PrismaModule],
-    controllers: [DigitalInvitesController],
-    providers: [DigitalInvitesService],
+  imports: [PrismaModule],
+  controllers: [DigitalInvitesController],
+  providers: [DigitalInvitesService],
 })
-export class DigitalInvitesModule { }
+export class DigitalInvitesModule {}

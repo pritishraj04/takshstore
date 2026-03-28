@@ -6,7 +6,12 @@ export class AdminDashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getOverview() {
-    const [totalRevenueResult, activeOrdersCount, totalCustomers, recentActivity] = await Promise.all([
+    const [
+      totalRevenueResult,
+      activeOrdersCount,
+      totalCustomers,
+      recentActivity,
+    ] = await Promise.all([
       // Sum the amount of all Orders where status === 'PAID'
       this.prisma.order.aggregate({
         where: { status: 'PAID' },
@@ -55,16 +60,20 @@ export class AdminDashboardService {
     }
 
     paidOrders.forEach((order) => {
-      const monthStr = order.createdAt.toLocaleString('default', { month: 'short' });
+      const monthStr = order.createdAt.toLocaleString('default', {
+        month: 'short',
+      });
       if (monthlyRevenueMap[monthStr] !== undefined) {
         monthlyRevenueMap[monthStr] += order.totalAmount;
       }
     });
 
-    const revenueChart = Object.entries(monthlyRevenueMap).map(([name, total]) => ({
-      name,
-      total,
-    }));
+    const revenueChart = Object.entries(monthlyRevenueMap).map(
+      ([name, total]) => ({
+        name,
+        total,
+      }),
+    );
 
     return {
       totalRevenue: totalRevenueResult._sum.totalAmount || 0,

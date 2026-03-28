@@ -1,6 +1,9 @@
 import { Controller, Get, UseGuards } from '@nestjs/common';
 import { AdminDashboardService } from './admin-dashboard.service';
-import { AdminPermissionsGuard, RequirePermission } from '../admin-auth/guards/rbac.guard';
+import {
+  AdminPermissionsGuard,
+  RequirePermission,
+} from '../admin-auth/guards/rbac.guard';
 
 @Controller('admin/dashboard')
 @UseGuards(AdminPermissionsGuard)

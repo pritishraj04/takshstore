@@ -1,7 +1,19 @@
-import { Controller, Get, Post, Patch, Delete, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { JournalService } from './journal.service';
 import { CreateJournalDto, UpdateJournalDto } from './dto/journal.dto';
-import { AdminPermissionsGuard, RequirePermission } from '../admin-auth/guards/rbac.guard';
+import {
+  AdminPermissionsGuard,
+  RequirePermission,
+} from '../admin-auth/guards/rbac.guard';
 
 @Controller('admin/journals')
 @UseGuards(AdminPermissionsGuard)
@@ -32,4 +44,3 @@ export class AdminJournalController {
     return this.journalService.deleteJournal(id);
   }
 }
-

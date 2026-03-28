@@ -30,12 +30,15 @@ interface DigitalInvite {
     id: string;
     status: InviteStatus;
     websiteUrl: string | null;
+    isEternity?: boolean;
+    marriageDate?: string;
 }
 
 interface OrderItem {
     id: string;
     quantity: number;
     priceAtPurchase: number;
+    hasPaidEternity?: boolean;
     product: {
         id: string;
         title: string;
@@ -182,21 +185,45 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                     <div className="flex gap-4 font-inter text-xs tracking-widest uppercase text-secondary">
                                         <span>Type: {item.product.type}</span>
                                         <span>Qty: {item.quantity}</span>
+                                        {item.hasPaidEternity && (
+                                            <span className="text-[#C5B39A] font-bold">Eternity Hosting: Active</span>
+                                        )}
                                     </div>
 
                                     {/* Digital Invite Specific Rendering */}
                                     {item.product.type === "DIGITAL" && item.digitalInvite && (
-                                        <div className="mt-4 pt-4 border-t border-light/50">
-                                            {item.digitalInvite.status === 'PUBLISHED' && item.digitalInvite.websiteUrl ? (
-                                                <a href={item.digitalInvite.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-inter tracking-wide text-[#C5B39A] hover:underline flex items-center gap-2">
-                                                    View Live Invitation →
-                                                </a>
-                                            ) : (
-                                                <p className="text-[11px] font-inter tracking-widest uppercase text-secondary flex items-center gap-2">
-                                                    <span className={`h-1.5 w-1.5 rounded-full ${item.digitalInvite.status === 'DEVELOPMENT' ? 'bg-amber-500' : 'bg-gray-400'}`} />
-                                                    Status: {item.digitalInvite.status === 'DEVELOPMENT' ? 'Awaiting Deployment' : 'Draft'}
-                                                </p>
-                                            )}
+                                        <div className="mt-4 pt-4 border-t border-light/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                            <div>
+                                                {item.digitalInvite.status === 'PUBLISHED' && item.digitalInvite.websiteUrl ? (
+                                                    <a href={item.digitalInvite.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-inter tracking-wide text-[#C5B39A] hover:underline flex items-center gap-2 mb-2 md:mb-0">
+                                                        View Live Invitation →
+                                                    </a>
+                                                ) : (
+                                                    <p className="text-[11px] font-inter tracking-widest uppercase text-secondary flex items-center gap-2 mb-2 md:mb-0">
+                                                        <span className={`h-1.5 w-1.5 rounded-full ${item.digitalInvite.status === 'DEVELOPMENT' ? 'bg-amber-500' : 'bg-gray-400'}`} />
+                                                        Status: {item.digitalInvite.status === 'DEVELOPMENT' ? 'Awaiting Deployment' : 'Draft'}
+                                                    </p>
+                                                )}
+                                            </div>
+                                            
+                                            {(() => {
+                                                const invite = item.digitalInvite;
+                                                const isExpired = invite.marriageDate && new Date() > new Date(invite.marriageDate) && !invite.isEternity;
+                                                
+                                                return isExpired ? (
+                                                    <div className="bg-gray-300 text-gray-500 font-inter text-[10px] tracking-widest uppercase py-2 px-4 flex items-center group w-fit cursor-not-allowed">
+                                                        <span className="mr-2">🔒</span>
+                                                        Locked (Date Passed)
+                                                    </div>
+                                                ) : (
+                                                    <Link
+                                                        href={`/customizer/${invite.id}`}
+                                                        className="bg-[#1A1A1A] text-white font-inter text-[10px] tracking-widest uppercase py-2 px-4 hover:bg-black transition-colors flex items-center group w-fit"
+                                                    >
+                                                        Edit Invite
+                                                    </Link>
+                                                );
+                                            })()}
                                         </div>
                                     )}
                                 </div>

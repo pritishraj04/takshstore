@@ -17,9 +17,13 @@ export default function CollectionDrawer() {
     if (!mounted) return null;
 
     const getEffectivePrice = (item: any) => {
-        return (item.discountedPrice && Number(item.discountedPrice) > 0) 
+        let basePrice = (item.discountedPrice && Number(item.discountedPrice) > 0) 
             ? Number(item.discountedPrice) 
             : Number(item.price);
+        if (item.isEternity && item.eternityAddonPrice) {
+            basePrice += Number(item.eternityAddonPrice);
+        }
+        return basePrice;
     };
 
     const subtotal = items.reduce((total, item) => total + (getEffectivePrice(item) * Number(item.quantity)), 0) || 0;

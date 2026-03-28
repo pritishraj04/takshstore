@@ -1,6 +1,18 @@
-import { Controller, Get, Patch, Param, Body, UseGuards, Query, Post } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+  Query,
+  Post,
+} from '@nestjs/common';
 import { AdminCustomersService } from './admin-customers.service';
-import { AdminPermissionsGuard, RequirePermission } from '../admin-auth/guards/rbac.guard';
+import {
+  AdminPermissionsGuard,
+  RequirePermission,
+} from '../admin-auth/guards/rbac.guard';
 import { UpdateCustomerStatusDto } from './dto/admin-customers.dto';
 import { CreateCustomerDto } from './dto/create-customer.dto';
 
@@ -23,7 +35,10 @@ export class AdminCustomersController {
 
   @Patch(':id/status')
   @RequirePermission('customers', 'WRITE')
-  async updateCustomerStatus(@Param('id') id: string, @Body() dto: UpdateCustomerStatusDto) {
+  async updateCustomerStatus(
+    @Param('id') id: string,
+    @Body() dto: UpdateCustomerStatusDto,
+  ) {
     return this.service.updateCustomerStatus(id, dto.status);
   }
 

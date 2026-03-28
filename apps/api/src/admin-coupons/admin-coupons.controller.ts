@@ -1,6 +1,18 @@
-import { Controller, Get, Post, Put, Patch, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Patch,
+  Param,
+  Body,
+  UseGuards,
+} from '@nestjs/common';
 import { AdminCouponsService } from './admin-coupons.service';
-import { AdminPermissionsGuard, RequirePermission } from '../admin-auth/guards/rbac.guard';
+import {
+  AdminPermissionsGuard,
+  RequirePermission,
+} from '../admin-auth/guards/rbac.guard';
 import { CreateCouponDto, UpdateCouponDto } from './dto/admin-coupons.dto';
 
 @Controller('admin/coupons')

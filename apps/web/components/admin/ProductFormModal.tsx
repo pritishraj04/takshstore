@@ -43,6 +43,7 @@ export function ProductFormModal({
     const [templateWarning, setTemplateWarning] = useState<string | null>(null);
     const [defaultAudioUrl, setDefaultAudioUrl] = useState('');
     const [isCustomizable, setIsCustomizable] = useState(true);
+    const [eternityAddonPrice, setEternityAddonPrice] = useState('');
 
     const handleTemplateChange = async (slug: string) => {
         setTemplateSlug(slug);
@@ -80,6 +81,7 @@ export function ProductFormModal({
             setTemplateSlug(initialData.templateSlug || '');
             setDefaultAudioUrl(initialData.defaultAudioUrl || '');
             setIsCustomizable(initialData.isCustomizable ?? true);
+            setEternityAddonPrice(initialData.eternityAddonPrice?.toString() || '');
             setTemplateWarning(null);
             setSelectedFile(null);
             setPreviewUrl(initialData.imageUrl || null);
@@ -87,7 +89,7 @@ export function ProductFormModal({
             // Reset state for new entry
             setTitle(''); setDescription(''); setPrice(''); setDiscountedPrice('');
             setImageUrl(''); setImages([]); setStockCount(''); setWeight(''); setWidth(''); setHeight('');
-            setTemplateSlug(''); setDefaultAudioUrl(''); setIsCustomizable(true);
+            setTemplateSlug(''); setDefaultAudioUrl(''); setIsCustomizable(true); setEternityAddonPrice('');
             setType('PHYSICAL');
             setTemplateWarning(null);
             setSelectedFile(null);
@@ -153,6 +155,8 @@ export function ProductFormModal({
             payload.templateSlug = templateSlug;
             payload.defaultAudioUrl = defaultAudioUrl;
             payload.isCustomizable = isCustomizable;
+            payload.isDigital = true;
+            payload.eternityAddonPrice = eternityAddonPrice ? parseFloat(eternityAddonPrice) : undefined;
         }
 
         try {
@@ -354,6 +358,10 @@ export function ProductFormModal({
                                     <div className="flex items-center gap-3 bg-white p-3 border border-emerald-100 rounded-lg w-fit mt-2 shadow-sm">
                                         <input type="checkbox" id="isCust" checked={isCustomizable} onChange={e => setIsCustomizable(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded border-gray-300 focus:ring-emerald-500 cursor-pointer" />
                                         <label htmlFor="isCust" className="text-sm font-bold text-gray-700 cursor-pointer select-none">Engage Customizer Engine explicitly restricting hard-coded blocks.</label>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-700 mb-1.5 ">Eternity Add-on Price (₹)</label>
+                                        <input type="number" min="0" step="0.01" value={eternityAddonPrice} onChange={e => setEternityAddonPrice(e.target.value)} className="w-full px-4 py-3 bg-white border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-sm font-bold text-emerald-700" placeholder="Optional Add-on Price" />
                                     </div>
                                 </div>
                             </div>

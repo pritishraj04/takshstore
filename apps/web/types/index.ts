@@ -5,13 +5,17 @@ export interface Product {
     title: string;
     price: number;
     discountedPrice?: number;
+    eternityAddonPrice?: number;
     imageUrl: string;
     images?: string[];
     type: ProductType;
+    isDigital: boolean;
 }
 
 export interface CollectionItem extends Product {
     quantity: number;
     inviteData?: any;
     draftId?: string;
+    isEternity?: boolean;
+    marriageDate?: string;
 }
