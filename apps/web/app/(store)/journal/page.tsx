@@ -3,10 +3,10 @@ import { API_URL } from "@/config/env";
 
 export const dynamic = 'force-dynamic';
 
-async function getArticles() {
+async function getJournals() {
     try {
-        const res = await fetch(`${API_URL}/articles`, {
-            next: { revalidate: 60 },
+        const res = await fetch(`${API_URL}/journals`, {
+            cache: 'no-store',
             signal: AbortSignal.timeout(10000) // 10s timeout
         });
 
@@ -19,11 +19,11 @@ async function getArticles() {
 }
 
 export default async function InsightsPage() {
-    const articles = await getArticles();
+    const journals = await getJournals();
 
     return (
         <main className="w-full flex-auto relative">
-            <InsightsList articles={articles} />
+            <InsightsList articles={journals} />
         </main>
     );
 }

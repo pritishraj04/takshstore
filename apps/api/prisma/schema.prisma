@@ -249,3 +249,15 @@ model StoreSetting {
   value     String   @db.Text
   updatedAt DateTime @updatedAt
 }
+
+model Journal {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  coverImage  String?
+  excerpt     String?
+  content     String   @db.Text
+  isPublished Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

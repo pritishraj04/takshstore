@@ -25,8 +25,10 @@ import { AdminDashboardModule } from './admin-dashboard/admin-dashboard.module';
 
 import { CheckoutModule } from './checkout/checkout.module';
 
+import { JournalModule } from './journal/journal.module';
+
 @Module({
-  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, CheckoutModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule, AdminAuthModule, AdminOrdersModule, AdminMediaModule, AdminUsersModule, AdminCmsModule, AdminCustomersModule, AdminProductsModule, AdminCouponsModule, MailModule, AdminUploadModule, AdminSettingsModule, AdminDashboardModule],
+  imports: [AuthModule, PrismaModule, ProductsModule, OrdersModule, PaymentsModule, CheckoutModule, DigitalInvitesModule, StorageModule, CouponsModule, ArticlesModule, AdminAuthModule, AdminOrdersModule, AdminMediaModule, AdminUsersModule, AdminCmsModule, AdminCustomersModule, AdminProductsModule, AdminCouponsModule, MailModule, AdminUploadModule, AdminSettingsModule, AdminDashboardModule, JournalModule],
   controllers: [AppController],
   providers: [AppService],
 })
