@@ -18,17 +18,14 @@ export class AdminMediaController {
   constructor(private readonly adminMediaService: AdminMediaService) {}
 
   @Get()
-  @RequirePermission('orders', 'READ')
+  @RequirePermission('media', 'READ')
   async getAllMedia() {
     return this.adminMediaService.getAllMediaFiles();
   }
 
-  @Delete(':inviteId')
-  @RequirePermission('orders', 'WRITE')
-  async deleteMedia(
-    @Param('inviteId') inviteId: string,
-    @Query('type') type: 'IMAGE' | 'AUDIO',
-  ) {
-    return this.adminMediaService.deleteMedia(inviteId, type);
+  @Delete(':mediaId')
+  @RequirePermission('media', 'WRITE')
+  async deleteMedia(@Param('mediaId') mediaId: string) {
+    return this.adminMediaService.deleteMedia(mediaId);
   }
 }

@@ -10,95 +10,45 @@ export class AdminMediaService {
   ) {}
 
   async getAllMediaFiles() {
-    const invites = await this.prisma.digitalInvite.findMany({
-      select: {
-        id: true,
-        slug: true,
-        inviteData: true,
-        createdAt: true,
-        updatedAt: true,
+    // Primary Source: Use the newly established Media table for structured global visibility
+    const media = await this.prisma.media.findMany({
+      include: {
+        user: { select: { name: true, email: true } },
+        admin: { select: { name: true, email: true } },
       },
+      orderBy: { createdAt: 'desc' },
     });
 
-    const assets: any[] = [];
-
-    for (const invite of invites) {
-      let inviteData: any = {};
-      try {
-        inviteData =
-          typeof invite.inviteData === 'string'
-            ? JSON.parse(invite.inviteData)
-            : invite.inviteData || {};
-      } catch {}
-
-      if (inviteData.heroImage) {
-        assets.push({
-          inviteId: invite.id,
-          slug: invite.slug,
-          type: 'IMAGE',
-          url: inviteData.heroImage,
-          uploadedAt: invite.updatedAt || invite.createdAt,
-        });
-      }
-
-      if (inviteData.music && inviteData.music.url) {
-        assets.push({
-          inviteId: invite.id,
-          slug: invite.slug,
-          type: 'AUDIO',
-          url: inviteData.music.url,
-          uploadedAt: invite.updatedAt || invite.createdAt,
-        });
-      }
-    }
-
-    // Sort by most recent changes
-    return assets.sort(
-      (a, b) =>
-        new Date(b.uploadedAt).getTime() - new Date(a.uploadedAt).getTime(),
-    );
+    // Return the consolidated list
+    return media.map((item) => ({
+      id: item.id,
+      url: item.url,
+      key: item.key,
+      type: item.type,
+      uploadedAt: item.createdAt,
+      user: item.user || item.admin || null,
+      uploaderType: item.adminId ? 'ADMIN' : item.userId ? 'USER' : 'SYSTEM',
+    }));
   }
 
-  async deleteMedia(inviteId: string, type: 'IMAGE' | 'AUDIO') {
-    const invite = await this.prisma.digitalInvite.findUnique({
-      where: { id: inviteId },
+  async deleteMedia(mediaId: string) {
+    const media = await this.prisma.media.findUnique({
+      where: { id: mediaId },
     });
 
-    if (!invite) throw new NotFoundException('Invite not found');
-
-    let inviteData: any = {};
-    try {
-      inviteData =
-        typeof invite.inviteData === 'string'
-          ? JSON.parse(invite.inviteData)
-          : invite.inviteData || {};
-    } catch {}
-
-    const url = type === 'IMAGE' ? inviteData.heroImage : inviteData.music?.url;
-
-    if (!url) throw new NotFoundException('Asset URL not found on this invite');
+    if (!media) throw new NotFoundException('Media asset not found');
 
     // 1. Physically terminate the file block via explicit AWS S3 DeleteObjectCommand
     try {
-      await this.storage.deleteFile(url);
+      await this.storage.deleteFile(media.url);
     } catch (e) {
       // Catch exceptions silently here in case S3 was already nuked physically. We still want to strip the DB!
       console.error('S3 Delete Overwrite Mismatch', e);
     }
 
-    // 2. Wipe reference from the database cleanly
-    if (type === 'IMAGE') {
-      inviteData.heroImage = '';
-    } else {
-      if (inviteData.music) {
-        inviteData.music.url = '';
-        inviteData.music.name = ''; // Purge meta names as well
-      }
-    }
-
-    await this.prisma.digitalInvite.update({
-      where: { id: inviteId },
-      data: { inviteData },
+    // 2. Wipe record from the database
+    await this.prisma.media.delete({
+      where: { id: mediaId },
     });
 
     return { message: 'Asset permanently removed from S3 and database' };

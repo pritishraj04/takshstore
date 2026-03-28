@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 export default function AdminMediaGalleryPage() {
     const [assets, setAssets] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState<'IMAGE' | 'AUDIO'>('IMAGE');
+    const [activeTab, setActiveTab] = useState<'IMAGE' | 'MUSIC'>('IMAGE');
     const [deletingIds, setDeletingIds] = useState<Set<string>>(new Set());
 
     useEffect(() => {
@@ -28,24 +28,23 @@ export default function AdminMediaGalleryPage() {
             setAssets(data);
         } catch (error: any) {
             console.error(error);
-            toast.error(`Failed to load S3 media: ${error.message}`);
+            toast.error(`Failed to load media: ${error.message}`);
         } finally {
             setIsLoading(false);
         }
     };
 
-    const handleDelete = async (inviteId: string, type: 'IMAGE' | 'AUDIO') => {
+    const handleDelete = async (mediaId: string) => {
         if (!window.confirm("Are you sure you want to permanently delete this asset from S3? This cannot be undone.")) {
             return;
         }
 
-        const uniqueKey = `${inviteId}-${type}`;
         const updatedDeleting = new Set(deletingIds);
-        updatedDeleting.add(uniqueKey);
+        updatedDeleting.add(mediaId);
         setDeletingIds(updatedDeleting);
 
         try {
-            const res = await adminApiFetch(`/admin/media/${inviteId}?type=${type}`, {
+            const res = await adminApiFetch(`/admin/media/${mediaId}`, {
                 method: 'DELETE',
             });
 
@@ -54,13 +53,13 @@ export default function AdminMediaGalleryPage() {
                 throw new Error(data.message || 'Failed to delete asset');
             }
 
-            toast.success("Asset deleted and invite reset.");
-            setAssets(prev => prev.filter(a => !(a.inviteId === inviteId && a.type === type)));
+            toast.success("Asset permanently terminated.");
+            setAssets(prev => prev.filter(a => a.id !== mediaId));
         } catch (error: any) {
             toast.error(error.message);
         } finally {
             const newDeleting = new Set(deletingIds);
-            newDeleting.delete(uniqueKey);
+            newDeleting.delete(mediaId);
             setDeletingIds(newDeleting);
         }
     };
@@ -86,12 +85,12 @@ export default function AdminMediaGalleryPage() {
                     <ImageIcon className="w-[18px] h-[18px]" /> Photos ({assets.filter(a => a.type === 'IMAGE').length})
                 </button>
                 <button
-                    onClick={() => setActiveTab('AUDIO')}
+                    onClick={() => setActiveTab('MUSIC')}
                     className={`flex items-center gap-2 px-6 py-3 font-semibold text-sm transition-colors border-b-2 ${
-                        activeTab === 'AUDIO' ? 'border-black text-black' : 'border-transparent text-gray-500 hover:text-gray-900'
+                        activeTab === 'MUSIC' ? 'border-black text-black' : 'border-transparent text-gray-500 hover:text-gray-900'
                     }`}
                 >
-                    <Music className="w-[18px] h-[18px]" /> Audio Files ({assets.filter(a => a.type === 'AUDIO').length})
+                    <Music className="w-[18px] h-[18px]" /> Audio Files ({assets.filter(a => a.type === 'MUSIC').length})
                 </button>
             </div>
 

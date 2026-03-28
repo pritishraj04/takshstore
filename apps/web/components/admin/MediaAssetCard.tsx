@@ -4,13 +4,14 @@ import { ExternalLink, Trash2, Headphones } from 'lucide-react';
 
 interface MediaAssetCardProps {
     asset: {
-        inviteId: string;
-        slug: string | null;
-        type: 'IMAGE' | 'AUDIO';
+        id: string;
+        type: 'IMAGE' | 'MUSIC';
         url: string;
         uploadedAt: string;
+        user?: { name: string; email: string } | null;
+        uploaderType?: 'ADMIN' | 'USER' | 'SYSTEM';
     };
-    onDelete: (inviteId: string, type: 'IMAGE' | 'AUDIO') => void;
+    onDelete: (id: string) => void;
     isDeleting: boolean;
 }
 
@@ -41,21 +42,23 @@ export function MediaAssetCard({ asset, onDelete, isDeleting }: MediaAssetCardPr
             <div className="p-4 flex flex-col flex-1">
                 <div className="flex-1 mb-[22px]">
                     <p className="text-[10px] text-gray-400 font-bold tracking-widest uppercase mb-1">
-                        {new Date(asset.uploadedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric'})}
+                        {new Date(asset.uploadedAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                     </p>
-                    <a 
-                        href={`/invites/${asset.slug}`} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="text-sm font-semibold text-gray-900 hover:text-blue-600 transition-colors flex items-center gap-1.5 line-clamp-1 w-max"
-                    >
-                        {asset.slug ? `/${asset.slug}` : 'Draft (No slug)'}
-                        {asset.slug && <ExternalLink className="w-[14px] h-[14px]" />}
-                    </a>
+                    <div className="flex flex-col gap-1">
+                        <span className="text-sm font-bold text-gray-900 line-clamp-1">
+                            {asset.user?.name || 'System / Anonymous'}
+                        </span>
+                        <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded w-fit border ${asset.uploaderType === 'ADMIN'
+                                ? 'bg-indigo-50 text-indigo-700 border-indigo-100'
+                                : 'bg-emerald-50 text-emerald-700 border-emerald-100'
+                            }`}>
+                            {asset.uploaderType || 'USER'}
+                        </span>
+                    </div>
                 </div>
 
                 <button
-                    onClick={() => onDelete(asset.inviteId, asset.type)}
+                    onClick={() => onDelete(asset.id)}
                     disabled={isDeleting}
                     className="w-full flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold py-2.5 px-4 rounded-lg transition-colors border border-red-100 hover:border-red-200 disabled:opacity-50 disabled:cursor-not-allowed text-xs uppercase tracking-wide"
                 >

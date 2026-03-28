@@ -8,8 +8,10 @@ import {
   S3Client,
   PutObjectCommand,
   DeleteObjectCommand,
+  ListObjectsV2Command,
 } from '@aws-sdk/client-s3';
 import { v4 as uuidv4 } from 'uuid';
+import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
 export class StorageService {
@@ -17,7 +19,7 @@ export class StorageService {
   private bucketName: string;
   private readonly logger = new Logger(StorageService.name);
 
-  constructor() {
+  constructor(private readonly prisma: PrismaService) {
     this.bucketName = process.env.AWS_S3_BUCKET_NAME || 'taksh-store-assets';
 
     const hasCredentials =
@@ -39,7 +41,12 @@ export class StorageService {
     });
   }
 
-  async uploadFile(file: Express.Multer.File, folder: string): Promise<string> {
+  async uploadFile(
+    file: Express.Multer.File, 
+    folder: string,
+    userId?: string,
+    isAdmin: boolean = false
+  ): Promise<string> {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
@@ -63,7 +70,21 @@ export class StorageService {
       await this.s3Client.send(command);
       // Construct the public URL
       const region = process.env.AWS_REGION || 'ap-south-1';
-      return `https://${this.bucketName}.s3.${region}.amazonaws.com/${fileName}`;
+      const fileUrl = `https://${this.bucketName}.s3.${region}.amazonaws.com/${fileName}`;
+
+      // RECORD IN DATABASE
+      const type = file.mimetype.startsWith('audio') ? 'MUSIC' : 'IMAGE';
+      
+      await this.prisma.media.create({
+        data: {
+          url: fileUrl,
+          key: fileName,
+          type,
+          ...(isAdmin ? { adminId: userId } : { userId }),
+        }
+      });
+
+      return fileUrl;
     } catch (error) {
       this.logger.error('Error uploading file to S3', error);
       throw new InternalServerErrorException(
@@ -99,6 +120,33 @@ export class StorageService {
       // so we'll just log it. But for strict API we should:
       throw new InternalServerErrorException(
         'Failed to delete file from storage',
+      );
+    }
+  }
+
+  async listFiles(prefix?: string): Promise<any[]> {
+    const region = process.env.AWS_REGION || 'ap-south-1';
+    try {
+      const command = new ListObjectsV2Command({
+        Bucket: this.bucketName,
+        Prefix: prefix,
+      });
+
+      const response = await this.s3Client.send(command);
+
+      return (response.Contents || []).map((obj) => {
+        const url = `https://${this.bucketName}.s3.${region}.amazonaws.com/${obj.Key}`;
+        return {
+          key: obj.Key,
+          url,
+          size: obj.Size,
+          lastModified: obj.LastModified,
+        };
+      });
+    } catch (error) {
+      this.logger.error('Error listing objects from S3', error);
+      throw new InternalServerErrorException(
+        'Failed to list items from storage',
       );
     }
   }

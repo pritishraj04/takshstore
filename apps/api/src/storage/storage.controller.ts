@@ -7,6 +7,7 @@ import {
   Body,
   BadRequestException,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from './storage.service';
@@ -22,13 +23,34 @@ export class StorageController {
   async uploadFile(
     @UploadedFile() file: Express.Multer.File,
     @Body('folder') folder: string,
+    @Request() req: any,
   ) {
     if (!file) {
       throw new BadRequestException('File is required');
     }
 
-    const targetFolder = folder || 'uploads';
-    const fileUrl = await this.storageService.uploadFile(file, targetFolder);
+    const userId = req.user?.sub;
+    const isAdmin = !!req.user?.isAdmin;
+
+    // FOLDER SANITIZATION & LOGIC
+    // Admins can specify certain top-level folders
+    // Users are always sandboxed to their own userId prefix
+    let targetFolder = 'misc';
+
+    if (isAdmin) {
+      const allowedAdminFolders = ['catalog', 'journals', 'team', 'marketing'];
+      targetFolder = allowedAdminFolders.includes(folder) ? folder : 'admin-misc';
+    } else if (userId) {
+      // User uploads: users/{userId}/invites or similar
+      targetFolder = `users/${userId}/${folder || 'misc'}`;
+    }
+
+    const fileUrl = await this.storageService.uploadFile(
+      file,
+      targetFolder,
+      userId,
+      isAdmin,
+    );
 
     return {
       success: true,

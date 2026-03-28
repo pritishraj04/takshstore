@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
-import { AdminUploadService } from './admin-upload.service';
 import { AdminUploadController } from './admin-upload.controller';
 import { AdminAuthModule } from '../admin-auth/admin-auth.module';
+import { StorageModule } from '../storage/storage.module';
 
 @Module({
-  imports: [AdminAuthModule],
-  providers: [AdminUploadService],
+  imports: [AdminAuthModule, StorageModule],
+  providers: [],
   controllers: [AdminUploadController],
-  exports: [AdminUploadService],
+  exports: [],
 })
 export class AdminUploadModule {}

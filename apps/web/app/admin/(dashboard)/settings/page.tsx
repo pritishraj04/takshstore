@@ -72,13 +72,13 @@ export default function AdminSettingsPage() {
             </div>
 
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-                
+
                 {/* SECTION 2: E-Commerce Rules */}
                 <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
                     <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 border-b border-gray-50 pb-3">
                         <Truck className="w-5 h-5 text-emerald-500" /> E-Commerce Rules
                     </h2>
-                    
+
                     <div className="space-y-4">
                         <div className="group relative">
                             <label className="block text-sm font-semibold text-gray-700 mb-1.5">Free Shipping Threshold (₹)</label>
@@ -112,12 +112,12 @@ export default function AdminSettingsPage() {
                 </div>
 
                 {/* SECTION 3: Social Links */}
-                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6 xl:col-span-2">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-6">
                     <h2 className="text-base font-bold text-gray-900 flex items-center gap-2 border-b border-gray-50 pb-3">
                         <MapPin className="w-5 h-5 text-rose-500" /> Web Links
                     </h2>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+                    <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
                         <div>
                             <label className="flex items-center gap-2 text-sm font-semibold text-gray-700 mb-1.5"><MessageCircle className="w-4 h-4 text-emerald-500" /> WhatsApp URL</label>
                             <input

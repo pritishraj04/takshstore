@@ -57,6 +57,7 @@ model User {
   status    UserAccountStatus @default(ACTIVE)
   orders    Order[]
   reviews   Review[]
+  media     Media[]
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 }
@@ -199,6 +200,7 @@ model AdminUser {
 
   permissions AdminPermissions?
   auditLogs   AdminAuditLog[]
+  media       Media[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -217,6 +219,9 @@ model AdminPermissions {
   articles   PermissionLevel @default(NONE)
   cms        PermissionLevel @default(NONE)
   coupons    PermissionLevel @default(NONE)
+  reviews    PermissionLevel @default(NONE)
+  media      PermissionLevel @default(NONE)
+  settings   PermissionLevel @default(NONE)
 }
 
 model AdminAuditLog {
@@ -304,4 +309,24 @@ model Review {
   updatedAt DateTime     @updatedAt
 
   @@unique([userId, productId, orderId])
+}
+enum MediaType {
+  IMAGE
+  MUSIC
+}
+
+model Media {
+  id        String    @id @default(uuid())
+  url       String    @unique
+  key       String    @unique
+  type      MediaType
+  
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  adminId   String?
+  admin     AdminUser? @relation(fields: [adminId], references: [id], onDelete: SetNull)
+  
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }

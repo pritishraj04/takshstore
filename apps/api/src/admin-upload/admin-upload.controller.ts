@@ -4,9 +4,11 @@ import {
   UseInterceptors,
   UploadedFile,
   UseGuards,
+  Request,
+  Body,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { AdminUploadService } from './admin-upload.service';
+import { StorageService } from '../storage/storage.service';
 import {
   AdminPermissionsGuard,
   RequirePermission,
@@ -15,13 +17,26 @@ import {
 @Controller('admin/upload')
 @UseGuards(AdminPermissionsGuard)
 export class AdminUploadController {
-  constructor(private readonly adminUploadService: AdminUploadService) {}
+  constructor(private readonly storageService: StorageService) {}
 
   @Post()
   @RequirePermission('products', 'WRITE')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
-    const url = await this.adminUploadService.uploadImage(file);
+  async uploadImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('folder') folder: string,
+    @Request() req: any,
+  ) {
+    // Admin sanctioned folder routing
+    const allowedAdminFolders = ['catalog', 'journals', 'team', 'marketing'];
+    const targetFolder = allowedAdminFolders.includes(folder) ? folder : 'catalog'; // Default to catalog if missing or invalid
+
+    const url = await this.storageService.uploadFile(
+      file,
+      targetFolder,
+      req.user.sub,
+      true,
+    );
     return { url };
   }
 }
