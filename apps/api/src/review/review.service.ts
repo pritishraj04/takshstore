@@ -33,20 +33,21 @@ export class ReviewService {
     if (!product) throw new NotFoundException('Product not found');
 
     if (product.type === 'PHYSICAL' || !product.isDigital) {
-      if (
-        order.status !== OrderStatus.COMPLETED &&
-        order.status !== OrderStatus.SHIPPED
-      ) {
+      const allowedPhysical: OrderStatus[] = [
+        OrderStatus.DELIVERED,
+        OrderStatus.COMPLETED,
+        OrderStatus.SHIPPED,
+      ];
+      if (!allowedPhysical.includes(order.status)) {
         throw new ForbiddenException(
           'Can only review delivered physical orders',
         );
       }
     } else {
-      // Digital Product: Allow review once paid or published
-      const allowedStatuses: OrderStatus[] = [OrderStatus.PAID, OrderStatus.COMPLETED, OrderStatus.PUBLISHED];
-      if (!allowedStatuses.includes(order.status)) {
+      // Digital Product: Must be PUBLISHED to be reviewed
+      if (order.status !== OrderStatus.PUBLISHED) {
         throw new ForbiddenException(
-          'Can only review paid or published digital orders',
+          'Can only review published digital orders',
         );
       }
     }

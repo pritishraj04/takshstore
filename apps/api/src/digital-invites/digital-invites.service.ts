@@ -136,7 +136,7 @@ export class DigitalInvitesService {
     const isPaid =
       existingInvite.isPaid ||
       existingInvite.status === 'DEVELOPMENT' ||
-      existingInvite.status === 'PUBLISHED';
+      existingInvite.status === 'PAID';
 
     // Exploit Guards
     if (isPaid) {
@@ -219,7 +219,9 @@ export class DigitalInvitesService {
     }
 
     if (status) {
-      data.status = status;
+      // INTERCEPT: 'PUBLISHED' is no longer a valid status for DigitalInvite. 
+      // We map it to 'PAID' (terminal state for invite) and update the Order instead.
+      data.status = status === 'PUBLISHED' ? 'PAID' : status;
     }
 
     return this.prisma.$transaction(async (tx) => {
@@ -229,6 +231,7 @@ export class DigitalInvitesService {
         include: { orderItem: true }
       });
 
+      // If the intent was to PUBLISH, update the parent Order status
       if (status === 'PUBLISHED' && updatedInvite.orderItem?.orderId) {
         await tx.order.update({
           where: { id: updatedInvite.orderItem.orderId },

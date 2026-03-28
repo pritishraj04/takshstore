@@ -19,6 +19,7 @@ enum OrderStatus {
   FAILED
   PROCESSING
   SHIPPED
+  DELIVERED
   COMPLETED
   PUBLISHED
 }
@@ -26,7 +27,7 @@ enum OrderStatus {
 enum InviteStatus {
   DRAFT
   DEVELOPMENT
-  PUBLISHED
+  PAID
 }
 
 enum AdminStatus {

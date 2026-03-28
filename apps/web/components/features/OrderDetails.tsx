@@ -15,7 +15,7 @@ import { ProductType } from "@taksh/types";
 enum InviteStatus {
     DRAFT = "DRAFT",
     DEVELOPMENT = "DEVELOPMENT",
-    PUBLISHED = "PUBLISHED",
+    PAID = "PAID",
 }
 
 enum OrderStatus {
@@ -23,7 +23,9 @@ enum OrderStatus {
     PAID = "PAID",
     PROCESSING = "PROCESSING",
     SHIPPED = "SHIPPED",
+    DELIVERED = "DELIVERED",
     COMPLETED = "COMPLETED",
+    PUBLISHED = "PUBLISHED",
 }
 
 interface DigitalInvite {
@@ -66,7 +68,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<{id: string, name: string} | null>(null);
 
-    const isDelivered = order && (order.status === 'COMPLETED' || order.status === 'SHIPPED');
+    const isDelivered = order && (order.status === 'COMPLETED' || order.status === 'SHIPPED' || order.status === 'DELIVERED');
 
     useGSAP(() => {
         if (!isLoading && order) {
@@ -194,7 +196,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                     {item.product.type === "DIGITAL" && item.digitalInvite && (
                                         <div className="mt-4 pt-4 border-t border-light/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                                             <div>
-                                                {item.digitalInvite.status === 'PUBLISHED' && item.digitalInvite.websiteUrl ? (
+                                                {order.status === 'PUBLISHED' && item.digitalInvite.websiteUrl ? (
                                                     <a href={item.digitalInvite.websiteUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-inter tracking-wide text-[#C5B39A] hover:underline flex items-center gap-2 mb-2 md:mb-0">
                                                         View Live Invitation →
                                                     </a>
@@ -249,7 +251,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                     
                                     {(() => {
                                         const isItemDelivered = item.product.type === 'DIGITAL' 
-                                            ? item.digitalInvite?.status === 'PUBLISHED' 
+                                            ? order.status === 'PUBLISHED' 
                                             : isDelivered;
                                             
                                         if (isItemDelivered) {
