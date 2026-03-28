@@ -44,7 +44,7 @@ export class OrdersService {
                         productId: item.productId,
                         quantity: item.quantity,
                         priceAtPurchase: item.priceAtPurchase,
-                        hasPaidEternity: item.isEternity || false,
+                        hasPaidEternity: item.isEternity === true,
                     },
                 });
 
@@ -69,7 +69,7 @@ export class OrdersService {
                                 status: 'DEVELOPMENT',
                                 inviteData: item.inviteData,
                                 slug: (item.inviteData as any).slug || null,
-                                isEternity: item.isEternity || false,
+                                isEternity: item.isEternity === true,
                                 marriageDate: validMarriageDate,
                             }
                         });
@@ -79,7 +79,7 @@ export class OrdersService {
                                 orderItemId: orderItem.id,
                                 inviteData: item.inviteData,
                                 slug: (item.inviteData as any).slug || null,
-                                isEternity: item.isEternity || false,
+                                isEternity: item.isEternity === true,
                                 marriageDate: validMarriageDate,
                             },
                         });

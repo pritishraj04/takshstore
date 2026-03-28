@@ -41,6 +41,7 @@ interface OrderItem {
     quantity: number;
     priceAtPurchase: number;
     hasPaidEternity?: boolean;
+    status: string;
     product: {
         id: string;
         title: string;
@@ -190,6 +191,11 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                         {item.hasPaidEternity && (
                                             <span className="text-[#C5B39A] font-bold">Eternity Hosting: Active</span>
                                         )}
+                                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                            item.status === 'PUBLISHED' ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+                                        }`}>
+                                            {item.status || 'PENDING'}
+                                        </span>
                                     </div>
 
                                     {/* Digital Invite Specific Rendering */}

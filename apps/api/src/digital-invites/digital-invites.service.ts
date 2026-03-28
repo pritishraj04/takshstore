@@ -59,7 +59,9 @@ export class DigitalInvitesService {
 
     return invites.map((invite) => ({
       ...invite,
-      isPaid: invite.orderItem?.order?.status === 'PAID',
+      isPaid: ['PAID', 'PUBLISHED', 'DELIVERED', 'COMPLETED'].includes(
+        invite.orderItem?.order?.status,
+      ),
     }));
   }
 
@@ -89,7 +91,9 @@ export class DigitalInvitesService {
 
     return {
       ...invite,
-      isPaid: invite.orderItem?.order?.status === 'PAID',
+      isPaid: ['PAID', 'PUBLISHED', 'DELIVERED', 'COMPLETED'].includes(
+        invite.orderItem?.order?.status,
+      ),
     };
   }
 
@@ -120,7 +124,9 @@ export class DigitalInvitesService {
 
     return {
       ...invite,
-      isPaid: invite.orderItem?.order?.status === 'PAID',
+      isPaid: ['PAID', 'PUBLISHED', 'DELIVERED', 'COMPLETED'].includes(
+        invite.orderItem?.order?.status,
+      ),
     };
   }
 
@@ -135,8 +141,7 @@ export class DigitalInvitesService {
 
     const isPaid =
       existingInvite.isPaid ||
-      existingInvite.status === 'DEVELOPMENT' ||
-      existingInvite.status === 'PAID';
+      ['DEVELOPMENT', 'PAID', 'PUBLISHED'].includes(existingInvite.status);
 
     // Exploit Guards
     if (isPaid) {
@@ -231,10 +236,10 @@ export class DigitalInvitesService {
         include: { orderItem: true }
       });
 
-      // If the intent was to PUBLISH, update the parent Order status
-      if (status === 'PUBLISHED' && updatedInvite.orderItem?.orderId) {
-        await tx.order.update({
-          where: { id: updatedInvite.orderItem.orderId },
+      // If the intent was to PUBLISH, update the specific digital item
+      if (status === 'PUBLISHED' && updatedInvite.orderItemId) {
+        await tx.orderItem.update({
+          where: { id: updatedInvite.orderItemId },
           data: { status: 'PUBLISHED' }
         });
       }

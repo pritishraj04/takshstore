@@ -13,10 +13,7 @@ export default function AdminOrderDetailsPage() {
     const [order, setOrder] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Fulfillment State
-    const [status, setStatus] = useState<string>('');
-    const [trackingUrl, setTrackingUrl] = useState<string>('');
-    const [isUpdating, setIsUpdating] = useState(false);
+
 
     const fetchOrder = async () => {
         setIsLoading(true);
@@ -25,8 +22,6 @@ export default function AdminOrderDetailsPage() {
             if (res.ok) {
                 const data = await res.json();
                 setOrder(data);
-                setStatus(data.status);
-                setTrackingUrl(data.trackingUrl || '');
             } else {
                 toast.error('Order not found');
                 router.push('/admin/orders');
@@ -42,20 +37,17 @@ export default function AdminOrderDetailsPage() {
         if (id) fetchOrder();
     }, [id]);
 
-    const handleUpdateStatus = async () => {
-        setIsUpdating(true);
+    const handleUpdateItemStatus = async (itemId: string, newStatus: string) => {
         try {
-            const res = await adminApiFetch(`/admin/orders/${id}/status`, {
+            const res = await adminApiFetch(`/admin/orders/${id}/items/${itemId}/status`, {
                 method: 'PATCH',
-                body: JSON.stringify({ status, trackingUrl: status === 'SHIPPED' ? trackingUrl : undefined }),
+                body: JSON.stringify({ status: newStatus }),
             });
-            if (!res.ok) throw new Error('Status update failed');
-            toast.success('Order status updated!');
+            if (!res.ok) throw new Error('Item status update failed');
+            toast.success('Item status updated!');
             await fetchOrder(); // refresh data
         } catch (error: any) {
             toast.error(error.message);
-        } finally {
-            setIsUpdating(false);
         }
     };
 
@@ -109,7 +101,29 @@ export default function AdminOrderDetailsPage() {
                                     </div>
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-gray-900 text-sm">{item.product.title}</h3>
-                                        <p className="text-xs text-gray-500 mt-0.5">Quantity: {item.quantity} • {item.product.type}</p>
+                                        <div className="flex items-center gap-3 mt-0.5">
+                                            <p className="text-xs text-gray-500">Quantity: {item.quantity} • {item.product.type}</p>
+                                            
+                                            <select 
+                                                value={item.status || 'PENDING'} 
+                                                onChange={(e) => handleUpdateItemStatus(item.id, e.target.value)}
+                                                className="ml-auto px-2 py-1 bg-gray-50 border border-gray-200 rounded text-[10px] font-bold uppercase outline-none focus:border-indigo-500 transition-colors"
+                                            >
+                                                {item.product.type === 'PHYSICAL' ? (
+                                                    <>
+                                                        <option value="PENDING">Pending</option>
+                                                        <option value="PROCESSING">Processing</option>
+                                                        <option value="SHIPPED">Shipped</option>
+                                                        <option value="DELIVERED">Delivered</option>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        <option value="PAID">Paid</option>
+                                                        <option value="PUBLISHED">Published</option>
+                                                    </>
+                                                )}
+                                            </select>
+                                        </div>
                                         
                                         {item.product.type === 'DIGITAL' && item.digitalInvite && (
                                             <div className="mt-3 flex flex-col gap-2">
@@ -174,54 +188,29 @@ export default function AdminOrderDetailsPage() {
                     </div>
                 </div>
 
-                {/* Right Column: Fulfillment Status (THE CORE REQUIREMENT) */}
+                {/* Right Column: Order Context */}
                 <div className="space-y-6">
                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 relative overflow-hidden">
                         <div className="absolute top-0 left-0 w-full h-1 bg-indigo-500"></div>
                         <h2 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                            <Truck className="w-5 h-5 text-indigo-600" /> Fulfillment Status
+                            <ShieldAlert className="w-5 h-5 text-indigo-600" /> Order Matrix
                         </h2>
-                        <p className="text-xs text-gray-500 mb-6">Manage post-payment lifecycle.</p>
+                        <p className="text-xs text-gray-500 mb-6">Payment and legacy logistics control.</p>
                         
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Current Status</label>
-                                <select 
-                                    value={status} 
-                                    onChange={(e) => setStatus(e.target.value)}
-                                    className="w-full px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm font-medium"
-                                >
-                                    <option value="PENDING">Pending (Awaiting Process)</option>
-                                    <option value="PAID">Paid (Ready)</option>
-                                    <option value="PROCESSING">Processing (Manufacturing)</option>
-                                    <option value="SHIPPED">Shipped (In Transit)</option>
-                                    <option value="COMPLETED">Completed (Delivered)</option>
-                                    <option value="PUBLISHED">Published (Live Digital)</option>
-                                    <option value="FAILED">Failed / Refunded</option>
-                                </select>
+                                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Payment Flow Status</label>
+                                <div className="w-full px-3 py-2.5 bg-green-50 border border-green-100 rounded-lg text-sm font-bold text-green-700 uppercase flex items-center gap-2">
+                                    <CheckCircle className="w-4 h-4" /> {order.status}
+                                </div>
                             </div>
 
-                            {status === 'SHIPPED' && (
-                                <div className="animate-in slide-in-top-2 fade-in duration-300">
-                                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Tracking URL or Courier AWB</label>
-                                    <input 
-                                        type="text" 
-                                        placeholder="https://track.courier.xyz..."
-                                        value={trackingUrl}
-                                        onChange={(e) => setTrackingUrl(e.target.value)}
-                                        className="w-full px-3 py-2.5 bg-indigo-50/30 border border-indigo-100 rounded-lg outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-colors text-sm"
-                                    />
-                                    <p className="text-[10px] text-gray-500 mt-1.5 leading-tight">If a physical Canvas product is attached, an automated shipping email will blast to the customer carrying this link instantly.</p>
+                            {order.trackingUrl && (
+                                <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <label className="block text-[10px] font-bold text-gray-400 uppercase mb-1">Global Tracking URL</label>
+                                    <p className="text-xs text-gray-600 break-all">{order.trackingUrl}</p>
                                 </div>
                             )}
-
-                            <button 
-                                onClick={handleUpdateStatus}
-                                disabled={isUpdating}
-                                className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors disabled:opacity-50"
-                            >
-                                {isUpdating ? 'Syncying...' : 'Update Status'}
-                            </button>
                         </div>
                     </div>
 

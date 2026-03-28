@@ -245,4 +245,11 @@ export class AdminOrdersService {
       data: { isEternity },
     });
   }
+
+  async updateItemStatus(orderId: string, itemId: string, status: string) {
+    return this.prisma.orderItem.update({
+      where: { id: itemId, orderId },
+      data: { status },
+    });
+  }
 }

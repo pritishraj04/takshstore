@@ -53,6 +53,29 @@ export class CheckoutService {
 
     const amountToPay = totalAmount; // We could override with calculatedTotal if no coupons
 
+    // 1. Identify orphaned shell orders to clean up later
+    const shellOrdersToCleanup: { orderId: string; orderItemId: string }[] = [];
+
+    for (const item of items) {
+      if (item.type === 'DIGITAL' && item.draftId) {
+        const draft = await this.prisma.digitalInvite.findUnique({
+          where: { id: item.draftId },
+          include: { orderItem: { include: { order: true } } },
+        });
+
+        // If the old parent order was a $0 PENDING shell order, mark it for deletion
+        if (
+          draft?.orderItem?.order?.totalAmount === 0 &&
+          draft?.orderItem?.order?.status === 'PENDING'
+        ) {
+          shellOrdersToCleanup.push({
+            orderId: draft.orderItem.orderId,
+            orderItemId: draft.orderItemId,
+          });
+        }
+      }
+    }
+
     // Create a basic order
     const order = await this.prisma.order.create({
       data: {
@@ -67,10 +90,9 @@ export class CheckoutService {
               productId: item.productId,
               quantity: item.quantity,
               priceAtPurchase: item.priceAtPurchase,
-              hasPaidEternity: item.isEternity || false,
+              hasPaidEternity: item.isEternity === true,
             };
 
-            // Handle digital invites
             if (item.type === 'DIGITAL') {
               let validMarriageDate: Date | null = null;
               if (item.marriageDate) {
@@ -80,21 +102,51 @@ export class CheckoutService {
                 }
               }
 
-              baseItem.digitalInvite = {
-                create: {
-                  inviteData: item.inviteData || {},
-                  status: 'DRAFT',
-                  isEternity: item.isEternity || false,
-                  marriageDate: validMarriageDate,
-                },
-              };
+              if (item.draftId) {
+                // If a draft exists, CONNECT to it
+                baseItem.digitalInvite = {
+                  connect: { id: item.draftId },
+                };
+              } else {
+                // Fallback for edge cases where no draft exists
+                baseItem.digitalInvite = {
+                  create: {
+                    inviteData: item.inviteData || {},
+                    status: 'DRAFT',
+                    isEternity: item.isEternity === true,
+                    marriageDate: validMarriageDate,
+                  },
+                };
+              }
             }
-            baseItem.hasPaidEternity = item.isEternity || false;
             return baseItem;
           }),
         },
       },
     });
+
+    // Update existing drafts with the final checkout data
+    for (const item of items) {
+      if (item.type === 'DIGITAL' && item.draftId) {
+        let validMarriageDate: Date | null = null;
+        if (item.marriageDate) {
+          const parsedDate = new Date(item.marriageDate);
+          if (!isNaN(parsedDate.getTime())) {
+            validMarriageDate = parsedDate;
+          }
+        }
+
+        await this.prisma.digitalInvite.update({
+          where: { id: item.draftId },
+          data: {
+            inviteData: item.inviteData || {},
+            isEternity: item.isEternity === true,
+            marriageDate: validMarriageDate,
+            // Status remains DRAFT until payment is verified via Webhook
+          },
+        });
+      }
+    }
 
     // Initialize Razorpay
     const rzpOrder = await this.razorpayService.createOrder(
@@ -113,6 +165,22 @@ export class CheckoutService {
       where: { id: order.id },
       data: { razorpayOrderId: rzpOrder.id },
     });
+
+    // Clean up orphaned shell orders
+    for (const shell of shellOrdersToCleanup) {
+      try {
+        // Delete the empty OrderItem
+        await this.prisma.orderItem.delete({
+          where: { id: shell.orderItemId },
+        });
+        // Delete the empty parent Order
+        await this.prisma.order.delete({
+          where: { id: shell.orderId },
+        });
+      } catch (error) {
+        console.error(`Failed to clean up shell order ${shell.orderId}:`, error);
+      }
+    }
 
     return {
       id: order.id,

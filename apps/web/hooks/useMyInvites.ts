@@ -8,6 +8,7 @@ export interface MyInvite {
     inviteData: any;
     orderItem: {
         orderId: string;
+        status: string;
         order: {
             id: string;
             status: string;

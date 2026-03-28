@@ -55,3 +55,8 @@ export class CreateManualOrderDto {
   @IsObject()
   shippingAddress?: any;
 }
+
+export class UpdateItemStatusDto {
+  @IsString()
+  status: string;
+}

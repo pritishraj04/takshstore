@@ -41,6 +41,7 @@ interface DigitalInvite {
 interface OrderItem {
     id: string;
     quantity: number;
+    status: string;
     product: {
         title: string;
         type: ProductType;
@@ -132,7 +133,7 @@ export default function UserDashboard({ name }: UserDashboardProps) {
         );
     }
 
-    const allItems = orders?.flatMap((order) => order.items.map(item => ({ ...item, orderId: order.id, orderDate: order.createdAt, orderStatus: order.status, totalAmount: order.totalAmount }))) || [];
+    const allItems = orders?.flatMap((order) => order.items.map(item => ({ ...item, orderId: order.id, orderDate: order.createdAt, orderStatus: order.status, itemStatus: item.status, totalAmount: order.totalAmount }))) || [];
 
     // Separate into SaaS invites vs Physical items
     const digitalItems = myInvites || [];
@@ -171,8 +172,9 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                         ? `${invite.inviteData.couple.partner1} & ${invite.inviteData.couple.partner2}`
                                         : "The Couple";
 
-                                const paymentStatus = invite.orderItem?.order?.status || 'UNPAID';
-                                const isPaid = paymentStatus === 'PAID';
+                                const itemStatus = invite.orderItem?.status || 'PENDING';
+                                const orderStatus = invite.orderItem?.order?.status || 'UNPAID';
+                                const isPaid = orderStatus === 'PAID' || orderStatus === 'PUBLISHED';
 
                                 return (
                                     <div
@@ -192,8 +194,8 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                                 {/* Payment Status */}
                                                 <div className="flex items-center gap-2 border border-[#E5E4DF] px-3 py-1 bg-white rounded-full">
                                                     <span className={`h-1.5 w-1.5 rounded-full ${isPaid ? "bg-green-500" : "bg-red-500"}`} />
-                                                    <span className={`font-inter text-[9px] tracking-widest uppercase font-medium ${isPaid ? "text-green-700" : "text-red-600"}`}>
-                                                        {paymentStatus}
+                                                    <span className={`font-inter text-[9px] tracking-widest uppercase font-medium ${itemStatus === 'PUBLISHED' ? "text-green-700" : "text-amber-600"}`}>
+                                                        {itemStatus}
                                                     </span>
                                                 </div>
                                             </div>
@@ -305,8 +307,8 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                     </div>
 
                                     <div className="flex flex-col md:items-end w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-light border-dashed">
-                                        <span className="font-inter text-xs uppercase tracking-widest text-[#1A1A1A] mb-2 font-medium">
-                                            {item.orderStatus}
+                                        <span className={`font-inter text-[10px] uppercase tracking-widest mb-2 font-medium ${item.itemStatus === 'PUBLISHED' ? 'text-green-700' : 'text-[#1A1A1A]'}`}>
+                                            {item.itemStatus || item.orderStatus}
                                         </span>
                                         <span className="font-inter text-sm text-secondary font-light">
                                             ₹{item.totalAmount.toLocaleString()}

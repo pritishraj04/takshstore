@@ -13,6 +13,7 @@ import { AdminOrdersService } from './admin-orders.service';
 import {
   ForceUpdateInviteDto,
   UpdateOrderStatusDto,
+  UpdateItemStatusDto,
 } from './dto/admin-orders.dto';
 import {
   AdminPermissionsGuard,
@@ -79,5 +80,15 @@ export class AdminOrdersController {
     @Body() body: { isEternity: boolean },
   ) {
     return this.adminOrdersService.toggleEternity(id, body.isEternity);
+  }
+
+  @Patch(':orderId/items/:itemId/status')
+  @RequirePermission('orders', 'WRITE')
+  async updateItemStatus(
+    @Param('orderId') orderId: string,
+    @Param('itemId') itemId: string,
+    @Body() dto: UpdateItemStatusDto,
+  ) {
+    return this.adminOrdersService.updateItemStatus(orderId, itemId, dto.status);
   }
 }
