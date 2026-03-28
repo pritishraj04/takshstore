@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import Cookies from 'js-cookie';
 import { Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 import { API_URL } from '@/config/env';
 
 export default function AdminLoginPage() {
@@ -86,6 +87,15 @@ export default function AdminLoginPage() {
                                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
                         </div>
+                    </div>
+
+                    <div className="flex justify-end">
+                        <Link 
+                            href="/admin/forgot-password" 
+                            className="text-xs text-gray-500 hover:text-black transition-colors uppercase tracking-widest font-medium"
+                        >
+                            Forgot Password?
+                        </Link>
                     </div>
 
                     <button

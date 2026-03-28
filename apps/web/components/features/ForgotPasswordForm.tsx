@@ -1,17 +1,21 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Mail, Key } from "lucide-react";
+import { Mail, ShieldCheck, User } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 
-export default function LoginForm() {
+interface ForgotPasswordFormProps {
+    initialType?: "USER" | "ADMIN";
+}
+
+export default function ForgotPasswordForm({ initialType = "USER" }: ForgotPasswordFormProps) {
     const router = useRouter();
     const [email, setEmail] = useState("");
-    const [password, setPassword] = useState("");
+    const [type, setType] = useState<"USER" | "ADMIN">(initialType);
+    const [message, setMessage] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const container = useRef<HTMLDivElement>(null);
@@ -28,18 +32,27 @@ export default function LoginForm() {
         e.preventDefault();
         setIsLoading(true);
         setError("");
+        setMessage("");
 
-        const res = await signIn("credentials", {
-            email,
-            password,
-            redirect: false,
-        });
+        try {
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
+            const res = await fetch(`${apiUrl}/api/auth/forgot-password`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, type }),
+            });
 
-        if (res?.error) {
-            setError("Invalid email or password. Please try again.");
+            if (!res.ok) {
+                const data = await res.json();
+                throw new Error(data.message || "Failed to send reset link");
+            }
+
+            setMessage("If an account exists, a reset link has been sent to your email.");
+            setEmail("");
+        } catch (err: any) {
+            setError(err.message || "Something went wrong. Please try again.");
+        } finally {
             setIsLoading(false);
-        } else {
-            router.push("/dashboard"); // Or wherever the dashboard resides
         }
     };
 
@@ -47,10 +60,10 @@ export default function LoginForm() {
         <div ref={container} className="w-full max-w-md mx-auto">
             <div className="animate-y">
                 <h2 className="font-playfair text-4xl text-primary mb-2 tracking-wide">
-                    Welcome Back
+                    Recover Password
                 </h2>
                 <p className="font-inter text-sm text-secondary mb-12 tracking-wide font-light">
-                    Access your collection and bespoke drafts.
+                    Enter your email to receive a secure reset link.
                 </p>
             </div>
 
@@ -69,62 +82,29 @@ export default function LoginForm() {
                     />
                 </div>
 
-                <div className="relative mb-8">
-                    <div className="absolute left-0 top-1/2 -translate-y-1/2 text-secondary pb-3">
-                        <Key strokeWidth={1} size={18} />
-                    </div>
-                    <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        placeholder="Password"
-                        required
-                        className="w-full bg-transparent border-b border-light pb-3 pl-8 text-sm outline-none focus:border-primary transition-colors text-primary font-inter font-light"
-                    />
-                </div>
-
                 {error && (
-                    <p className="text-red-500 text-xs mt-4 mb-4 font-inter">{error}</p>
+                    <p className="text-red-500 text-xs mb-6 font-inter">{error}</p>
                 )}
-
-                <div className="flex justify-end mb-4">
-                    <Link 
-                        href="/forgot-password" 
-                        className="text-[10px] uppercase tracking-widest text-secondary hover:text-primary transition-colors font-inter"
-                    >
-                        Forgot Password?
-                    </Link>
-                </div>
+                {message && (
+                    <p className="text-green-600 text-xs mb-6 font-inter">{message}</p>
+                )}
 
                 <button
                     type="submit"
                     disabled={isLoading}
                     className="bg-[#1A1A1A] text-[#FBFBF9] w-full py-5 text-xs tracking-widest uppercase font-inter hover:bg-[#333] transition-colors disabled:opacity-50 mt-4"
                 >
-                    {isLoading ? "Signing in..." : "Sign In"}
+                    {isLoading ? "Sending Link..." : "Send Reset Link"}
                 </button>
             </form>
 
             <div className="animate-y">
                 <Link
-                    href="/register"
+                    href="/login"
                     className="text-xs text-secondary underline mt-8 text-center block font-inter hover:text-primary transition-colors tracking-wide"
                 >
-                    Don't have an account? Create one.
+                    Back to login
                 </Link>
-                <div className="mt-8 text-center">
-                    <p className="text-sm text-gray-500 pb-4">
-                        By continuing, you agree to our{" "}
-                        <Link href="/terms" className="text-gray-700 hover:text-gray-900 hover:underline">
-                            Terms and Conditions
-                        </Link>{" "}
-                        and{" "}
-                        <Link href="/privacy" className="text-gray-700 hover:text-gray-900 hover:underline">
-                            Privacy Policy
-                        </Link>
-                        .
-                    </p>
-                </div>
             </div>
         </div>
     );

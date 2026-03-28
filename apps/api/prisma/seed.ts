@@ -1,52 +1,129 @@
-import { PrismaClient, ProductType } from '@prisma/client';
-import { Pool } from 'pg';
-import { PrismaPg } from '@prisma/adapter-pg';
+import {
+    PrismaClient,
+    AdminStatus,
+    PermissionLevel,
+    ProductType,
+    ProductStatus
+} from '@prisma/client';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
-const connectionString = process.env.DATABASE_URL;
-const pool = new Pool({ connectionString });
-const adapter = new PrismaPg(pool);
-
-const prisma = new PrismaClient({ adapter });
+const prisma = new PrismaClient();
 
 async function main() {
-    console.log('Starting seed...');
+    console.log('🌱 Starting database seeding...');
 
-    // Clear existing products to prevent duplicates (cascade deletes order items based on Prisma relation rules if applicable, but usually orderItems restrict product deletion. Here we assume a fresh DB or deleting products is safe).
-    // Actually, to avoid foreign key errors during delete, let's just create new items without deleting old ones if possible, or try deleting.
-    // If order items exist referencing the products, deleteMany might fail. Let's wrap it in a try-catch just in case.
-    try {
-        await prisma.product.deleteMany({});
-        console.log('Cleared existing products.');
-    } catch (e) {
-        console.log('Could not clear existing products (likely due to existing orders), continuing to insert new ones.');
+    // ---------------------------------------------------------
+    // 1. Create the Super Admin User
+    // ---------------------------------------------------------
+    // NOTE: In production, you MUST hash this password using bcrypt!
+    // e.g., const hashedPassword = await bcrypt.hash('TakshAdmin2024!', 10);
+
+    const superAdmin = await prisma.adminUser.upsert({
+        where: { email: 'admin@taksh.com' },
+        update: {},
+        create: {
+            email: 'admin@takshstore.com',
+            name: 'Taksh Super Admin',
+            password: process.env.SUPER_ADMIN_INITAL_PASSWORD,
+            status: AdminStatus.ACTIVE,
+            isSuper: true,
+            permissions: {
+                create: {
+                    orders: PermissionLevel.WRITE,
+                    customers: PermissionLevel.WRITE,
+                    categories: PermissionLevel.WRITE,
+                    products: PermissionLevel.WRITE,
+                    subAdmins: PermissionLevel.WRITE,
+                    articles: PermissionLevel.WRITE,
+                    cms: PermissionLevel.WRITE,
+                    coupons: PermissionLevel.WRITE,
+                    reviews: PermissionLevel.WRITE,
+                    media: PermissionLevel.WRITE,
+                    settings: PermissionLevel.WRITE,
+                }
+            }
+        },
+    });
+    console.log(`✅ Super Admin created: ${superAdmin.email}`);
+
+    // ---------------------------------------------------------
+    // 2. Base CMS Documents
+    // ---------------------------------------------------------
+    const cmsDocs = [
+        { slug: 'about', title: 'About Us', content: 'Welcome to Taksh...' },
+        { slug: 'terms', title: 'Terms & Conditions', content: 'These are the terms and conditions...' },
+        { slug: 'privacy', title: 'Privacy Policy', content: 'We respect your privacy...' },
+    ];
+
+    for (const doc of cmsDocs) {
+        await prisma.cmsDocument.upsert({
+            where: { slug: doc.slug },
+            update: {},
+            create: doc,
+        });
     }
+    console.log(`✅ CMS Documents created.`);
 
-    const product1 = await prisma.product.create({
-        data: {
-            title: 'Abstract Gold Canvas',
-            price: 15000,
-            type: 'PHYSICAL',
+    // ---------------------------------------------------------
+    // 3. Store Settings
+    // ---------------------------------------------------------
+    const defaultSettings = [
+        { key: 'STORE_NAME', value: 'Taksh' },
+        { key: 'CONTACT_EMAIL', value: 'support@taksh.com' },
+        { key: 'CURRENCY', value: 'INR' },
+    ];
+
+    for (const setting of defaultSettings) {
+        await prisma.storeSetting.upsert({
+            where: { key: setting.key },
+            update: {},
+            create: setting,
+        });
+    }
+    console.log(`✅ Store Settings initialized.`);
+
+    // ---------------------------------------------------------
+    // 4. Base Products (Digital & Physical)
+    // ---------------------------------------------------------
+    await prisma.product.upsert({
+        where: { id: 'default-digital-invite' },
+        update: {},
+        create: {
+            id: 'default-digital-invite',
+            title: 'Bespoke Digital Invitation',
+            type: ProductType.DIGITAL,
+            price: 2000,
+            description: 'A beautifully crafted digital experience for your guests.',
+            status: ProductStatus.ACTIVE,
+            isDigital: true,
+            isCustomizable: true,
+            eternityAddonPrice: 500,
         },
     });
 
-    const product2 = await prisma.product.create({
-        data: {
-            title: 'Bespoke Digital Wedding Invite',
+    await prisma.product.upsert({
+        where: { id: 'default-canvas-print' },
+        update: {},
+        create: {
+            id: 'default-canvas-print',
+            title: 'Premium Museum Canvas',
+            type: ProductType.PHYSICAL,
             price: 5000,
-            type: 'DIGITAL',
+            description: 'Your favorite memory, printed on premium gallery-wrapped canvas.',
+            status: ProductStatus.ACTIVE,
+            isDigital: false,
+            isCustomizable: false,
         },
     });
+    console.log(`✅ Default Products created.`);
 
-    console.log('Successfully created seed products:');
-    console.log(`Product 1 (Physical) ID: ${product1.id}`);
-    console.log(`Product 2 (Digital) ID: ${product2.id}`);
+    console.log('🎉 Seeding complete!');
 }
 
 main()
     .catch((e) => {
-        console.error(e);
+        console.error('❌ Seeding failed:', e);
         process.exit(1);
     })
     .finally(async () => {

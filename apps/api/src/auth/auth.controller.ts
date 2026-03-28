@@ -7,7 +7,7 @@ import {
   Request,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegisterDto, LoginDto } from './dto/auth.dto';
+import { RegisterDto, LoginDto, ForgotPasswordDto, ResetPasswordDto } from './dto/auth.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
 
@@ -26,6 +26,18 @@ export class AuthController {
   @ApiOperation({ summary: 'Login and receive JWT' })
   async login(@Body() dto: LoginDto) {
     return this.authService.login(dto);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Send password reset link' })
+  async forgotPassword(@Body() dto: ForgotPasswordDto) {
+    return this.authService.forgotPassword(dto);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password using token' })
+  async resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 
   @UseGuards(JwtAuthGuard)

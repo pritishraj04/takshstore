@@ -16,7 +16,7 @@ export default function middleware(req: NextRequest, event: any) {
     // Handle Admin Portal specifically
     if (pathname.startsWith('/admin')) {
         const adminToken = req.cookies.get('admin_session')?.value;
-        const isAuthPage = pathname === '/admin/login' || pathname.startsWith('/admin/onboarding');
+        const isAuthPage = pathname === '/admin/login' || pathname.startsWith('/admin/onboarding') || pathname.startsWith('/admin/forgot-password');
 
         // If they HAVE a token and try to go to Login/Onboarding -> Bounce to Dashboard
         if (adminToken && isAuthPage) {

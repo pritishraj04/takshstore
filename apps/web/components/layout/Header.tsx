@@ -54,11 +54,16 @@ export default function Header() {
     useGSAP(() => {
         gsap.registerPlugin(ScrollTrigger);
 
-        // Calculate initial state explicitly in case of scroll restoration
-        if (window.scrollY > 20) {
-            setIsScrolled(true);
+        // Reset state and calculate initial scroll position explicitly on route change
+        const isCurrentlyScrolled = window.scrollY > 20;
+        setIsScrolled(isCurrentlyScrolled);
+        
+        if (isCurrentlyScrolled) {
             gsap.set(bgRef.current, { autoAlpha: 1 });
             gsap.set(borderRef.current, { scaleX: 1 });
+        } else {
+            gsap.set(bgRef.current, { autoAlpha: 0 });
+            gsap.set(borderRef.current, { scaleX: 0 });
         }
 
         ScrollTrigger.create({
@@ -90,7 +95,7 @@ export default function Header() {
                 });
             },
         });
-    }, { scope: headerRef });
+    }, { scope: headerRef, dependencies: [pathname] });
 
     if (pathname === '/login' || pathname === '/register') return null;
 
