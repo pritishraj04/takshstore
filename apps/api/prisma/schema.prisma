@@ -54,6 +54,7 @@ model User {
   phone     String?
   status    UserAccountStatus @default(ACTIVE)
   orders    Order[]
+  reviews   Review[]
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
 }
@@ -86,6 +87,7 @@ model Product {
   isCustomizable  Boolean       @default(true)
 
   orderItems      OrderItem[]
+  reviews         Review[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -104,6 +106,7 @@ model Order {
   razorpaySignature String?
   isManual          Boolean     @default(false)
   items             OrderItem[]
+  reviews           Review[]
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt
 }
@@ -260,4 +263,31 @@ model Journal {
   isPublished Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Review {
+  id        String       @id @default(uuid())
+  rating    Int
+  comment   String?      @db.Text
+  status    ReviewStatus @default(PENDING)
+  
+  userId    String
+  user      User         @relation(fields: [userId], references: [id])
+  
+  productId String
+  product   Product      @relation(fields: [productId], references: [id])
+  
+  orderId   String
+  order     Order        @relation(fields: [orderId], references: [id])
+
+  createdAt DateTime     @default(now())
+  updatedAt DateTime     @updatedAt
+
+  @@unique([userId, productId, orderId])
 }

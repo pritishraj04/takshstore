@@ -166,6 +166,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                 id: digitalProduct.id,
                 title: digitalProduct.title,
                 price: digitalProduct.price,
+                discountedPrice: digitalProduct.discountedPrice,
                 type: 'DIGITAL',
                 imageUrl: digitalProduct.imageUrl || "/main-website-assets/images/placeholder.webp",
                 inviteData: currentDraft,

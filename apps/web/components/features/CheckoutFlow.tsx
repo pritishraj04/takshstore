@@ -22,7 +22,8 @@ export default function CheckoutFlow() {
 
     // Coupon State
     const [couponCode, setCouponCode] = useState('');
-    const [discountPct, setDiscountPct] = useState(0);
+    const [discountValue, setDiscountValue] = useState(0);
+    const [discountType, setDiscountType] = useState('PERCENTAGE');
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
     const [couponError, setCouponError] = useState<string | null>(null);
     const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
@@ -34,11 +35,23 @@ export default function CheckoutFlow() {
 
     if (!mounted) return null;
 
+    const getEffectivePrice = (item: any) => {
+        return (item.discountedPrice && Number(item.discountedPrice) > 0) 
+            ? Number(item.discountedPrice) 
+            : Number(item.price);
+    };
+
     const requiresShipping = items.some(item => item.type === 'PHYSICAL');
-    const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
-    const discountAmount = Math.round((subtotal * discountPct) / 100);
+    const subtotal = items.reduce((total, item) => total + (getEffectivePrice(item) * Number(item.quantity)), 0) || 0;
+    
+    // Calculate the actual discount amount based on type
+    const calculatedDiscountAmount = discountType === 'PERCENTAGE'
+        ? Math.round((subtotal * discountValue) / 100) 
+        : discountValue;
+    const discountAmount = calculatedDiscountAmount || 0;
+    
     const shippingCost = requiresShipping ? 150 : 0; // Flat luxury shipping rate or free
-    const total = subtotal - discountAmount + shippingCost;
+    const total = Math.max((subtotal - discountAmount + shippingCost) || 0, 0);
 
     if (items.length === 0) {
         return (
@@ -68,11 +81,12 @@ export default function CheckoutFlow() {
         setCouponSuccess(null);
         try {
             const { data } = await apiClient.get(`/coupons/validate/${couponCode}`);
-            setDiscountPct(data.discountPercentage);
-            setCouponSuccess(`Code applied! ${data.discountPercentage}% off`);
+            setDiscountValue(data.discountValue);
+            setDiscountType(data.discountType);
+            setCouponSuccess(`Code applied! ${data.discountType === 'PERCENTAGE' ? `${data.discountValue}%` : `₹${data.discountValue}`} off`);
         } catch (err: any) {
             setCouponError(err.response?.data?.message || err.message || 'Invalid coupon or expired');
-            setDiscountPct(0);
+            setDiscountValue(0);
         } finally {
             setIsApplyingCoupon(false);
         }
@@ -110,8 +124,8 @@ export default function CheckoutFlow() {
                         checkout({
                             items: items.map(item => ({
                                 productId: item.id,
-                                quantity: item.quantity,
-                                priceAtPurchase: item.price,
+                                quantity: Number(item.quantity),
+                                priceAtPurchase: getEffectivePrice(item),
                                 type: item.type,
                                 inviteData: item.type === 'DIGITAL'
                                     ? item.inviteData
@@ -352,12 +366,25 @@ export default function CheckoutFlow() {
                                     {item.type} {item.quantity > 1 && `(x${item.quantity})`}
                                 </p>
                             </div>
-                            <p
-                                className="text-sm text-[#1A1A1A]"
-                                style={{ fontFamily: 'var(--font-inter)' }}
-                            >
-                                ₹{(item.price * item.quantity).toLocaleString()}
-                            </p>
+                            <div className="text-right">
+                                {getEffectivePrice(item) < Number(item.price) ? (
+                                    <div className="flex flex-col items-end">
+                                        <span className="text-xs line-through text-gray-400" style={{ fontFamily: 'var(--font-inter)' }}>
+                                            ₹{(item.price * item.quantity).toLocaleString()}
+                                        </span>
+                                        <span className="text-sm text-[#1A1A1A] font-bold" style={{ fontFamily: 'var(--font-inter)' }}>
+                                            ₹{(getEffectivePrice(item) * item.quantity).toLocaleString()}
+                                        </span>
+                                    </div>
+                                ) : (
+                                    <p
+                                        className="text-sm text-[#1A1A1A]"
+                                        style={{ fontFamily: 'var(--font-inter)' }}
+                                    >
+                                        ₹{(getEffectivePrice(item) * item.quantity).toLocaleString()}
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     ))}
                 </div>
@@ -389,17 +416,17 @@ export default function CheckoutFlow() {
                                 type="text"
                                 value={couponCode}
                                 onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-                                disabled={discountPct > 0 || isApplyingCoupon}
+                                disabled={discountValue > 0 || isApplyingCoupon}
                                 placeholder="Enter code"
                                 className="flex-1 bg-transparent border border-[#E5E4DF] px-4 py-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors disabled:opacity-50"
                                 style={{ fontFamily: 'var(--font-inter)' }}
                             />
-                            {discountPct > 0 ? (
+                            {discountValue > 0 ? (
                                 <button
                                     type="button"
                                     onClick={() => {
                                         setCouponCode('');
-                                        setDiscountPct(0);
+                                        setDiscountValue(0);
                                         setCouponSuccess(null);
                                     }}
                                     className="px-6 bg-[#1A1A1A] text-[#FBFBF9] text-xs uppercase tracking-widest hover:bg-black transition-colors"
@@ -423,12 +450,12 @@ export default function CheckoutFlow() {
                         {couponSuccess && <p className="text-green-600 text-xs mt-2">{couponSuccess}</p>}
                     </div>
 
-                    {discountPct > 0 && (
+                    {discountValue > 0 && (
                         <div
                             className="flex justify-between items-center text-sm text-[#5A5A5A] mt-2"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            <span>Discount ({discountPct}%)</span>
+                            <span>Discount ({discountType === 'PERCENTAGE' ? `${discountValue}%` : `₹${discountValue}`})</span>
                             <span className="text-green-700">-₹{discountAmount.toLocaleString()}</span>
                         </div>
                     )}

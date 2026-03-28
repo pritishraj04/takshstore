@@ -8,11 +8,14 @@ export class ProductsService {
 
     async findAll(query?: string) {
         if (!query) {
-            return this.prisma.product.findMany();
+            return this.prisma.product.findMany({
+                where: { status: 'ACTIVE' }
+            });
         }
 
         return this.prisma.product.findMany({
             where: {
+                status: 'ACTIVE',
                 title: {
                     contains: query,
                     mode: 'insensitive'

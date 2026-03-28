@@ -52,10 +52,18 @@ export default function ProductCard({ product }: ProductCardProps) {
                     {product.title}
                 </h3>
                 <p
-                    className="text-xs uppercase tracking-widest text-[#5A5A5A]"
+                    className="text-xs uppercase tracking-widest text-[#5A5A5A] flex items-center justify-center gap-2"
                     style={{ fontFamily: 'var(--font-inter)' }}
                 >
-                    {product.type === 'PHYSICAL' ? 'Physical Canvas' : 'Digital Suite'} — ₹{product.price.toLocaleString()}
+                    <span>{product.type === 'PHYSICAL' ? 'Physical Canvas' : 'Digital Suite'} — </span>
+                    {product.discountedPrice && product.discountedPrice > 0 ? (
+                        <span>
+                            <span className="line-through text-gray-400 mr-2">₹{product.price.toLocaleString()}</span>
+                            <span className="text-black font-semibold">₹{product.discountedPrice.toLocaleString()}</span>
+                        </span>
+                    ) : (
+                        <span>₹{product.price.toLocaleString()}</span>
+                    )}
                 </p>
 
                 <button

@@ -16,7 +16,13 @@ export default function CollectionDrawer() {
 
     if (!mounted) return null;
 
-    const subtotal = items.reduce((total, item) => total + (item.price * item.quantity), 0);
+    const getEffectivePrice = (item: any) => {
+        return (item.discountedPrice && Number(item.discountedPrice) > 0) 
+            ? Number(item.discountedPrice) 
+            : Number(item.price);
+    };
+
+    const subtotal = items.reduce((total, item) => total + (getEffectivePrice(item) * Number(item.quantity)), 0) || 0;
 
     return (
         <>
@@ -99,12 +105,24 @@ export default function CollectionDrawer() {
                                         >
                                             {item.type} {item.quantity > 1 && `(x${item.quantity})`}
                                         </p>
-                                        <p
-                                            className="text-sm text-[#1A1A1A]"
-                                            style={{ fontFamily: 'var(--font-inter)' }}
-                                        >
-                                            ₹{item.price.toLocaleString()}
-                                        </p>
+                                        
+                                        {getEffectivePrice(item) < Number(item.price) ? (
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-sm font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                    ₹{(getEffectivePrice(item) * item.quantity).toLocaleString()}
+                                                </span>
+                                                <span className="text-xs line-through text-gray-400" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                    ₹{(item.price * item.quantity).toLocaleString()}
+                                                </span>
+                                            </div>
+                                        ) : (
+                                            <p
+                                                className="text-sm text-[#1A1A1A]"
+                                                style={{ fontFamily: 'var(--font-inter)' }}
+                                            >
+                                                ₹{(getEffectivePrice(item) * item.quantity).toLocaleString()}
+                                            </p>
+                                        )}
                                     </div>
 
                                     <button

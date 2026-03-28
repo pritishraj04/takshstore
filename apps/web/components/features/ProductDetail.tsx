@@ -140,10 +140,17 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                         </h1>
 
                         <p
-                            className="text-lg text-[#1A1A1A] font-light"
+                            className="text-lg text-[#1A1A1A] font-light flex items-center gap-3"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            ₹{product.price.toLocaleString()}
+                            {product.discountedPrice && product.discountedPrice > 0 ? (
+                                <>
+                                    <span className="line-through text-gray-400">₹{product.price.toLocaleString()}</span>
+                                    <span className="font-bold text-black">₹{product.discountedPrice.toLocaleString()}</span>
+                                </>
+                            ) : (
+                                <span>₹{product.price.toLocaleString()}</span>
+                            )}
                         </p>
 
                         <p

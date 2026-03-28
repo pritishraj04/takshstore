@@ -1,12 +1,14 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useOrder } from "../../hooks/useOrder";
 import { useRetryPayment } from "../../hooks/useRetryPayment";
+import { useOrderReviews } from "../../hooks/useOrderReviews";
+import { ReviewModal } from "./ReviewModal";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { Info, AlertCircle } from "lucide-react";
+import { Info, AlertCircle, Star } from "lucide-react";
 import { ProductType } from "@taksh/types";
 
 // Types matching the Prisma backend
@@ -35,8 +37,10 @@ interface OrderItem {
     quantity: number;
     priceAtPurchase: number;
     product: {
+        id: string;
         title: string;
         type: ProductType;
+        price: number;
     };
     digitalInvite: DigitalInvite | null;
 }
@@ -54,6 +58,12 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
     const container = useRef<HTMLDivElement>(null);
     const { data: order, isLoading, isError } = useOrder(orderId) as { data: Order, isLoading: boolean, isError: boolean };
     const { mutate: retryPayment, isPending: isRetrying } = useRetryPayment();
+    const { data: orderReviews = [] } = useOrderReviews(orderId);
+    
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [selectedProduct, setSelectedProduct] = useState<{id: string, name: string} | null>(null);
+
+    const isDelivered = order && (order.status === 'COMPLETED' || order.status === 'SHIPPED');
 
     useGSAP(() => {
         if (!isLoading && order) {
@@ -191,8 +201,61 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                     )}
                                 </div>
 
-                                <div className="mt-4 md:mt-0 font-inter text-lg text-primary">
-                                    ₹{item.priceAtPurchase.toLocaleString()}
+                                <div className="mt-6 md:mt-0 flex flex-col md:items-end gap-4 min-w-[120px]">
+                                    {item.product.price && item.priceAtPurchase < item.product.price ? (
+                                        <div className="flex flex-col items-end">
+                                            <span className="font-inter text-xs text-gray-400 line-through tracking-wider mb-1">
+                                                ₹{item.product.price.toLocaleString()}
+                                            </span>
+                                            <div className="font-inter text-xl text-primary font-medium tracking-wide">
+                                                ₹{item.priceAtPurchase.toLocaleString()}
+                                            </div>
+                                            <span className="font-inter text-[10px] text-green-700 tracking-widest uppercase mt-1">
+                                                Sale Applied
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="font-inter text-xl text-primary font-medium tracking-wide">
+                                            ₹{item.priceAtPurchase.toLocaleString()}
+                                        </div>
+                                    )}
+                                    
+                                    {(() => {
+                                        const isItemDelivered = item.product.type === 'DIGITAL' 
+                                            ? item.digitalInvite?.status === 'PUBLISHED' 
+                                            : isDelivered;
+                                            
+                                        if (isItemDelivered) {
+                                            return (
+                                                <div className="print:hidden">
+                                                    {(() => {
+                                                        const existingReview = orderReviews.find((r: any) => r.productId === item.product.id);
+                                                        if (existingReview) {
+                                                            return (
+                                                                <span className="flex items-center gap-1.5 font-inter text-xs tracking-widest text-[#C5B39A] uppercase bg-white px-3 py-1.5 border border-[#E5E4DF] rounded-full shadow-sm">
+                                                                    <Star size={12} className="fill-[#C5B39A]" />
+                                                                    {existingReview.status === 'APPROVED' ? 'Reviewed' : 'Review Pending'}
+                                                                </span>
+                                                            );
+                                                        }
+                                                        return (
+                                                            <button 
+                                                                onClick={() => {
+                                                                    setSelectedProduct({ id: item.product.id, name: item.product.title });
+                                                                    setReviewModalOpen(true);
+                                                                }}
+                                                                className="font-inter text-[10px] tracking-widest uppercase text-secondary hover:text-black border border-secondary hover:border-black px-4 py-2 transition-colors flex items-center gap-2 rounded-full"
+                                                            >
+                                                                <Star size={12} />
+                                                                Leave a Review
+                                                            </button>
+                                                        );
+                                                    })()}
+                                                </div>
+                                            );
+                                        }
+                                        return null;
+                                    })()}
                                 </div>
                             </div>
                         ))}
@@ -233,6 +296,19 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                 </div>
 
             </div>
+
+            {selectedProduct && (
+                <ReviewModal 
+                    isOpen={reviewModalOpen}
+                    onClose={() => {
+                        setReviewModalOpen(false);
+                        setSelectedProduct(null);
+                    }}
+                    orderId={orderId}
+                    productId={selectedProduct.id}
+                    productName={selectedProduct.name}
+                />
+            )}
         </div>
     );
 }
