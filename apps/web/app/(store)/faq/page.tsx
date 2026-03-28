@@ -1,11 +1,12 @@
+import { getApiUrl } from "@/lib/api";
 import FAQAccordion from "@/components/features/FAQAccordion";
 
 export const dynamic = 'force-dynamic';
 
 async function getFaqs() {
-    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const API_URL = getApiUrl();
     try {
-        const res = await fetch(`${API_URL}/cms/faqs`, { 
+        const res = await fetch(`${API_URL}/cms/faqs`, {
             next: { revalidate: 3600 },
             signal: AbortSignal.timeout(10000) // 10s timeout
         });

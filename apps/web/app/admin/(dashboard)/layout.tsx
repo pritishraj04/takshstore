@@ -1,5 +1,16 @@
+import type { Metadata } from "next";
+
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
+
+export const metadata: Metadata = {
+  title: "Admin | Taksh Store",
+  description: "A luxurious visual experience",
+  icons: {
+    icon: '/themes/royal-wedding/assets/images/favicon.png',
+    apple: '/themes/royal-wedding/assets/images/apple-touch-icon.png',
+  },
+};
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -14,7 +25,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <AdminHeader />
         <main className="flex-1 overflow-y-auto w-full p-4 md:p-8 lg:p-10 pb-20 scroll-smooth">
           <div className="max-w-[1400px] mx-auto w-full">
-             {children}
+            {children}
           </div>
         </main>
       </div>

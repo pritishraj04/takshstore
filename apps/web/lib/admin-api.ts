@@ -11,7 +11,7 @@ export async function adminApiFetch(endpoint: string, options: RequestInit = {})
 
     // 2. Prepare the headers, merging any custom headers passed down
     const headers = new Headers(options.headers || {});
-    
+
     // Ensure standard content-type if not mutating headers extensively
     if (!headers.has('Content-Type') && !(options.body instanceof FormData)) {
         headers.set('Content-Type', 'application/json');
