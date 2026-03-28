@@ -2,10 +2,10 @@ import { getApiUrl } from "@/lib/api";
 
 export const dynamic = 'force-dynamic';
 
-async function getDocument(slug: string) {
+async function getPrivacyContent() {
     const API_URL = getApiUrl();
     try {
-        const res = await fetch(`${API_URL}/cms/documents/${slug}`, {
+        const res = await fetch(`${API_URL}/api/cms/content/PRIVACY`, {
             next: { revalidate: 3600 },
             signal: AbortSignal.timeout(10000) // 10s timeout
         });
@@ -17,9 +17,9 @@ async function getDocument(slug: string) {
 }
 
 export default async function PrivacyPage() {
-    const doc = await getDocument('privacy-policy');
+    const privacyData = await getPrivacyContent();
 
-    if (!doc) {
+    if (!privacyData || !privacyData.content) {
         return (
             <main className="w-full min-h-screen bg-[#FBFBF9] text-[#1A1A1A] pt-40 pb-32 px-6 md:px-16 text-center flex flex-col items-center justify-center">
                 <h1 className="text-4xl" style={{ fontFamily: 'var(--font-playfair)' }}>Privacy Policy</h1>
@@ -31,12 +31,12 @@ export default async function PrivacyPage() {
     return (
         <main className="w-full min-h-screen bg-[#FBFBF9] text-[#1A1A1A] pt-40 pb-32 px-6 md:px-16 selection:bg-[#1A1A1A] selection:text-[#FBFBF9]">
             <h1 className="text-4xl md:text-6xl text-center mb-16" style={{ fontFamily: 'var(--font-playfair)' }}>
-                {doc.title}
+                Privacy Policy
             </h1>
 
             <article
                 className="max-w-3xl mx-auto prose prose-sm md:prose-base prose-headings:font-playfair prose-headings:font-normal prose-p:font-inter prose-p:text-[#5A5A5A] prose-p:leading-loose prose-a:text-[#1A1A1A] prose-a:underline"
-                dangerouslySetInnerHTML={{ __html: doc.content }}
+                dangerouslySetInnerHTML={{ __html: privacyData.content }}
             />
         </main>
     );

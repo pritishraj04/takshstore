@@ -7,7 +7,7 @@ import { Mail, Phone, MapPin, ArrowRight } from "lucide-react";
 
 type InquiryType = "Wall Decorative Painting" | "Digital Wedding Invite" | "General Inquiry";
 
-export default function ContactInquiry() {
+export default function ContactInquiry({ contactData }: { contactData?: any }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [inquiryType, setInquiryType] = useState<InquiryType>("Wall Decorative Painting");
 
@@ -67,8 +67,8 @@ export default function ContactInquiry() {
                         <Mail size={16} strokeWidth={1} className="text-[#C5B39A] mt-1 shrink-0" />
                         <div>
                             <span className="block text-xs uppercase tracking-[0.2em] text-[#5A5A5A] mb-2" style={{ fontFamily: 'var(--font-inter)' }}>Email</span>
-                            <a href="mailto:hello@takshstore.com" className="text-sm border-b border-transparent hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all text-[#5A5A5A] pb-1 inline-block" style={{ fontFamily: 'var(--font-inter)' }}>
-                                hello@takshstore.com
+                            <a href={`mailto:${contactData?.email || 'hello@takshstore.com'}`} className="text-sm border-b border-transparent hover:border-[#1A1A1A] hover:text-[#1A1A1A] transition-all text-[#5A5A5A] pb-1 inline-block" style={{ fontFamily: 'var(--font-inter)' }}>
+                                {contactData?.email || 'hello@takshstore.com'}
                             </a>
                         </div>
                     </div>
@@ -78,7 +78,7 @@ export default function ContactInquiry() {
                         <div>
                             <span className="block text-xs uppercase tracking-[0.2em] text-[#5A5A5A] mb-2" style={{ fontFamily: 'var(--font-inter)' }}>Phone / WhatsApp</span>
                             <span className="text-sm text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>
-                                +91 999 999 9999
+                                {contactData?.phone || '+91 999 999 9999'}
                             </span>
                         </div>
                     </div>
@@ -86,9 +86,10 @@ export default function ContactInquiry() {
                     <div className="left-col-element flex items-start gap-4">
                         <MapPin size={16} strokeWidth={1} className="text-[#C5B39A] mt-1 shrink-0" />
                         <div>
-                            <span className="block text-xs uppercase tracking-[0.2em] text-[#5A5A5A] mb-2" style={{ fontFamily: 'var(--font-inter)' }}>Studio</span>
-                            <span className="text-sm text-[#5A5A5A]" style={{ fontFamily: 'var(--font-inter)' }}>
-                                Operating from Noida, India.<br />Serving spaces nationwide.
+                            <span className="block text-xs uppercase tracking-[0.2em] text-[#5A5A5A] mb-2" style={{ fontFamily: 'var(--font-inter)' }}>Studio & Hours</span>
+                            <span className="text-sm text-[#5A5A5A] whitespace-pre-wrap leading-relaxed" style={{ fontFamily: 'var(--font-inter)' }}>
+                                {(contactData?.address || "Operating from Noida, India.\nServing spaces nationwide.") + "\n"}
+                                <strong>{contactData?.hours || "Mon-Sat, 10am - 6pm"}</strong>
                             </span>
                         </div>
                     </div>

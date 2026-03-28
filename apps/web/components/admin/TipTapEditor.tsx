@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 
 export function TipTapEditor({ content, onChange }: { content: string; onChange: (html: string) => void }) {
     const editor = useEditor({
+        immediatelyRender: false,
         extensions: [
             StarterKit,
             Link.configure({

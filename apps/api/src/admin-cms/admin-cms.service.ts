@@ -8,6 +8,21 @@ export class AdminCmsService {
 
   // --- CMS Public & Private Accessors ---
   
+  async getCmsContent(key: string) {
+    const data = await this.prisma.cmsContent.findUnique({
+      where: { key: key.toUpperCase() },
+    });
+    return data || { key: key.toUpperCase(), content: '' };
+  }
+
+  async upsertCmsContent(key: string, content: string) {
+    const formattedKey = key.toUpperCase();
+    return this.prisma.cmsContent.upsert({
+      where: { key: formattedKey },
+      update: { content },
+      create: { key: formattedKey, content },
+    });
+  }
   async getDocuments() {
     return this.prisma.cmsDocument.findMany({
       orderBy: { updatedAt: 'desc' },

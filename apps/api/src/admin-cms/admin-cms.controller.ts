@@ -8,6 +8,11 @@ import { AdminPermissionsGuard, RequirePermission } from '../admin-auth/guards/r
 export class PublicCmsController {
   constructor(private readonly cmsService: AdminCmsService) {}
 
+  @Get('content/:key')
+  async getCmsContent(@Param('key') key: string) {
+      return this.cmsService.getCmsContent(key);
+  }
+
   @Get('documents/:slug')
   async getDocument(@Param('slug') slug: string) {
       return this.cmsService.getDocument(slug);
@@ -29,6 +34,12 @@ export class AdminCmsController {
   @RequirePermission('cms', 'READ')
   async getDocuments() {
     return this.cmsService.getDocuments();
+  }
+
+  @Patch('content/:key')
+  @RequirePermission('cms', 'WRITE')
+  async updateCmsContent(@Param('key') key: string, @Body('content') content: string) {
+    return this.cmsService.upsertCmsContent(key, content);
   }
 
   @Put('documents/:slug')

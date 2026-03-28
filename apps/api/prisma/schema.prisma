@@ -237,6 +237,13 @@ model Faq {
   createdAt    DateTime @default(now())
 }
 
+model CmsContent {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  content   String   @db.Text
+  updatedAt DateTime @updatedAt
+}
+
 model StoreSetting {
   key       String   @id
   value     String   @db.Text
