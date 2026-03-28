@@ -34,6 +34,12 @@ export class ReviewController {
     const userId = req.user?.sub || req.user?.userId;
     return this.reviewService.getOrderReviews(userId, orderId);
   }
+
+  @Get('featured')
+  @ApiOperation({ summary: 'Get featured reviews for homepage' })
+  async getFeaturedReviews() {
+    return this.reviewService.getFeaturedReviews();
+  }
 }
 
 // Another controller for the public route /products/:id/reviews

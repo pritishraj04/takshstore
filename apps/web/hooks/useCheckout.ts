@@ -15,6 +15,10 @@ export interface OrderItemPayload {
 
 export interface CreateOrderPayload {
     totalAmount: number;
+    subtotal?: number;
+    discountAmount?: number;
+    couponCode?: string;
+    shippingCost?: number;
     shippingAddress?: any;
     developerNotes?: string;
     items: OrderItemPayload[];

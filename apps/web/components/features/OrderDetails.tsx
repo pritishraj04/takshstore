@@ -56,6 +56,11 @@ interface Order {
     userId: string;
     status: OrderStatus;
     totalAmount: number;
+    subtotal?: number;
+    discountAmount?: number;
+    couponCode?: string | null;
+    shippingAddress?: any;
+    shippingCost?: number;
     createdAt: string;
     items: OrderItem[];
 }
@@ -68,6 +73,8 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
 
     const [reviewModalOpen, setReviewModalOpen] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<{ id: string, name: string } | null>(null);
+
+    const isDraftOrder = order?.totalAmount === 0 && order?.status === 'PENDING';
 
     const isDelivered = order && (order.status === 'COMPLETED' || order.status === 'SHIPPED' || order.status === 'DELIVERED');
 
@@ -131,7 +138,7 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                     <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                         <div>
                             <h1 className="font-playfair text-5xl md:text-6xl text-primary tracking-wide mb-4">
-                                Order Summary
+                                {isDraftOrder ? 'Saved Draft' : 'Order Summary'}
                             </h1>
                             <p className="font-inter text-sm text-secondary tracking-widest uppercase">
                                 ID: {order.id.split('-')[0]} // {new Date(order.createdAt).toLocaleDateString("en-US", { year: 'numeric', month: 'short', day: 'numeric' })}
@@ -143,14 +150,14 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                     'bg-gray-100 text-gray-800 border border-gray-200'
                             }`}>
                             <span className="font-inter text-[10px] tracking-widest uppercase font-semibold">
-                                {order.status}
+                                {isDraftOrder ? 'DRAFT' : order.status}
                             </span>
                         </div>
                     </div>
                 </div>
 
                 {/* State Machine Action Banners */}
-                {order.status === 'PENDING' && (
+                {order.status === 'PENDING' && !isDraftOrder && (
                     <div className="order-animate mb-12 bg-amber-500/10 border border-amber-500/30 p-6 flex items-start gap-4">
                         <Info className="text-amber-600 mt-1 shrink-0" size={20} />
                         <div>
@@ -170,6 +177,18 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                             <p className="font-inter text-sm text-red-900/80 leading-relaxed font-light">
                                 We were unable to securely capture the funds from your bank. Your order has been placed on hold. Please try an alternative payment method to complete the transaction.
                             </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Shipping Details */}
+                {order.shippingAddress && (
+                    <div className="order-animate mb-12 bg-secondary/20 border border-light p-6">
+                        <h4 className="font-inter text-xs tracking-widest uppercase text-secondary mb-4">Delivery Logistics</h4>
+                        <div className="font-inter text-sm text-primary leading-relaxed">
+                            <p>{order.shippingAddress.name}</p>
+                            <p>{order.shippingAddress.address}</p>
+                            <p>{order.shippingAddress.city}{order.shippingAddress.postalCode && `, ${order.shippingAddress.postalCode}`}</p>
                         </div>
                     </div>
                 )}
@@ -271,10 +290,16 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                                         const existingReview = orderReviews.find((r: any) => r.productId === item.product.id);
                                                         if (existingReview) {
                                                             return (
-                                                                <span className="flex items-center gap-1.5 font-inter text-xs tracking-widest text-[#C5B39A] uppercase bg-white px-3 py-1.5 border border-[#E5E4DF] rounded-full shadow-sm">
-                                                                    <Star size={12} className="fill-[#C5B39A]" />
-                                                                    {existingReview.status === 'APPROVED' ? 'Reviewed' : 'Review Pending'}
-                                                                </span>
+                                                                <div className="flex flex-col items-end text-right">
+                                                                    <div className="flex gap-0.5 mb-1">
+                                                                        {[...Array(5)].map((_, i) => (
+                                                                            <Star key={i} size={12} className={i < existingReview.rating ? "fill-[#C5B39A] text-[#C5B39A]" : "text-gray-300"} />
+                                                                        ))}
+                                                                    </div>
+                                                                    <p className="font-inter text-[10px] text-gray-500 italic max-w-[200px] truncate">
+                                                                        "{existingReview.comment}"
+                                                                    </p>
+                                                                </div>
                                                             );
                                                         }
                                                         return (
@@ -303,16 +328,41 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
 
                 {/* Footer and Totals */}
                 <div className="order-animate mt-16 border-t border-light pt-12 flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
-                    <div className="flex flex-col">
-                        <span className="font-inter text-xs tracking-widest uppercase text-secondary mb-2">
-                            {['PAID', 'COMPLETED', 'SHIPPED'].includes(order.status) ? 'Total Paid' : (order.status as string) === 'FAILED' ? 'Total Amount' : 'Amount Due'}
-                        </span>
-                        <span className="font-playfair text-4xl text-primary tracking-wide">
-                            ₹{order.totalAmount.toLocaleString()}
-                        </span>
+                    <div className="flex flex-col gap-2 w-full md:w-64 text-right print:w-full">
+                        {!isDraftOrder && (
+                            <>
+                                <div className="flex justify-between font-inter text-sm text-secondary">
+                                    <span>Subtotal</span>
+                                    <span>₹{(order.subtotal || order.totalAmount).toLocaleString()}</span>
+                                </div>
+
+                                {(order as any).shippingCost > 0 && (
+                                    <div className="flex justify-between font-inter text-sm text-secondary">
+                                        <span>Shipping</span>
+                                        <span>₹{(order as any).shippingCost.toLocaleString()}</span>
+                                    </div>
+                                )}
+
+                                {(order as any).discountAmount > 0 && (
+                                    <div className="flex justify-between font-inter text-sm text-green-700">
+                                        <span>Discount {(order as any).couponCode ? `(${(order as any).couponCode})` : ''}</span>
+                                        <span>-₹{(order as any).discountAmount.toLocaleString()}</span>
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        <div className="flex justify-between items-end mt-4 pt-4 border-t border-light">
+                            <span className="font-inter text-xs tracking-widest uppercase text-secondary">
+                                {isDraftOrder ? 'Draft Total' : ['PAID', 'COMPLETED', 'SHIPPED'].includes(order.status) ? 'Total Paid' : 'Amount Due'}
+                            </span>
+                            <span className="font-playfair text-3xl text-primary tracking-wide">
+                                ₹{order.totalAmount.toLocaleString()}
+                            </span>
+                        </div>
                     </div>
 
-                    <div className="flex gap-4 print:hidden">
+                    <div className="flex gap-4 print:hidden mt-6 md:mt-0">
                         {['PAID', 'COMPLETED', 'SHIPPED'].includes(order.status) && (
                             <button
                                 onClick={() => window.print()}
@@ -321,15 +371,25 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                 Print Receipt
                             </button>
                         )}
-                        {(order.status === 'PENDING' || (order.status as string) === 'FAILED') && (
-                            <button
-                                onClick={() => retryPayment(order.id)}
-                                disabled={isRetrying}
-                                className={`bg-[#C5B39A] text-[#1A1A1A] px-8 py-4 font-inter text-[11px] tracking-widest uppercase flex items-center justify-center cursor-pointer transition-colors ${isRetrying ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white'
-                                    }`}
+                        
+                        {isDraftOrder ? (
+                            <Link 
+                                href="/collection" 
+                                className="bg-[#1A1A1A] text-[#FBFBF9] px-8 py-4 font-inter text-[11px] tracking-widest uppercase hover:bg-black transition-colors"
                             >
-                                {isRetrying ? 'Regenerating Session...' : 'Retry Payment'}
-                            </button>
+                                Continue Shopping
+                            </Link>
+                        ) : (
+                            (order.status === 'PENDING' || (order.status as string) === 'FAILED') && (
+                                <button
+                                    onClick={() => retryPayment(order.id)}
+                                    disabled={isRetrying}
+                                    className={`bg-[#C5B39A] text-[#1A1A1A] px-8 py-4 font-inter text-[11px] tracking-widest uppercase flex items-center justify-center cursor-pointer transition-colors ${isRetrying ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white'
+                                        }`}
+                                >
+                                    {isRetrying ? 'Regenerating Session...' : 'Retry Payment'}
+                                </button>
+                            )
                         )}
                     </div>
                 </div>

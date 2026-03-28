@@ -137,7 +137,11 @@ export default function CheckoutFlow() {
                                 marriageDate: item.marriageDate       // <--- AND THIS WAS MISSING
                             })),
                             totalAmount: total,
-                            shippingAddress: requiresShipping ? { address, city, postalCode } : undefined
+                            subtotal: subtotal,
+                            discountAmount: discountAmount,
+                            couponCode: discountValue > 0 ? couponCode : undefined,
+                            shippingCost: shippingCost,
+                            shippingAddress: requiresShipping ? { name, address, city, postalCode } : undefined
                         }, {
                             onSuccess: (data: any) => {
                                 console.log('2. Mutation Success, Data:', data);

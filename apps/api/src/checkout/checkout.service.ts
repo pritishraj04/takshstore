@@ -21,6 +21,7 @@ export class CheckoutService {
     items: any[],
     shippingAddress?: any,
     developerNotes?: string,
+    payload: any = {},
   ) {
     // Calculate the cart total securely on the backend.
     // For brevity based on the prompt instructions, we use the totalAmount sent from frontend or could recalc here.
@@ -82,6 +83,10 @@ export class CheckoutService {
         userId,
         status: 'PENDING',
         totalAmount: Number(amountToPay),
+        subtotal: payload.subtotal || 0,
+        discountAmount: payload.discountAmount || 0,
+        couponCode: payload.couponCode || null,
+        shippingCost: payload.shippingCost || 0,
         shippingAddress,
         developerNotes,
         items: {

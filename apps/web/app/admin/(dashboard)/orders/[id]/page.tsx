@@ -176,11 +176,11 @@ export default function AdminOrderDetailsPage() {
                                 <div>
                                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mb-1">Shipping Address</p>
                                     <p className="text-sm text-gray-700 whitespace-pre-wrap">
-                                        {order.shippingAddress.name}
-                                        {'\n'}{order.shippingAddress.line1}
+                                        {order.shippingAddress.name || order.user.name}
+                                        {'\n'}{order.shippingAddress.line1 || order.shippingAddress.address}
                                         {order.shippingAddress.line2 && `\n${order.shippingAddress.line2}`}
-                                        {'\n'}{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.postal_code}
-                                        {'\n'}{order.shippingAddress.country}
+                                        {'\n'}{order.shippingAddress.city}, {order.shippingAddress.state || ''} {order.shippingAddress.postal_code || order.shippingAddress.postalCode}
+                                        {order.shippingAddress.country && `\n${order.shippingAddress.country}`}
                                     </p>
                                 </div>
                             )}
@@ -221,8 +221,20 @@ export default function AdminOrderDetailsPage() {
                         </h2>
                         <div className="flex justify-between items-center py-2">
                             <span className="text-sm text-gray-500">Subtotal</span>
-                            <span className="text-sm font-medium">₹{order.totalAmount.toLocaleString()}</span>
+                            <span className="text-sm font-medium">₹{(order.subtotal || order.totalAmount).toLocaleString()}</span>
                         </div>
+                        {order.shippingCost > 0 && (
+                            <div className="flex justify-between items-center py-2">
+                                <span className="text-sm text-gray-500">Shipping</span>
+                                <span className="text-sm font-medium">₹{order.shippingCost.toLocaleString()}</span>
+                            </div>
+                        )}
+                        {order.discountAmount > 0 && (
+                            <div className="flex justify-between items-center py-2">
+                                <span className="text-sm text-gray-500">Discount {order.couponCode ? `(${order.couponCode})` : ''}</span>
+                                <span className="text-sm font-medium text-emerald-600">-₹{order.discountAmount.toLocaleString()}</span>
+                            </div>
+                        )}
                         <div className="flex justify-between items-center py-2 border-t border-gray-100 mt-2 pt-3">
                             <span className="text-sm font-bold text-gray-900">Total Charged</span>
                             <span className="text-lg font-black text-emerald-600">₹{order.totalAmount.toLocaleString()}</span>

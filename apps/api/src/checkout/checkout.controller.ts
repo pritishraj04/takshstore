@@ -24,7 +24,7 @@ export class CheckoutController {
       throw new BadRequestException('User not authenticated properly');
     }
 
-    const { totalAmount, items, shippingAddress, developerNotes } = body;
+    const { totalAmount, items, shippingAddress, developerNotes, subtotal, discountAmount, couponCode, shippingCost } = body;
 
     if (!totalAmount || !items || !items.length) {
       throw new BadRequestException('Invalid checkout block');
@@ -36,6 +36,7 @@ export class CheckoutController {
       items,
       shippingAddress,
       developerNotes,
+      { subtotal, discountAmount, couponCode, shippingCost },
     );
   }
 

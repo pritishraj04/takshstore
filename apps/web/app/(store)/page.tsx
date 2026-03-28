@@ -9,9 +9,7 @@ import InsightsBlock from "../../components/features/InsightsBlock";
 import TestimonialsBlock from "../../components/features/TestimonialsBlock";
 import SpringWeddingPromo from "../../components/features/SpringWeddingPromo";
 import DynamicFeaturedCoupon from "../../components/features/DynamicFeaturedCoupon";
-import LatestJournals from "../../components/features/LatestJournals";
 import { useProducts } from "../../hooks/useProducts";
-import { Loader2 } from "lucide-react";
 
 export default function Home() {
   const { data: products, isLoading } = useProducts();
@@ -26,7 +24,6 @@ export default function Home() {
       <WhyGoDigital />
       <DynamicFeaturedCoupon />
       <StoryBlock />
-      <LatestJournals />
       <InsightsBlock />
       <TestimonialsBlock />
     </main>

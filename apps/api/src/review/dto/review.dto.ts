@@ -1,4 +1,4 @@
-import { IsString, IsInt, Min, Max, IsOptional, IsEnum } from 'class-validator';
+import { IsString, IsInt, Min, Max, IsOptional, IsEnum, IsBoolean } from 'class-validator';
 import { ReviewStatus } from '@prisma/client';
 
 export class CreateReviewDto {
@@ -19,6 +19,11 @@ export class CreateReviewDto {
 }
 
 export class UpdateReviewStatusDto {
+  @IsOptional()
   @IsEnum(ReviewStatus)
-  status: ReviewStatus;
+  status?: ReviewStatus;
+
+  @IsOptional()
+  @IsBoolean()
+  isFeatured?: boolean;
 }

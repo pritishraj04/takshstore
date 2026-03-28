@@ -101,6 +101,10 @@ model Order {
   userId          String
   user            User        @relation(fields: [userId], references: [id])
   status          OrderStatus @default(PENDING)
+  subtotal        Float       @default(0)
+  discountAmount  Float       @default(0)
+  couponCode      String?
+  shippingCost    Float       @default(0)
   totalAmount     Float
   shippingAddress Json?
   developerNotes  String?
@@ -285,6 +289,7 @@ model Review {
   rating    Int
   comment   String?      @db.Text
   status    ReviewStatus @default(PENDING)
+  isFeatured Boolean     @default(false)
   
   userId    String
   user      User         @relation(fields: [userId], references: [id])

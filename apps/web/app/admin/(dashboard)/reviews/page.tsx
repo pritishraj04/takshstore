@@ -47,6 +47,24 @@ export default function ReviewsAdminPage() {
         }
     };
 
+    const handleToggleFeatured = async (review: any) => {
+        try {
+            const res = await adminApiFetch(`/admin/reviews/${review.id}/status`, {
+                method: "PATCH",
+                body: JSON.stringify({ isFeatured: !review.isFeatured }),
+            });
+            
+            if (res.ok) {
+                toast.success(review.isFeatured ? "Removed from homepage" : "Featured on homepage");
+                setReviews(prev => prev.map(r => r.id === review.id ? { ...r, isFeatured: !review.isFeatured } : r));
+            } else {
+                toast.error("Failed to update feature status");
+            }
+        } catch (error) {
+            toast.error("Server error");
+        }
+    };
+
     const filteredReviews = reviews.filter(r => statusFilter === 'ALL' || r.status === statusFilter);
 
     if (isLoading) {
@@ -137,24 +155,40 @@ export default function ReviewsAdminPage() {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">
-                                            {review.status === 'PENDING' ? (
-                                                <div className="flex items-center justify-end gap-2">
+                                            <div className="flex items-center justify-end gap-2">
+                                                {review.status === 'APPROVED' && (
                                                     <button 
-                                                        onClick={() => handleUpdateStatus(review.id, 'APPROVED')}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 rounded-lg text-xs font-semibold transition-colors border border-emerald-200/50"
+                                                        onClick={() => handleToggleFeatured(review)}
+                                                        className={`p-1.5 rounded-lg border transition-all flex items-center gap-1.5 text-xs font-semibold ${
+                                                            review.isFeatured 
+                                                                ? "bg-amber-100 border-amber-300 text-amber-700 hover:bg-amber-200" 
+                                                                : "bg-gray-50 border-gray-200 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                                                        }`}
+                                                        title={review.isFeatured ? "Unfeature from Home" : "Feature on Home"}
                                                     >
-                                                        <Check size={14} /> Approve
+                                                        <Star size={14} className={review.isFeatured ? "fill-amber-500 text-amber-500" : ""} />
+                                                        {review.isFeatured ? "Featured" : "Feature"}
                                                     </button>
-                                                    <button 
-                                                        onClick={() => handleUpdateStatus(review.id, 'REJECTED')}
-                                                        className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 rounded-lg text-xs font-semibold transition-colors border border-rose-200/50"
-                                                    >
-                                                        <X size={14} /> Reject
-                                                    </button>
-                                                </div>
-                                            ) : (
-                                                <div className="text-xs text-gray-400">Moderated</div>
-                                            )}
+                                                )}
+                                                {review.status === 'PENDING' ? (
+                                                    <>
+                                                        <button 
+                                                            onClick={() => handleUpdateStatus(review.id, 'APPROVED')}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 rounded-lg text-xs font-semibold transition-colors border border-emerald-200/50"
+                                                        >
+                                                            <Check size={14} /> Approve
+                                                        </button>
+                                                        <button 
+                                                            onClick={() => handleUpdateStatus(review.id, 'REJECTED')}
+                                                            className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:text-rose-800 rounded-lg text-xs font-semibold transition-colors border border-rose-200/50"
+                                                        >
+                                                            <X size={14} /> Reject
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <div className="text-xs text-gray-400">Moderated</div>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}

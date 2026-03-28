@@ -120,7 +120,22 @@ export class ReviewService {
 
     return this.prisma.review.update({
       where: { id },
-      data: { status: dto.status },
+      data: {
+        status: dto.status !== undefined ? dto.status : undefined,
+        isFeatured: dto.isFeatured !== undefined ? dto.isFeatured : undefined,
+      },
+    });
+  }
+
+  async getFeaturedReviews() {
+    return this.prisma.review.findMany({
+      where: { status: 'APPROVED', isFeatured: true },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        user: { select: { name: true } },
+        product: { select: { title: true, type: true } },
+      },
+      take: 10, // Limit to recent 10 featured testimonials
     });
   }
 }
