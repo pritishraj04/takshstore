@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Mail, ShieldCheck, User } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { getApiUrl } from "@/lib/api";
 
 interface ForgotPasswordFormProps {
     initialType?: "USER" | "ADMIN";
@@ -35,8 +36,7 @@ export default function ForgotPasswordForm({ initialType = "USER" }: ForgotPassw
         setMessage("");
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-            const res = await fetch(`${apiUrl}/api/auth/forgot-password`, {
+            const res = await fetch(getApiUrl('/auth/forgot-password'), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email, type }),

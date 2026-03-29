@@ -4,9 +4,8 @@ import FAQAccordion from "@/components/features/FAQAccordion";
 export const dynamic = 'force-dynamic';
 
 async function getFaqs() {
-    const API_URL = getApiUrl();
     try {
-        const res = await fetch(`${API_URL}/api/cms/faqs`, {
+        const res = await fetch(getApiUrl('/cms/faqs'), {
             next: { revalidate: 3600 },
             signal: AbortSignal.timeout(10000) // 10s timeout
         });

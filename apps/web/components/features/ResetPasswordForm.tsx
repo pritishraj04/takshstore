@@ -7,6 +7,7 @@ import { Key, CheckCircle2, ShieldCheck, User } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import { toast } from "sonner";
+import { getApiUrl } from "@/lib/api";
 
 function ResetPasswordFormContent() {
     const router = useRouter();
@@ -46,8 +47,7 @@ function ResetPasswordFormContent() {
         setError("");
 
         try {
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000';
-            const res = await fetch(`${apiUrl}/api/auth/reset-password`, {
+            const res = await fetch(getApiUrl('/auth/reset-password'), {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 

@@ -3,9 +3,8 @@ import { getApiUrl } from "@/lib/api";
 export const dynamic = 'force-dynamic';
 
 async function getTermsContent() {
-    const API_URL = getApiUrl();
     try {
-        const res = await fetch(`${API_URL}/api/cms/content/TERMS`, {
+        const res = await fetch(getApiUrl('/cms/content/TERMS'), {
             next: { revalidate: 3600 },
             signal: AbortSignal.timeout(10000) // 10s timeout
         });

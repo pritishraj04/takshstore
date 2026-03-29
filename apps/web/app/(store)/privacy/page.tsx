@@ -3,9 +3,8 @@ import { getApiUrl } from "@/lib/api";
 export const dynamic = 'force-dynamic';
 
 async function getPrivacyContent() {
-    const API_URL = getApiUrl();
     try {
-        const res = await fetch(`${API_URL}/api/cms/content/PRIVACY`, {
+        const res = await fetch(getApiUrl('/cms/content/PRIVACY'), {
             next: { revalidate: 3600 },
             signal: AbortSignal.timeout(10000) // 10s timeout
         });

@@ -1,5 +1,5 @@
 import Cookies from 'js-cookie';
-import { API_URL } from '@/config/env';
+import { getApiUrl } from './api';
 
 /**
  * A wrapper around native fetch that automatically attaches the
@@ -22,7 +22,7 @@ export async function adminApiFetch(endpoint: string, options: RequestInit = {})
     }
 
     // 3. Make the cleanly constructed network request
-    const response = await fetch(`${API_URL}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`, {
+    const response = await fetch(getApiUrl(endpoint), {
         ...options,
         headers,
     });

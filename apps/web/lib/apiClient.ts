@@ -1,6 +1,7 @@
-import axios from 'axios';
+import axios, { InternalAxiosRequestConfig } from 'axios';
 import { getSession, signOut } from 'next-auth/react';
 import { toast } from 'sonner';
+import { getApiUrl } from './api';
 import { API_URL } from '@/config/env';
 
 export const apiClient = axios.create({
@@ -8,7 +9,13 @@ export const apiClient = axios.create({
 });
 
 apiClient.interceptors.request.use(
-    async (config) => {
+    async (config: InternalAxiosRequestConfig) => {
+        // Bulletproof URL magic: run every path through our utility to fix double /api
+        if (config.url && !config.url.startsWith('http')) {
+            config.url = getApiUrl(config.url);
+            config.baseURL = ''; // Wipe baseURL since config.url is now absolute
+        }
+
         if (typeof window !== 'undefined') {
             const session = await getSession();
             if (session && (session as any).access_token) {
