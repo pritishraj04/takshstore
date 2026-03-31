@@ -9,25 +9,103 @@ import { PaymentsService } from '../payments/payments.service';
 
 @Injectable()
 export class CheckoutService {
+  // Default fallbacks if keys missing from DB
+  private readonly FALLBACK_BASE_RATE = 150;
+  private readonly FALLBACK_THRESHOLD = 5000;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly razorpayService: RazorpayService,
     private readonly paymentsService: PaymentsService,
   ) {}
 
+  async calculateCartTotals(userId: string, items: { productId: string, quantity: number }[]) {
+    // 1. Fetch Dynamic Settings from DB
+    const dbSettings = await this.prisma.storeSetting.findMany({
+      where: {
+        key: { in: ['FREE_SHIPPING_THRESHOLD', 'STANDARD_SHIPPING_RATE'] }
+      }
+    });
+
+    const settingsMap = dbSettings.reduce((acc, curr) => {
+      acc[curr.key] = curr.value;
+      return acc;
+    }, {} as Record<string, string>);
+
+    const threshold = Number(settingsMap['FREE_SHIPPING_THRESHOLD']) || this.FALLBACK_THRESHOLD;
+    const baseRate = Number(settingsMap['STANDARD_SHIPPING_RATE']) || this.FALLBACK_BASE_RATE;
+
+    let subtotal = 0;
+    let hasPhysicalItems = false;
+    
+    // Process items and identify product types
+    for (const item of items) {
+      const product = await this.prisma.product.findUnique({
+        where: { id: item.productId }
+      });
+
+      if (!product) {
+        throw new BadRequestException(`Product reference invalid: ${item.productId}`);
+      }
+
+      const price = product.discountedPrice || product.price;
+      subtotal += price * item.quantity;
+
+      if (product.type === 'PHYSICAL') {
+        hasPhysicalItems = true;
+      }
+    }
+
+    let shippingCharge = 0;
+    
+    if (hasPhysicalItems) {
+      if (subtotal >= threshold) {
+        shippingCharge = 0;
+      } else {
+        shippingCharge = baseRate;
+      }
+    } else {
+      // Digital only cart = Not Applicable
+      shippingCharge = 0;
+    }
+
+    const amountToFreeShipping = Math.max(0, threshold - subtotal);
+    const totalAmount = subtotal + shippingCharge;
+
+    return {
+      subtotal,
+      shippingCharge,
+      totalAmount,
+      amountToFreeShipping,
+      hasPhysicalItems,
+      freeShippingThreshold: threshold, // Pass this to frontend for progress bar accuracy
+      isDigitalOnly: !hasPhysicalItems && items.length > 0
+    };
+  }
+
   async initiateCheckout(
     userId: string,
-    totalAmount: number,
+    requestedTotal: number, // We verify this against our calculation
     items: any[],
     shippingAddress?: any,
     developerNotes?: string,
     payload: any = {},
   ) {
-    // Calculate the cart total securely on the backend.
-    // For brevity based on the prompt instructions, we use the totalAmount sent from frontend or could recalc here.
-    // Prompt says: Calculate the cart total securely on the backend (do not trust frontend prices).
+    // 1. Calculate securely on backend
+    const { subtotal, shippingCharge, totalAmount } = await this.calculateCartTotals(userId, items.map(i => ({
+      productId: i.productId,
+      quantity: i.quantity
+    })));
 
-    let calculatedTotal = 0;
+    // For safety, we use our calculated total for the actual payment intent
+    const finalAmountToPay = totalAmount;
+
+    // Optional: Log if frontend sent discrepant totals
+    if (Math.abs(requestedTotal - totalAmount) > 1) {
+      console.warn(`Price Discrepancy! Frontend sent: ${requestedTotal}, Backend calculated: ${totalAmount}. Forcing backend total.`);
+    }
+
+    // Reuse the existing validation logic from previous check
     for (const item of items) {
       const product = await this.prisma.product.findUnique({
         where: { id: item.productId },
@@ -35,36 +113,16 @@ export class CheckoutService {
       if (!product)
         throw new BadRequestException(`Product not found: ${item.productId}`);
 
-      // Stock validation for physical products
+      // Stock validation
       if (product.stockCount !== null && product.stockCount !== undefined) {
         if (product.stockCount <= 0) {
-          throw new BadRequestException(
-            `"${product.title}" is completely out of stock`,
-          );
+          throw new BadRequestException(`"${product.title}" is out of stock`);
         }
         if (item.quantity > product.stockCount) {
-          throw new BadRequestException(
-            `Only ${product.stockCount} ${product.stockCount === 1 ? 'unit' : 'units'} of "${product.title}" left in stock`,
-          );
+          throw new BadRequestException(`Only ${product.stockCount} left of "${product.title}"`);
         }
       }
-
-      calculatedTotal +=
-        (product.discountedPrice || product.price) * item.quantity;
     }
-
-    // Add shipping if any items are physical
-    const requiresShipping = items.some((item) => item.type === 'PHYSICAL');
-    if (requiresShipping) {
-      calculatedTotal += 150; // Add flat luxury shipping rate
-    }
-
-    // This is a rough estimation of secure calc. But wait, what about the discount?
-    // Since the prompt doesn't specify coupon calculation in backend here, we'll just use totalAmount
-    // directly if we don't have the coupon logic, but let's trust totalAmount if it's within reason.
-    // Actually, for simplicity let's just use the `totalAmount` argument to avoid breaking coupons.
-
-    const amountToPay = totalAmount; // We could override with calculatedTotal if no coupons
 
     // 1. Identify orphaned shell orders to clean up later
     const shellOrdersToCleanup: { orderId: string; orderItemId: string }[] = [];
@@ -94,11 +152,11 @@ export class CheckoutService {
       data: {
         userId,
         status: 'PENDING',
-        totalAmount: Number(amountToPay),
-        subtotal: payload.subtotal || 0,
+        totalAmount: finalAmountToPay,
+        subtotal: subtotal,
         discountAmount: payload.discountAmount || 0,
         couponCode: payload.couponCode || null,
-        shippingCost: payload.shippingCost || 0,
+        shippingCost: shippingCharge,
         shippingAddress,
         developerNotes,
         items: {
@@ -167,7 +225,7 @@ export class CheckoutService {
 
     // Initialize Razorpay
     const rzpOrder = await this.razorpayService.createOrder(
-      amountToPay,
+      finalAmountToPay,
       order.id,
     );
 

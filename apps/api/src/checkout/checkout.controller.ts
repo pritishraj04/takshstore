@@ -40,6 +40,19 @@ export class CheckoutController {
     );
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Post('calculate')
+  async calculateTotals(@Req() req: Request, @Body('items') items: any[]) {
+    const user = req.user as any;
+    const userId = user?.sub || user?.userId;
+
+    if (!items || !items.length) {
+      throw new BadRequestException('Items array is required for calculation');
+    }
+
+    return this.checkoutService.calculateCartTotals(userId, items);
+  }
+
   @Post('verify')
   async verifyCheckout(
     @Body('razorpayPaymentId') razorpayPaymentId: string,

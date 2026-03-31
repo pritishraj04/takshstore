@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { useCheckout } from "../../hooks/useCheckout";
@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { apiClient } from "../../lib/apiClient";
 import { toast } from "sonner";
+import CartTotals from "../checkout/CartTotals";
 
 export default function CheckoutFlow() {
     const { items, clearCollection } = useCollectionStore();
@@ -24,6 +25,12 @@ export default function CheckoutFlow() {
     const [couponCode, setCouponCode] = useState('');
     const [discountValue, setDiscountValue] = useState(0);
     const [discountType, setDiscountType] = useState('PERCENTAGE');
+
+    const [calculatedTotals, setCalculatedTotals] = useState<any>(null);
+
+    const handleCalculateTotals = useCallback((data: any) => {
+        setCalculatedTotals(data);
+    }, []);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
     const [couponError, setCouponError] = useState<string | null>(null);
     const [couponSuccess, setCouponSuccess] = useState<string | null>(null);
@@ -45,17 +52,14 @@ export default function CheckoutFlow() {
         return basePrice;
     };
 
-    const requiresShipping = items.some(item => item.type === 'PHYSICAL');
-    const subtotal = items.reduce((total, item) => total + (getEffectivePrice(item) * Number(item.quantity)), 0) || 0;
-
-    // Calculate the actual discount amount based on type
+    const subtotal = calculatedTotals?.subtotal || items.reduce((total, item) => total + (getEffectivePrice(item) * Number(item.quantity)), 0) || 0;
+    const shippingCost = calculatedTotals?.shippingCharge || 0;
     const calculatedDiscountAmount = discountType === 'PERCENTAGE'
         ? Math.round((subtotal * discountValue) / 100)
         : discountValue;
     const discountAmount = calculatedDiscountAmount || 0;
-
-    const shippingCost = requiresShipping ? 150 : 0; // Flat luxury shipping rate or free
-    const total = Math.max((subtotal - discountAmount + shippingCost) || 0, 0);
+    const total = calculatedTotals?.totalAmount - discountAmount || 0;
+    const requiresShipping = calculatedTotals?.hasPhysicalItems || items.some(item => item.type === 'PHYSICAL');
 
     if (items.length === 0) {
         return (
@@ -403,25 +407,16 @@ export default function CheckoutFlow() {
                 </div>
 
                 {/* Totals Block */}
-                <div className="mt-8 pt-8 border-t border-[#E5E4DF] flex flex-col gap-4">
-                    <div
-                        className="flex justify-between items-center text-sm text-[#5A5A5A]"
-                        style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                        <span>Subtotal</span>
-                        <span>₹{subtotal.toLocaleString()}</span>
-                    </div>
-                    <div
-                        className="flex justify-between items-center text-sm text-[#5A5A5A]"
-                        style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                        <span>Shipping</span>
-                        <span>{shippingCost === 0 ? 'Complimentary' : `₹${shippingCost}`}</span>
-                    </div>
+                <div className="mt-8 pt-8 border-t border-[#E5E4DF]">
+                    <CartTotals 
+                        items={items} 
+                        discountAmount={discountAmount} 
+                        onCalculate={handleCalculateTotals} 
+                    />
 
                     {/* Promo Code Section */}
-                    <div className="pt-4 border-t border-[#E5E4DF]">
-                        <label className="block text-xs uppercase tracking-widest text-[#5A5A5A] mb-3" style={{ fontFamily: 'var(--font-inter)' }}>
+                    <div className="pt-8 border-t border-[#E5E4DF] mt-8">
+                        <label className="block text-xs uppercase tracking-widest text-[#5A5A5A] mb-3 font-bold" style={{ fontFamily: 'var(--font-inter)' }}>
                             Promo Code
                         </label>
                         <div className="flex gap-3">
@@ -461,33 +456,6 @@ export default function CheckoutFlow() {
                         </div>
                         {couponError && <p className="text-red-600 text-xs mt-2">{couponError}</p>}
                         {couponSuccess && <p className="text-green-600 text-xs mt-2">{couponSuccess}</p>}
-                    </div>
-
-                    {discountValue > 0 && (
-                        <div
-                            className="flex justify-between items-center text-sm text-[#5A5A5A] mt-2"
-                            style={{ fontFamily: 'var(--font-inter)' }}
-                        >
-                            <span>Discount ({discountType === 'PERCENTAGE' ? `${discountValue}%` : `₹${discountValue}`})</span>
-                            <span className="text-green-700">-₹{discountAmount.toLocaleString()}</span>
-                        </div>
-                    )}
-
-                    <div
-                        className="flex justify-between items-end mt-4 pt-4 border-t border-[#E5E4DF]"
-                    >
-                        <span
-                            className="text-xs uppercase tracking-widest text-[#1A1A1A]"
-                            style={{ fontFamily: 'var(--font-inter)' }}
-                        >
-                            Total
-                        </span>
-                        <span
-                            className="text-2xl text-[#1A1A1A]"
-                            style={{ fontFamily: 'var(--font-playfair)' }}
-                        >
-                            ₹{total.toLocaleString()}
-                        </span>
                     </div>
                 </div>
 
