@@ -6,11 +6,13 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+
+  const baseDomain = process.env.FRONTEND_URL || 'takshstore.com';
+
   const allowedOrigins = [
-    process.env.FRONTEND_URL,
-    process.env.ADMIN_URL,
     'http://localhost:3000',
-    'http://localhost:3001',
+    `https://${baseDomain}`,
+    `https://www.${baseDomain}`
   ].filter(Boolean) as string[];
 
   app.enableCors({

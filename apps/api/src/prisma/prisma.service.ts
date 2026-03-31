@@ -14,7 +14,12 @@ if (!connectionString) {
   );
 }
 
-const pool = new Pool({ connectionString });
+// 🔴 THE MAGIC FIX IS RIGHT HERE 🔴
+const pool = new Pool({
+  connectionString,
+  ssl: { rejectUnauthorized: false } // Tells AWS RDS we are using a secure connection!
+});
+
 const adapter = new PrismaPg(pool);
 
 @Injectable()
