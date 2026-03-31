@@ -29,6 +29,7 @@ import { CheckoutModule } from './checkout/checkout.module';
 import { JournalModule } from './journal/journal.module';
 import { ReviewModule } from './review/review.module';
 import { TagsModule } from './tags/tags.module';
+import { ContactModule } from './contact/contact.module';
 
 @Module({
   imports: [
@@ -58,6 +59,7 @@ import { TagsModule } from './tags/tags.module';
     JournalModule,
     ReviewModule,
     TagsModule,
+    ContactModule,
   ],
   controllers: [AppController],
   providers: [AppService],

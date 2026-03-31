@@ -14,6 +14,23 @@ export class AdminUsersService {
     private readonly adminAuthService: AdminAuthService,
   ) {}
 
+  async getMe(id: string) {
+    const user = await this.prisma.adminUser.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        receivesContactAlerts: true,
+        isSuper: true,
+        status: true,
+        permissions: true,
+      },
+    });
+    if (!user) throw new NotFoundException('Admin not found');
+    return user;
+  }
+
   async getAllUsers() {
     const users = await this.prisma.adminUser.findMany({
       include: {
@@ -62,5 +79,13 @@ export class AdminUsersService {
     });
 
     return { message: 'Sub-admin permanently deleted.' };
+  }
+
+  async toggleContactAlerts(id: string, receives: boolean) {
+    return this.prisma.adminUser.update({
+      where: { id },
+      data: { receivesContactAlerts: receives },
+      select: { id: true, email: true, receivesContactAlerts: true },
+    });
   }
 }

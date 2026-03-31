@@ -3,13 +3,24 @@
 import { useRef, useState } from "react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import { Mail, Phone, MapPin, ArrowRight } from "lucide-react";
+import { Mail, Phone, MapPin, ArrowRight, Loader2, CheckCircle2 } from "lucide-react";
+import { apiClient } from "../../lib/apiClient";
+import { toast } from "sonner";
 
 type InquiryType = "Wall Decorative Painting" | "Digital Wedding Invite" | "General Inquiry";
 
 export default function ContactInquiry({ contactData }: { contactData?: any }) {
     const containerRef = useRef<HTMLDivElement>(null);
     const [inquiryType, setInquiryType] = useState<InquiryType>("Wall Decorative Painting");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
+    const [formData, setFormData] = useState({
+        name: '',
+        email: '',
+        phone: '',
+        message: '',
+        website_url: '' // Honeypot
+    });
 
     useGSAP(() => {
         if (!containerRef.current) return;
@@ -45,6 +56,36 @@ export default function ContactInquiry({ contactData }: { contactData?: any }) {
 
     const handleInquiryChange = (type: InquiryType) => {
         setInquiryType(type);
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsSubmitting(true);
+        
+        try {
+            await apiClient.post('/contact', {
+                ...formData,
+                subject: inquiryType
+            });
+            setIsSuccess(true);
+            setFormData({ name: '', email: '', phone: '', message: '', website_url: '' });
+            toast.success("Message sent! Our team will reach out to you shortly.");
+            
+            // Revert state after 5 seconds so they can see the button again
+            setTimeout(() => {
+                setIsSuccess(false);
+            }, 5000);
+        } catch (error: any) {
+            console.error("Contact submission error:", error);
+            toast.error(error.response?.data?.message || "Something went wrong. Please try again.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
@@ -98,11 +139,26 @@ export default function ContactInquiry({ contactData }: { contactData?: any }) {
 
             {/* Right Column: The Form */}
             <div className="bg-[#F2F1EC] p-8 md:p-16 lg:p-24 border-l border-[#E5E4DF] flex flex-col justify-center pt-16 lg:pt-32">
-                <form className="max-w-xl w-full mx-auto lg:mx-0" onSubmit={(e) => e.preventDefault()}>
+                <form className="max-w-xl w-full mx-auto lg:mx-0" onSubmit={handleSubmit}>
+                    {/* Honeypot: Invisible to humans, irresistible to bots */}
+                    <div className="absolute opacity-0 -z-10 pointer-events-none" aria-hidden="true">
+                        <input
+                            type="text"
+                            name="website_url"
+                            value={formData.website_url}
+                            onChange={handleInputChange}
+                            tabIndex={-1}
+                            autoComplete="off"
+                        />
+                    </div>
 
                     <div className="form-element mb-12">
                         <input
                             type="text"
+                            name="name"
+                            required
+                            value={formData.name}
+                            onChange={handleInputChange}
                             placeholder="Full Name"
                             className="w-full bg-transparent border-b border-[#DCDAD2] pb-4 text-sm text-[#1A1A1A] focus:border-[#1A1A1A] focus:outline-none transition-colors placeholder:text-[#8D8A80]"
                             style={{ fontFamily: 'var(--font-inter)' }}
@@ -112,6 +168,10 @@ export default function ContactInquiry({ contactData }: { contactData?: any }) {
                     <div className="form-element mb-12">
                         <input
                             type="email"
+                            name="email"
+                            required
+                            value={formData.email}
+                            onChange={handleInputChange}
                             placeholder="Email Address"
                             className="w-full bg-transparent border-b border-[#DCDAD2] pb-4 text-sm text-[#1A1A1A] focus:border-[#1A1A1A] focus:outline-none transition-colors placeholder:text-[#8D8A80]"
                             style={{ fontFamily: 'var(--font-inter)' }}
@@ -121,6 +181,9 @@ export default function ContactInquiry({ contactData }: { contactData?: any }) {
                     <div className="form-element mb-12">
                         <input
                             type="tel"
+                            name="phone"
+                            value={formData.phone}
+                            onChange={handleInputChange}
                             placeholder="Phone Number (WhatsApp preferred)"
                             className="w-full bg-transparent border-b border-[#DCDAD2] pb-4 text-sm text-[#1A1A1A] focus:border-[#1A1A1A] focus:outline-none transition-colors placeholder:text-[#8D8A80]"
                             style={{ fontFamily: 'var(--font-inter)' }}
@@ -156,6 +219,10 @@ export default function ContactInquiry({ contactData }: { contactData?: any }) {
 
                     <div className="form-element mb-12">
                         <textarea
+                            name="message"
+                            required
+                            value={formData.message}
+                            onChange={handleInputChange}
                             placeholder="Tell us about your space, your wedding, or your vision..."
                             rows={4}
                             className="w-full bg-transparent border-b border-[#DCDAD2] pb-4 text-sm text-[#1A1A1A] resize-none focus:border-[#1A1A1A] focus:outline-none transition-colors placeholder:text-[#8D8A80]"
@@ -164,14 +231,26 @@ export default function ContactInquiry({ contactData }: { contactData?: any }) {
                     </div>
 
                     <div className="form-element">
-                        <button
-                            type="submit"
-                            className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 mt-4 text-xs uppercase tracking-[0.2em] hover:bg-black transition-colors flex items-center justify-center group"
-                            style={{ fontFamily: 'var(--font-inter)' }}
-                        >
-                            <ArrowRight size={14} className="mr-3 group-hover:translate-x-1 transition-transform" strokeWidth={1} />
-                            Submit Inquiry
-                        </button>
+                        {isSuccess ? (
+                            <div className="flex items-center gap-3 text-emerald-700 py-5 font-semibold text-xs uppercase tracking-widest">
+                                <CheckCircle2 size={18} />
+                                Inquiry Sent Successfully
+                            </div>
+                        ) : (
+                            <button
+                                type="submit"
+                                disabled={isSubmitting}
+                                className="w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 mt-4 text-xs uppercase tracking-[0.2em] hover:bg-black transition-colors flex items-center justify-center group disabled:opacity-50"
+                                style={{ fontFamily: 'var(--font-inter)' }}
+                            >
+                                {isSubmitting ? (
+                                    <Loader2 size={14} className="mr-3 animate-spin" />
+                                ) : (
+                                    <ArrowRight size={14} className="mr-3 group-hover:translate-x-1 transition-transform" strokeWidth={1} />
+                                )}
+                                {isSubmitting ? 'Sending...' : 'Submit Inquiry'}
+                            </button>
+                        )}
                     </div>
 
                 </form>

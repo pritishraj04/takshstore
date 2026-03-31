@@ -222,4 +222,50 @@ export class MailService implements OnModuleInit {
       this.logger.error(`Password reset transmission failure: ${e.message}`);
     }
   }
+
+  async sendContactAlert(
+    adminEmail: string,
+    customerName: string,
+    customerEmail: string,
+    subject: string,
+    message: string,
+  ) {
+    try {
+      const info = await this.transporter.sendMail({
+        from: '"Customer Service" <hello@takshstore.com>',
+        to: adminEmail,
+        replyTo: customerEmail,
+        subject: `New Inquiry: ${subject} | ${customerName}`,
+        html: `
+          <div style="font-family: sans-serif; padding: 30px; color: #1a1a1a; max-width: 600px; margin: auto; border: 1px solid #e5e4df; background: #fbfbf9;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="font-family: serif; color: #1a1a1a; font-size: 24px; text-transform: uppercase; letter-spacing: 0.15em; margin: 0;">Taksh Store</h1>
+                <p style="text-transform: uppercase; font-size: 10px; tracking: 0.2em; color: #5a5a5a; margin-top: 5px;">Admin Submission Alert</p>
+            </div>
+            
+            <div style="background-color: white; padding: 25px; border: 1px solid #e5e4df;">
+                <h3 style="margin-top: 0; color: #1a1a1a; font-size: 16px; border-bottom: 1px solid #e5e4df; padding-bottom: 10px;">Contact Request Details</h3>
+                <p style="font-size: 14px; margin-bottom: 10px;"><strong>Name:</strong> ${customerName}</p>
+                <p style="font-size: 14px; margin-bottom: 10px;"><strong>Email:</strong> ${customerEmail}</p>
+                <p style="font-size: 14px; margin-bottom: 10px;"><strong>Subject:</strong> ${subject}</p>
+                <div style="margin-top: 20px; padding: 15px; background: #f2f1ec; font-style: italic; font-size: 13px; line-height: 1.6; color: #444;">
+                    ${message.replace(/\n/g, '<br/>')}
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="mailto:${customerEmail}" style="display: inline-block; padding: 14px 28px; background-color: #1a1a1a; color: white; text-decoration: none; border-radius: 2px; font-weight: bold; font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em;">Reply to Customer</a>
+            </div>
+
+            <p style="text-align: center; font-size: 10px; color: #9a9a9a; margin-top: 40px;">
+                &copy; ${new Date().getFullYear()} Taksh Store Analytics. Confidential Admin Data.
+            </p>
+          </div>
+        `,
+      });
+      this.logger.log(`Contact alert successfully dispatched to active admin: ${adminEmail}`);
+    } catch (e: any) {
+      this.logger.error(`Alert sequence failed for ${adminEmail}: ${e.message}`);
+    }
+  }
 }

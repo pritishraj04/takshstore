@@ -219,6 +219,7 @@ model AdminUser {
   name     String
   status   AdminStatus @default(PENDING)
   isSuper  Boolean     @default(false)
+  receivesContactAlerts Boolean @default(false)
 
   permissions AdminPermissions?
   auditLogs   AdminAuditLog[]
@@ -354,4 +355,14 @@ model Media {
   
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+}
+
+model ContactMessage {
+  id        String   @id @default(uuid())
+  name      String
+  email     String
+  subject   String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }

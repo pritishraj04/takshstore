@@ -38,10 +38,10 @@ export default function AdminOrdersPage() {
         <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
-                  <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
-                    <ShoppingCart size={28} className="text-blue-600" /> Order Management
+                  <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
+                    <ShoppingCart size={32} className="text-indigo-600" /> Order Management
                   </h1>
-                  <p className="text-gray-500 text-sm mt-1">Review, monitor, and directly alter incoming customer orders.</p>
+                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Review, monitor, and directly alter incoming customer orders.</p>
                 </div>
                 
                 <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto mt-4 lg:mt-0">

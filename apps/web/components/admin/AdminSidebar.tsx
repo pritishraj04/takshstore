@@ -6,6 +6,7 @@ import { LayoutDashboard, ShoppingCart, Mail, Palette, Users, Tag, Image as Imag
 
 const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
+  { name: 'Customer Inquiries', href: '/admin/inquiries', icon: Mail },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Products / Catalog', href: '/admin/catalog', icon: Package },
   { name: 'Product Tags', href: '/admin/tags', icon: Tag },
