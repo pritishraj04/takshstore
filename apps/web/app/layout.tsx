@@ -5,6 +5,7 @@ import "./globals.css";
 import QueryProvider from "../components/providers/QueryProvider";
 import AuthProvider from "../components/providers/AuthProvider";
 import { Toaster } from "sonner";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 // Configure Playfair Display (Serif) with styles defined in project-bible
 const playfair = Playfair_Display({
@@ -86,6 +87,9 @@ export default function RootLayout({
           </QueryProvider>
         </AuthProvider>
         <Toaster theme="dark" position="bottom-right" />
+        {process.env.NEXT_PUBLIC_GA_ID && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_ID} />
+        )}
       </body>
     </html>
   );

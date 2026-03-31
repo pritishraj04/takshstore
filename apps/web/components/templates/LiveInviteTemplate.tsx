@@ -83,12 +83,24 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
         : [data?.couple?.bride?.name, data?.couple?.groom?.name];
 
     const brideParents = data?.couple?.bride?.parents?.order === 'FATHER_FIRST'
-        ? [data?.couple?.bride?.parents?.father, data?.couple?.bride?.parents?.mother]
-        : [data?.couple?.bride?.parents?.mother, data?.couple?.bride?.parents?.father];
+        ? [
+            { name: data?.couple?.bride?.parents?.father || "", label: "Father's Name" },
+            { name: data?.couple?.bride?.parents?.mother || "", label: "Mother's Name" }
+        ]
+        : [
+            { name: data?.couple?.bride?.parents?.mother || "", label: "Mother's Name" },
+            { name: data?.couple?.bride?.parents?.father || "", label: "Father's Name" }
+        ];
 
     const groomParents = data?.couple?.groom?.parents?.order === 'FATHER_FIRST'
-        ? [data?.couple?.groom?.parents?.father, data?.couple?.groom?.parents?.mother]
-        : [data?.couple?.groom?.parents?.mother, data?.couple?.groom?.parents?.father];
+        ? [
+            { name: data?.couple?.groom?.parents?.father || "", label: "Father's Name" },
+            { name: data?.couple?.groom?.parents?.mother || "", label: "Mother's Name" }
+        ]
+        : [
+            { name: data?.couple?.groom?.parents?.mother || "", label: "Mother's Name" },
+            { name: data?.couple?.groom?.parents?.father || "", label: "Father's Name" }
+        ];
 
     const firstParents = isGroomFirst ? groomParents : brideParents;
     const secondParents = isGroomFirst ? brideParents : groomParents;
@@ -412,7 +424,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
 
                         <p className="font-body text-[1.2rem] text-[#f3ecba] mb-2">From the hearts of {helperData.firstParentsLabel} parents</p>
                         <p className="font-body text-[1.7em] text-[#f3ecba] font-bold mb-6 leading-none inline-block">
-                            {helperData.firstParents[0] || "Mother's Name"}<br />&amp;<br />{helperData.firstParents[1] || "Father's Name"}
+                            {helperData.firstParents[0].name || helperData.firstParents[0].label}<br />&amp;<br />{helperData.firstParents[1].name || helperData.firstParents[1].label}
                         </p>
 
                         <h2 className="font-heading text-[2rem] md:text-[3rem] text-[#d9fff2] font-extralight uppercase tracking-widest mb-6 leading-tight wrap-break-word">
@@ -421,7 +433,7 @@ export function LiveInviteTemplate({ data, isPreviewMode = false }: LiveInviteTe
 
                         <p className="font-body text-[1.2rem] text-[#f3ecba] mb-2">From the hearts of {helperData.secondParentsLabel} parents</p>
                         <p className="font-body text-[1.7em] text-[#f3ecba] font-bold mb-6 leading-none inline-block">
-                            {helperData.secondParents[0] || "Mother's Name"}<br />&amp;<br />{helperData.secondParents[1] || "Father's Name"}
+                            {helperData.secondParents[0].name || helperData.secondParents[0].label}<br />&amp;<br />{helperData.secondParents[1].name || helperData.secondParents[1].label}
                         </p>
                     </div>
                 </div>
