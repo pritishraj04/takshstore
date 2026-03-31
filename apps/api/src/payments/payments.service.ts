@@ -20,16 +20,56 @@ export class PaymentsService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async processOrderSuccess(orderId: string) {
-    const order = await this.prisma.order.update({
+  async processOrderSuccess(orderId: string, options: { skipEmails?: boolean } = {}) {
+    const order = await this.prisma.order.findUnique({
       where: { id: orderId },
-      data: { status: 'PAID' },
       include: {
         user: true,
         items: { include: { digitalInvite: true, product: true } },
       },
     });
 
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // 1. Idempotency Check: Prevent duplicate processing
+    if (order.status === 'PAID') {
+      return;
+    }
+
+    // 2. Prepare stock deduction queries for products with inventory tracking
+    const physicalItems = order.items.filter((item) => item.product.stockCount !== null);
+
+    const stockDecrementQueries = physicalItems.map((item) =>
+      this.prisma.product.update({
+        where: { id: item.productId },
+        data: {
+          stockCount: { decrement: item.quantity },
+        },
+      }),
+    );
+
+    // 3. Execute Transaction: Update Order Status & Deduct Stock
+    try {
+      await this.prisma.$transaction([
+        this.prisma.order.update({
+          where: { id: orderId },
+          data: { status: 'PAID' },
+        }),
+        ...stockDecrementQueries,
+      ]);
+    } catch (error: any) {
+      console.error('[INVENTORY_ANOMALY] Failed to finalize order stock:', {
+        orderId,
+        error: error.message,
+      });
+      throw new InternalServerErrorException(
+        'Critical failure during inventory deduction. Please contact support.',
+      );
+    }
+
+    // 4. Post-Payment Logic: Digital Invite Activation & Receipt Mails
     for (const item of order.items) {
       if (item.digitalInvite && item.digitalInvite.status === 'DRAFT') {
         const inviteData = item.digitalInvite.inviteData as any;
@@ -59,24 +99,28 @@ export class PaymentsService {
           },
         });
 
-        // Trigger Digital Access Mail
-        const customizerToken = this.jwtService.sign(
-          { id: item.digitalInvite.id, type: 'CUSTOMIZER_ACCESS' },
-          { expiresIn: '90d', secret: process.env.JWT_SECRET || 'dev_secret' },
-        );
-        const customizerLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/customizer/${item.digitalInvite.slug}?token=${customizerToken}`;
+        if (!options.skipEmails) {
+          // Trigger Digital Access Mail
+          const customizerToken = this.jwtService.sign(
+            { id: item.digitalInvite.id, type: 'CUSTOMIZER_ACCESS' },
+            { expiresIn: '90d', secret: process.env.JWT_SECRET || 'dev_secret' },
+          );
+          const customizerLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/customizer/${item.digitalInvite.slug}?token=${customizerToken}`;
 
-        await this.mailService.sendDigitalInviteAccess(
-          order.user.email,
-          customizerLink,
-        );
-      } else if (!item.digitalInvite) {
-        // Assuming Physical Canvas Print
-        const breakdownText = `Product: ${item.product.title} (x${item.quantity}) - ₹${item.priceAtPurchase * item.quantity}`;
-        await this.mailService.sendCanvasReceipt(
-          order.user.email,
-          breakdownText,
-        );
+          await this.mailService.sendDigitalInviteAccess(
+            order.user.email,
+            customizerLink,
+          );
+        }
+      } else if (item.product.type === 'PHYSICAL' || !item.product.isDigital) {
+        if (!options.skipEmails) {
+          // Physical Product Receipt
+          const breakdownText = `Product: ${item.product.title} (x${item.quantity}) - ₹${item.priceAtPurchase * item.quantity}`;
+          await this.mailService.sendCanvasReceipt(
+            order.user.email,
+            breakdownText,
+          );
+        }
       }
     }
   }

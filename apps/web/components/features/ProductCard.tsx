@@ -16,8 +16,12 @@ export default function ProductCard({ product }: ProductCardProps) {
     const router = useRouter();
     const { mutate: createDraft, isPending: isCreatingDraft } = useCreateDraft();
 
+    const isOutOfStock = product.stockCount !== undefined && product.stockCount !== null && product.stockCount <= 0;
+
     const handleAddToCart = (e: React.MouseEvent) => {
         e.preventDefault();
+        if (isOutOfStock) return;
+
         if (product.type === 'DIGITAL') {
             createDraft(product.id, {
                 onSuccess: (data) => {
@@ -38,8 +42,15 @@ export default function ProductCard({ product }: ProductCardProps) {
                 <img
                     src={product.imageUrl || '/assets/images/placeholder-product.jpg'}
                     alt={product.title}
-                    className="absolute inset-0 w-full h-full object-cover transform scale-100 transition-transform duration-700 ease-out group-hover:scale-105"
+                    className={`absolute inset-0 w-full h-full object-cover transform scale-100 transition-transform duration-700 ease-out group-hover:scale-105 ${isOutOfStock ? 'opacity-60 grayscale-30' : ''}`}
                 />
+                {isOutOfStock && (
+                    <div className="absolute top-4 left-4 bg-red-600/90 backdrop-blur-sm text-white text-[9px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium"
+                        style={{ fontFamily: 'var(--font-inter)' }}
+                    >
+                        Out of Stock
+                    </div>
+                )}
             </Link>
 
 
@@ -68,11 +79,17 @@ export default function ProductCard({ product }: ProductCardProps) {
 
                 <button
                     onClick={handleAddToCart}
-                    disabled={isCreatingDraft}
-                    className="mt-6 inline-flex items-center text-[10px] uppercase tracking-[0.2em] text-[#1A1A1A] border-b border-[#E5E4DF] pb-1 opacity-0 translate-y-4 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0 hover:border-[#1A1A1A] disabled:opacity-50"
+                    disabled={isCreatingDraft || isOutOfStock}
+                    className={`mt-6 inline-flex items-center text-[10px] uppercase tracking-[0.2em] pb-1 transition-all duration-500 ease-out ${
+                        isOutOfStock
+                            ? 'text-[#999] border-b border-[#E5E4DF] cursor-not-allowed opacity-70'
+                            : 'text-[#1A1A1A] border-b border-[#E5E4DF] opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 hover:border-[#1A1A1A] disabled:opacity-50'
+                    }`}
                     style={{ fontFamily: 'var(--font-inter)' }}
                 >
-                    {isCreatingDraft && product.type === 'DIGITAL' ? (
+                    {isOutOfStock ? (
+                        <>OUT OF STOCK</>
+                    ) : isCreatingDraft && product.type === 'DIGITAL' ? (
                         <><Loader2 size={14} className="mr-2 animate-spin" strokeWidth={1.5} /> WORKING...</>
                     ) : (
                         <><ShoppingBag size={14} className="mr-2" strokeWidth={1.5} /> {product.type === 'DIGITAL' ? 'PERSONALIZE' : 'ADD TO BAG'}</>

@@ -25,6 +25,8 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     const router = useRouter();
 
     const allImages = Array.from(new Set([product.imageUrl, ...(product.images || [])]));
+    const isOutOfStock = product.stockCount !== undefined && product.stockCount !== null && product.stockCount <= 0;
+    const isLowStock = !isOutOfStock && product.stockCount !== undefined && product.stockCount !== null && product.stockCount <= 5;
 
     // GSAP Animations
     useGSAP(() => {
@@ -68,6 +70,8 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     const { mutate: createDraft, isPending: isCreatingDraft } = useCreateDraft();
 
     const handlePrimaryAction = () => {
+        if (isOutOfStock) return;
+
         if (product.type === 'DIGITAL') {
             createDraft(product.id, {
                 onSuccess: (data) => {
@@ -114,8 +118,15 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                             <img
                                 src={activeImage || '/assets/images/placeholder-product.jpg'}
                                 alt={product.title}
-                                className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+                                className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isOutOfStock ? 'opacity-60 grayscale-30' : ''}`}
                             />
+                            {isOutOfStock && (
+                                <div className="absolute top-6 left-6 bg-red-600/90 backdrop-blur-sm text-white text-[10px] uppercase tracking-[0.2em] px-4 py-2 font-medium"
+                                    style={{ fontFamily: 'var(--font-inter)' }}
+                                >
+                                    Out of Stock
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -153,6 +164,22 @@ export default function ProductDetail({ product }: ProductDetailProps) {
                             )}
                         </p>
 
+                        {/* Stock Status Indicator */}
+                        {isOutOfStock && (
+                            <p className="mt-3 text-xs uppercase tracking-widest text-red-600 font-medium"
+                                style={{ fontFamily: 'var(--font-inter)' }}
+                            >
+                                Currently Unavailable
+                            </p>
+                        )}
+                        {isLowStock && (
+                            <p className="mt-3 text-xs uppercase tracking-widest text-amber-600 font-medium"
+                                style={{ fontFamily: 'var(--font-inter)' }}
+                            >
+                                Only {product.stockCount} left in stock
+                            </p>
+                        )}
+
                         <p
                             className="mt-8 text-base text-[#5A5A5A] leading-loose font-light whitespace-pre-wrap"
                             style={{ fontFamily: 'var(--font-inter)' }}
@@ -165,11 +192,17 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
                         <button
                             onClick={handlePrimaryAction}
-                            disabled={isCreatingDraft}
-                            className="mt-12 w-full bg-[#1A1A1A] text-[#FBFBF9] py-5 text-xs uppercase tracking-widest hover:bg-black transition-colors flex items-center justify-center disabled:opacity-50"
+                            disabled={isCreatingDraft || isOutOfStock}
+                            className={`mt-12 w-full py-5 text-xs uppercase tracking-widest flex items-center justify-center transition-colors ${
+                                isOutOfStock
+                                    ? 'bg-[#D4D4D4] text-[#999] cursor-not-allowed'
+                                    : 'bg-[#1A1A1A] text-[#FBFBF9] hover:bg-black disabled:opacity-50'
+                            }`}
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            {isCreatingDraft ? (
+                            {isOutOfStock ? (
+                                <>OUT OF STOCK</>
+                            ) : isCreatingDraft ? (
                                 <><Loader2 size={14} className="mr-2 animate-spin" strokeWidth={1.5} /> PREPARING CANVAS...</>
                             ) : product.type === 'DIGITAL' ? (
                                 <>PERSONALIZE SUITE</>

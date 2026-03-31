@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useCollectionStore } from "../../store/useCollectionStore";
-import { ShoppingBag } from "lucide-react";
+import { ShoppingBag, Plus, Minus } from "lucide-react";
 
 export default function CollectionDrawer() {
-    const { items, isOpen, setIsOpen, removeItem } = useCollectionStore();
+    const { items, isOpen, setIsOpen, removeItem, incrementItem, decrementItem } = useCollectionStore();
     const [mounted, setMounted] = useState(false);
 
     // Prevent hydration errors with persisted state
@@ -82,64 +82,106 @@ export default function CollectionDrawer() {
                 ) : (
                     // Populated State
                     <div className="flex-1 overflow-y-auto px-8 py-6 flex flex-col gap-8 bg-[#FBFBF9]">
-                        {items.map((item) => (
-                            <div key={item.id} className="flex gap-6 items-start">
+                        {items.map((item) => {
+                            const hasStockLimit = item.stockCount !== undefined && item.stockCount !== null;
+                            const isAtMaxStock = hasStockLimit && item.quantity >= (item.stockCount ?? 0);
 
-                                {/* Thumbnail */}
-                                <div className="relative w-24 aspect-4/5 shrink-0 bg-[#F2F1EC]">
-                                    <img
-                                        src={item.imageUrl || '/assets/images/placeholder-product.jpg'}
-                                        alt={item.title}
-                                        className="absolute inset-0 w-full h-full object-cover"
-                                    />
-                                </div>
+                            return (
+                                <div key={item.id} className="flex gap-6 items-start">
 
-                                {/* Details */}
-                                <div className="flex flex-col flex-1 justify-between h-full py-1">
-                                    <div>
-                                        <h3
-                                            className="text-lg text-[#1A1A1A] mb-1 leading-tight"
-                                            style={{ fontFamily: 'var(--font-playfair)' }}
-                                        >
-                                            {item.title}
-                                        </h3>
-                                        <p
-                                            className="text-xs text-[#5A5A5A] uppercase tracking-widest mb-2"
-                                            style={{ fontFamily: 'var(--font-inter)' }}
-                                        >
-                                            {item.type} {item.quantity > 1 && `(x${item.quantity})`}
-                                        </p>
-                                        
-                                        {getEffectivePrice(item) < Number(item.price) ? (
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-sm font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-inter)' }}>
-                                                    ₹{(getEffectivePrice(item) * item.quantity).toLocaleString()}
-                                                </span>
-                                                <span className="text-xs line-through text-gray-400" style={{ fontFamily: 'var(--font-inter)' }}>
-                                                    ₹{(item.price * item.quantity).toLocaleString()}
-                                                </span>
-                                            </div>
-                                        ) : (
-                                            <p
-                                                className="text-sm text-[#1A1A1A]"
-                                                style={{ fontFamily: 'var(--font-inter)' }}
-                                            >
-                                                ₹{(getEffectivePrice(item) * item.quantity).toLocaleString()}
-                                            </p>
-                                        )}
+                                    {/* Thumbnail */}
+                                    <div className="relative w-24 aspect-4/5 shrink-0 bg-[#F2F1EC]">
+                                        <img
+                                            src={item.imageUrl || '/assets/images/placeholder-product.jpg'}
+                                            alt={item.title}
+                                            className="absolute inset-0 w-full h-full object-cover"
+                                        />
                                     </div>
 
-                                    <button
-                                        onClick={() => removeItem(item.id)}
-                                        className="self-start text-xs text-[#5A5A5A] underline underline-offset-4 hover:text-[#1A1A1A] transition-colors mt-2"
-                                        style={{ fontFamily: 'var(--font-inter)' }}
-                                    >
-                                        Remove
-                                    </button>
-                                </div>
+                                    {/* Details */}
+                                    <div className="flex flex-col flex-1 justify-between h-full py-1">
+                                        <div>
+                                            <h3
+                                                className="text-lg text-[#1A1A1A] mb-1 leading-tight"
+                                                style={{ fontFamily: 'var(--font-playfair)' }}
+                                            >
+                                                {item.title}
+                                            </h3>
+                                            <p
+                                                className="text-xs text-[#5A5A5A] uppercase tracking-widest mb-3"
+                                                style={{ fontFamily: 'var(--font-inter)' }}
+                                            >
+                                                {item.type}
+                                            </p>
+                                            
+                                            {getEffectivePrice(item) < Number(item.price) ? (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-sm font-bold text-[#1A1A1A]" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                        ₹{(getEffectivePrice(item) * item.quantity).toLocaleString()}
+                                                    </span>
+                                                    <span className="text-xs line-through text-gray-400" style={{ fontFamily: 'var(--font-inter)' }}>
+                                                        ₹{(item.price * item.quantity).toLocaleString()}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <p
+                                                    className="text-sm text-[#1A1A1A]"
+                                                    style={{ fontFamily: 'var(--font-inter)' }}
+                                                >
+                                                    ₹{(getEffectivePrice(item) * item.quantity).toLocaleString()}
+                                                </p>
+                                            )}
 
-                            </div>
-                        ))}
+                                            {/* Quantity Selector */}
+                                            {item.type === 'PHYSICAL' && (
+                                                <div className="mt-3 flex flex-col gap-1">
+                                                    <div className="inline-flex items-center border border-[#E5E4DF] w-fit">
+                                                        <button
+                                                            onClick={() => decrementItem(item.id)}
+                                                            className="w-8 h-8 flex items-center justify-center text-[#5A5A5A] hover:text-[#1A1A1A] hover:bg-[#F2F1EC] transition-colors"
+                                                            aria-label="Decrease quantity"
+                                                        >
+                                                            <Minus size={12} strokeWidth={1.5} />
+                                                        </button>
+                                                        <span
+                                                            className="w-10 h-8 flex items-center justify-center text-xs text-[#1A1A1A] border-x border-[#E5E4DF] select-none"
+                                                            style={{ fontFamily: 'var(--font-inter)' }}
+                                                        >
+                                                            {item.quantity}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => incrementItem(item.id)}
+                                                            disabled={isAtMaxStock}
+                                                            className="w-8 h-8 flex items-center justify-center text-[#5A5A5A] hover:text-[#1A1A1A] hover:bg-[#F2F1EC] transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-transparent disabled:hover:text-[#5A5A5A]"
+                                                            aria-label="Increase quantity"
+                                                        >
+                                                            <Plus size={12} strokeWidth={1.5} />
+                                                        </button>
+                                                    </div>
+                                                    {isAtMaxStock && (
+                                                        <span
+                                                            className="text-[10px] text-amber-600 uppercase tracking-wider"
+                                                            style={{ fontFamily: 'var(--font-inter)' }}
+                                                        >
+                                                            Max stock reached
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <button
+                                            onClick={() => removeItem(item.id)}
+                                            className="self-start text-xs text-[#5A5A5A] underline underline-offset-4 hover:text-[#1A1A1A] transition-colors mt-2"
+                                            style={{ fontFamily: 'var(--font-inter)' }}
+                                        >
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
 

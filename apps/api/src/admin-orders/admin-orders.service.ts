@@ -29,11 +29,11 @@ export class AdminOrdersService {
     });
     if (!product) throw new NotFoundException('Product not found.');
 
-    // 1. Create the Order
+    // 1. Create the Order in PENDING status initially to allow processOrderSuccess to handle transitions
     const order = await this.prisma.order.create({
       data: {
         userId: user.id,
-        status: dto.paymentStatus,
+        status: 'PENDING',
         totalAmount: dto.customPrice,
         shippingAddress: dto.shippingAddress || null,
         isManual: true,
@@ -63,13 +63,18 @@ export class AdminOrdersService {
       });
     }
 
-    // 3. Trigger receipt generation logic if PAID and requested
-    if (dto.paymentStatus === 'PAID' && dto.sendEmailReceipt) {
-      // The payments API requires order ID execution explicitly mapping items naturally
-      await this.paymentsService.processOrderSuccess(order.id);
+    // 3. Trigger receipt and stock logic if requested status was PAID
+    if (dto.paymentStatus === 'PAID') {
+      await this.paymentsService.processOrderSuccess(order.id, {
+        skipEmails: !dto.sendEmailReceipt,
+      });
     }
 
-    return order;
+    // Return the final state of the order
+    return this.prisma.order.findUnique({
+      where: { id: order.id },
+      include: { items: true },
+    });
   }
 
   async findAllOrders(
@@ -155,6 +160,11 @@ export class AdminOrdersService {
       where: { id },
       data: updateData,
     });
+
+    // If order is manually marked as PAID, trigger the fulfillment logic (stock, mails, etc.)
+    if (dto.status === 'PAID') {
+      await this.paymentsService.processOrderSuccess(id);
+    }
 
     // Check bonus trigger explicitly mapping if PHYSICAL canvas
     if (dto.status === 'SHIPPED') {

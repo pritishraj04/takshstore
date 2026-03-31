@@ -35,8 +35,20 @@ export class CheckoutService {
       if (!product)
         throw new BadRequestException(`Product not found: ${item.productId}`);
 
-      // We might apply discounts, but here we just use the price as a trust measure from the database
-      // Assuming price match verification. If there's a custom discount, it should be processed.
+      // Stock validation for physical products
+      if (product.stockCount !== null && product.stockCount !== undefined) {
+        if (product.stockCount <= 0) {
+          throw new BadRequestException(
+            `"${product.title}" is completely out of stock`,
+          );
+        }
+        if (item.quantity > product.stockCount) {
+          throw new BadRequestException(
+            `Only ${product.stockCount} ${product.stockCount === 1 ? 'unit' : 'units'} of "${product.title}" left in stock`,
+          );
+        }
+      }
+
       calculatedTotal +=
         (product.discountedPrice || product.price) * item.quantity;
     }

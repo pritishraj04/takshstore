@@ -122,7 +122,6 @@ export class OrdersService {
     }
 
     async findOne(orderId: string, userId: string) {
-        console.log(`[DEBUG OrdersService] Looking for orderId: ${orderId}, userId: ${userId}`);
         const order = await this.prisma.order.findUnique({
             where: { id: orderId },
             include: {
@@ -134,8 +133,6 @@ export class OrdersService {
                 },
             },
         });
-
-        console.log(`[DEBUG OrdersService] Prisma result:`, order ? `Found order ${order.id}` : `null`);
 
         if (!order) {
             throw new NotFoundException('Order not found');
