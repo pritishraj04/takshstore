@@ -1,4 +1,10 @@
 import { getApiUrl } from "@/lib/api";
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Privacy Policy',
+    description: 'Our commitment to protecting your personal data and creative vision. Transparent data practices for a secure bespoke art experience.',
+};
 
 export const dynamic = 'force-dynamic';
 

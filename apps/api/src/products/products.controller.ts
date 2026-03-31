@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Query } from '@nestjs/common';
+import { Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ProductsService } from './products.service';
 import { ApiOperation, ApiTags, ApiQuery } from '@nestjs/swagger';
 
@@ -14,6 +14,12 @@ export class ProductsController {
   async findAll(@Query('q') query?: string, @Query('tags') tags?: string) {
     const tagsArray = tags ? tags.split(',') : [];
     return this.productsService.findAll(query, tagsArray);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a specific product by ID' })
+  async findOne(@Param('id') id: string) {
+    return this.productsService.findOne(id);
   }
 
   @Post('seed')

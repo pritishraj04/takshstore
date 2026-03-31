@@ -47,9 +47,11 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
     const { addItem, setIsOpen } = useCollectionStore();
     const digitalProduct = products?.find(p => p.type === 'DIGITAL');
 
+    const initializedRef = useRef(false);
+
     // Hydrate store on mount once data is received
     useEffect(() => {
-        if (data?.inviteData) {
+        if (data?.inviteData && !initializedRef.current) {
             // Ensure there is always at least one celebration to act as the primary Wedding event
             const hydratedData = { ...data.inviteData };
             if (!hydratedData.celebrations || hydratedData.celebrations.length === 0) {
@@ -61,6 +63,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                 hydratedData.celebrations[0].isPrimary = true;
             }
             setAllData(hydratedData);
+            initializedRef.current = true;
         }
     }, [data, setAllData]);
 

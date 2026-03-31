@@ -1,5 +1,11 @@
 import { getApiUrl } from "@/lib/api";
 import FAQAccordion from "@/components/features/FAQAccordion";
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'FAQs & Support',
+    description: 'Find answers to common questions about our bespoke canvas art, digital invitations, shipping, and customization process.',
+};
 
 export const dynamic = 'force-dynamic';
 

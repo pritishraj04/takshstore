@@ -25,11 +25,50 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Taksh Store",
-  description: "A luxurious visual experience",
+  metadataBase: new URL('https://takshstore.com'),
+  title: {
+    template: '%s | Taksh Store',
+    default: 'Taksh Store - Premium Canvas & Digital Invites',
+  },
+  description: 'Experience luxury through bespoke canvas art and high-end digital wedding invitations. Elevate your gifting and celebrations with Taksh Store.',
+  applicationName: 'Taksh Store',
+  authors: [{ name: 'Taksh Store Team' }],
+  generator: 'Next.js',
+  keywords: ['Luxury Art', 'Digital Wedding Invites', 'Bespoke Canvas', 'Premium Gifting', 'Indian Art'],
+  referrer: 'origin-when-cross-origin',
+  creator: 'Taksh Store',
+  publisher: 'Taksh Store',
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_IN',
+    url: 'https://takshstore.com',
+    siteName: 'Taksh Store',
+    title: 'Taksh Store - Premium Canvas & Digital Invites',
+    description: 'Bespoke canvas art and luxurious digital experiences.',
+    images: [
+      {
+        url: '/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'Taksh Store Luxury Experience',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Taksh Store - Premium Art & Invites',
+    description: 'Discover bespoke luxury canvas art and tailored digital invitations.',
+    images: ['/og-image.jpg'],
+    creator: '@takshstore',
+  },
   icons: {
-    icon: '/themes/royal-wedding/assets/images/favicon.png',
-    apple: '/themes/royal-wedding/assets/images/apple-touch-icon.png',
+    icon: '/favicon.png',
+    apple: '/apple-touch-icon.png',
   },
 };
 

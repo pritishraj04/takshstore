@@ -9,7 +9,7 @@ import { getEditDistance } from '../utils/levenshtein';
 
 @Injectable()
 export class DigitalInvitesService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async checkSlugAvailability(slug: string) {
     if (!slug || slug.trim().length === 0) {
@@ -312,7 +312,7 @@ export class DigitalInvitesService {
           inviteText:
             'With joyful hearts, we invite you to share in our happiness as we begin our new life together. Join us for an evening of love, laughter, and celebration.',
           socialShareText:
-            'With immense joy and heartfelt happiness, we, as a family, request the honor of your presence at the wedding of [Bride] and [Groom]. As they begin a beautiful journey...',
+            'With immense joy and heartfelt happiness, we, as a family, request the honor of your presence at the wedding of [Bride] and [Groom]. As they begin their Journey',
           whatsappContact: '',
           youtubeLink: '',
           optionalNote: '',

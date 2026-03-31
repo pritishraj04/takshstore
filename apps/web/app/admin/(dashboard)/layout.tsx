@@ -7,8 +7,8 @@ export const metadata: Metadata = {
   title: "Admin | Taksh Store",
   description: "A luxurious visual experience",
   icons: {
-    icon: '/themes/royal-wedding/assets/images/favicon.png',
-    apple: '/themes/royal-wedding/assets/images/apple-touch-icon.png',
+    icon: '/favicon.png',
+    apple: '/apple-touch-icon.png',
   },
 };
 

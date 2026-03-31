@@ -1,4 +1,10 @@
 import { getApiUrl } from "@/lib/api";
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Terms of Service',
+    description: 'The legal framework for commissioned art and digital wedding invites. Understanding our commitment to quality and service.',
+};
 
 export const dynamic = 'force-dynamic';
 

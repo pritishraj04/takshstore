@@ -1,5 +1,11 @@
 import ContactInquiry from "@/components/features/ContactInquiry";
 import { getApiUrl } from "@/lib/api";
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+    title: 'Collaborate With Us',
+    description: 'Get in touch with the Taksh Store team for custom canvas commissions, digital wedding invite inquiries, and bespoke design collaborations.',
+};
 
 export const dynamic = 'force-dynamic';
 

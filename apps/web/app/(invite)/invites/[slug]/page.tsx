@@ -30,7 +30,7 @@ export async function generateMetadata(
     const resolvedParams = await params;
     const invite = await getInviteData(resolvedParams.slug);
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || '';
+    const baseUrl = 'https://takshstore.com';
     const currentUrl = `${baseUrl}/invites/${resolvedParams.slug}`;
 
     if (!invite) {
@@ -51,11 +51,30 @@ export async function generateMetadata(
 
     // Use requested title format
     const title = `${name1} Weds ${name2} | A Royal Wedding Invite`;
-    const weddingDate = inviteData?.wedding?.displayDate || inviteData?.wedding?.date || (inviteData?.celebrations || [])[0]?.date || '';
-    const description = messages?.socialShareText || messages?.inviteText || `With joyful hearts, we invite you to share in our happiness as we begin our new life together. Join us for an evening of love, laughter, and celebration. Join us on ${weddingDate}.`;
+
+    // Dynamic Wedding Date for default fallback
+    const weddingDate = inviteData?.wedding?.displayDate || 'the wedding date';
+
+    // Default fallback text (approx 145-155 chars)
+    const defaultDescription = `With joyful hearts, we invite you to share in our happiness as we begin our new life together. Join us for an evening of love, laughter, and celebration. Join us on ${weddingDate}.`;
+
+    let description = messages?.socialShareText || messages?.inviteText || defaultDescription;
+
+    // Replace [Bride] and [Groom] placeholders if they exist
+    if (description.includes('[Bride]') || description.includes('[Groom]')) {
+        description = description
+            .replace(/\[Bride\]/g, brideName)
+            .replace(/\[Groom\]/g, groomName);
+    }
+
+    // Secondary Check: If the resulting text is over the 160 character limit, 
+    // or if it was the legacy long socialShareText, fallback to the cleaner default description.
+    if (description.length > 160) {
+        description = defaultDescription;
+    }
 
     // Fallback to the requested social share image
-    const ogImage = couple?.image || `${baseUrl}/assets/images/social-share.jpg`;
+    const ogImage = `${baseUrl}/themes/royal-wedding/assets/images/social-share.jpg`;
 
     return {
         title,
@@ -64,7 +83,7 @@ export async function generateMetadata(
         authors: [{ name: `${name1} & ${name2}` }],
         openGraph: {
             type: 'website',
-            url: baseUrl,
+            url: currentUrl,
             title,
             description,
             siteName: `${name1} & ${name2} Wedding`,
@@ -74,7 +93,7 @@ export async function generateMetadata(
                     url: ogImage,
                     width: 1200,
                     height: 630,
-                    alt: `${name1} & ${name2} Wedding Invitation`,
+                    alt: `${name1} & ${name2} | A Royal Wedding Invitation`,
                 },
             ],
         },
@@ -85,8 +104,8 @@ export async function generateMetadata(
             images: [ogImage],
         },
         icons: {
-            icon: '/assets/images/favicon.png',
-            apple: '/assets/images/apple-touch-icon.png',
+            icon: '/themes/royal-wedding/assets/images/favicon.png',
+            apple: '/themes/royal-wedding/assets/images/apple-touch-icon.png',
         },
         other: {
             'og:image:type': 'image/jpeg',
