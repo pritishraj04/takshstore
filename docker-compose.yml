@@ -20,6 +20,9 @@ services:
       - "8080:8080"
     env_file:
       - apps/api/.env
+    environment:
+      # This overrides the .env file strictly inside the container!
+      - DATABASE_URL=postgresql://postgres:password@db:5432/postgres?schema=public&sslmode=disable
     depends_on:
       - db
 

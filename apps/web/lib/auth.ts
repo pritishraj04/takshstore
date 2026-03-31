@@ -34,8 +34,11 @@ export const authOptions: NextAuthOptions = {
                         } as any;
                     }
                     return null;
-                } catch (e) {
-                    return null;
+                } catch (e: any) {
+                    const message =
+                        e.response?.data?.message ||
+                        'Invalid email or password.';
+                    throw new Error(message);
                 }
             },
         }),

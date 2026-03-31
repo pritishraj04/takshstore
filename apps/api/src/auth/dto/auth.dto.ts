@@ -19,3 +19,11 @@ export class ResetPasswordDto {
   newPassword!: string;
   type!: 'USER' | 'ADMIN';
 }
+
+export class VerifyEmailDto {
+  token!: string;
+}
+
+export class ResendVerificationDto {
+  email!: string;
+}

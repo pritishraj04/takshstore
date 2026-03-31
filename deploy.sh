@@ -6,7 +6,7 @@ echo "Starting deployment process..."
 aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 678308814622.dkr.ecr.ap-south-1.amazonaws.com
 
 # 2. Build the Docker image
-docker build --platform linux/amd64 -t taksh-api-repo .
+docker build --platform linux/amd64 --provenance=false -t taksh-api-repo .
 
 # 3. Tag the image for ECR
 docker tag taksh-api-repo:latest 678308814622.dkr.ecr.ap-south-1.amazonaws.com/taksh-api-repo:latest

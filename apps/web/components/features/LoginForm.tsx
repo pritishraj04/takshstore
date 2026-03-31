@@ -36,7 +36,7 @@ export default function LoginForm() {
         });
 
         if (res?.error) {
-            setError("Invalid email or password. Please try again.");
+            setError(res.error);
             setIsLoading(false);
         } else {
             router.push("/dashboard"); // Or wherever the dashboard resides

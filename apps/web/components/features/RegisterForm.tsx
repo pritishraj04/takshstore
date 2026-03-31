@@ -1,22 +1,20 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { User, Mail, Key } from "lucide-react";
+import { User, Mail, Key, CheckCircle } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
 import axios from "axios";
 import { API_URL } from "@/config/env";
 
 export default function RegisterForm() {
-    const router = useRouter();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [isRegistered, setIsRegistered] = useState(false);
     const container = useRef<HTMLDivElement>(null);
 
     useGSAP(() => {
@@ -38,18 +36,7 @@ export default function RegisterForm() {
                 { name, email, password }
             );
 
-            const res = await signIn("credentials", {
-                email,
-                password,
-                redirect: false,
-            });
-
-            if (res?.error) {
-                setError("Account created, but automatic sign in failed.");
-                setIsLoading(false);
-            } else {
-                router.push("/dashboard");
-            }
+            setIsRegistered(true);
         } catch (err: any) {
             setError(
                 err.response?.data?.message ||
@@ -58,6 +45,43 @@ export default function RegisterForm() {
             setIsLoading(false);
         }
     };
+
+    // ── Post-Registration Success State ──
+    if (isRegistered) {
+        return (
+            <div ref={container} className="w-full max-w-md mx-auto text-center">
+                <div className="animate-y">
+                    <div className="mx-auto mb-6 w-16 h-16 rounded-full bg-emerald-50 flex items-center justify-center">
+                        <CheckCircle className="text-emerald-600" size={32} strokeWidth={1.5} />
+                    </div>
+                </div>
+                <div className="animate-y">
+                    <h2 className="font-playfair text-3xl text-primary tracking-wide mb-3">
+                        Check Your Inbox
+                    </h2>
+                </div>
+                <div className="animate-y">
+                    <p className="font-inter text-sm text-secondary font-light tracking-wide mb-2 leading-relaxed">
+                        We&apos;ve sent a verification link to
+                    </p>
+                    <p className="font-inter text-sm text-primary font-medium tracking-wide mb-8">
+                        {email}
+                    </p>
+                    <p className="font-inter text-xs text-secondary font-light tracking-wide mb-10 leading-relaxed">
+                        Click the link in the email to verify your account. The link expires in 24 hours.
+                    </p>
+                </div>
+                <div className="animate-y">
+                    <Link
+                        href="/login"
+                        className="bg-[#1A1A1A] text-[#FBFBF9] w-full py-5 text-xs tracking-widest uppercase font-inter hover:bg-[#333] transition-colors block text-center"
+                    >
+                        Go to Login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div ref={container} className="w-full max-w-md mx-auto">
