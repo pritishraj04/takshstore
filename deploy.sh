@@ -2,6 +2,16 @@
 
 echo "Starting deployment process..."
 
+# Check if logged in to AWS
+if ! aws sts get-caller-identity > /dev/null 2>&1; then
+    echo "AWS session expired or not logged in. Redirecting to login..."
+    aws login
+    if ! aws sts get-caller-identity > /dev/null 2>&1; then
+        echo "Authentication failed. Please Login and Try again."
+        exit 1
+    fi
+fi
+
 # 1. Log in to AWS ECR
 aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 678308814622.dkr.ecr.ap-south-1.amazonaws.com
 
