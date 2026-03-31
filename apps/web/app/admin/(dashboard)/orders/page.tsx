@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { Search, SlidersHorizontal, PackageX } from 'lucide-react';
+import { Search, SlidersHorizontal, PackageX, ShoppingCart } from 'lucide-react';
 import { adminApiFetch } from '@/lib/admin-api';
 import { OrderActionMenu } from '@/components/admin/OrderActionMenu';
 import Link from 'next/link';
@@ -38,7 +38,9 @@ export default function AdminOrdersPage() {
         <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-gray-900">Order Management</h1>
+                  <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
+                    <ShoppingCart size={28} className="text-blue-600" /> Order Management
+                  </h1>
                   <p className="text-gray-500 text-sm mt-1">Review, monitor, and directly alter incoming customer orders.</p>
                 </div>
                 

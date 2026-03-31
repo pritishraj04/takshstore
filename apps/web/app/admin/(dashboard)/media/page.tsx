@@ -70,7 +70,9 @@ export default function AdminMediaGalleryPage() {
         <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in">
             {/* Header */}
             <div>
-              <h1 className="text-2xl font-bold tracking-tight text-gray-900">Media Moderation</h1>
+              <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
+                <ImageIcon size={28} className="text-fuchsia-600" /> Media Moderation
+              </h1>
               <p className="text-gray-500 text-sm mt-1">Review and manage raw files uploaded to S3 by your customers.</p>
             </div>
 

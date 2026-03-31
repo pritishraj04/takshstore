@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { adminApiFetch } from '@/lib/admin-api';
-import { Tag, Edit3, ShieldX, Zap, Eye, EyeOff, Plus, FileQuestion, Sparkles } from 'lucide-react';
+import { Tag, Edit3, ShieldX, Zap, Eye, EyeOff, Plus, FileQuestion, Sparkles, Ticket } from 'lucide-react';
 import { toast } from 'sonner';
 import { CouponFormModal } from '@/components/admin/CouponFormModal';
 
@@ -54,7 +54,9 @@ export default function CouponsPage() {
         <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in flex flex-col h-[calc(100vh-140px)]">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-gray-900 border-l-4 border-amber-500 pl-3">Promotional Engineering</h1>
+                  <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
+                    <Ticket size={28} className="text-rose-500" /> Coupon Engineering
+                  </h1>
                   <p className="text-gray-500 text-sm mt-1">Supervise code networks manipulating valuation logic passively natively over customer checkouts.</p>
                 </div>
                 <button onClick={() => { setEditingCoupon(null); setIsModalOpen(true); }} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 group">
@@ -65,7 +67,7 @@ export default function CouponsPage() {
             <div className="bg-white rounded-xl shadow-sm border border-gray-100/80 overflow-hidden flex-1 flex flex-col min-h-0 mt-8">
                 <div className="overflow-auto flex-1 h-full relative">
                     <table className="w-full text-sm text-left border-collapse">
-                         <thead className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest bg-gray-50 border-b border-gray-100 sticky top-0 z-10 backdrop-blur-md bg-gray-50/90 shadow-sm">
+                         <thead className="text-[10px] text-gray-500 font-extrabold uppercase tracking-widest bg-gray-50 border-b border-gray-100 sticky top-0 z-10 backdrop-blur-md shadow-sm">
                              <tr>
                                  <th className="px-6 py-4 rounded-tl-xl whitespace-nowrap">Vector Sequence</th>
                                  <th className="px-6 py-4 whitespace-nowrap">Impact Valuation</th>

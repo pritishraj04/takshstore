@@ -1,175 +1,263 @@
 "use client";
 
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { IndianRupee, ShoppingCart, Users, Package, Clock } from 'lucide-react';
+import { IndianRupee, ShoppingCart, Users, Package, Clock, Loader2, Calendar, LayoutDashboard } from 'lucide-react';
 import { MetricCard } from '@/components/admin/MetricCard';
 import { adminApiFetch } from '@/lib/admin-api';
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer,
 } from 'recharts';
-
-interface DashboardData {
-  totalRevenue: number;
-  pipelineItems: number;
-  completedItems: number;
-  totalCustomers: number;
-  recentActivity: any[];
-  revenueChart: { name: string; total: number }[];
-}
+import { BestsellerTile } from '@/components/admin/tiles/BestsellerTile';
+import { CouponTile } from '@/components/admin/tiles/CouponTile';
+import { ReviewsTile } from '@/components/admin/tiles/ReviewsTile';
+import { CustomersTile } from '@/components/admin/tiles/CustomersTile';
+import Cookies from 'js-cookie';
+import { jwtDecode } from 'jwt-decode';
 
 export default function AdminDashboardPage() {
-  const { data, isLoading } = useQuery<DashboardData>({
-    queryKey: ['admin-stats'],
-    queryFn: async () => {
-      const res = await adminApiFetch('/admin/dashboard/overview');
-      if (!res.ok) throw new Error('Failed to fetch dashboard metrics');
-      return res.json();
+  const [timeframe, setTimeframe] = useState<'1d' | '1w' | '1m' | '6m' | '1y' | 'all'>('1w');
+  const [admin, setAdmin] = useState<{ isSuper: boolean; permissions: string[] } | null>(null);
+
+  useEffect(() => {
+    const token = Cookies.get('admin_session');
+    if (token) {
+      try {
+        const decoded = jwtDecode(token) as any;
+        const perms: string[] = [];
+        if (decoded.permissions) {
+          Object.entries(decoded.permissions).forEach(([module, level]) => {
+            if (level !== 'NONE') {
+              perms.push(`view:${module}`);
+            }
+          });
+        }
+        setAdmin({
+          isSuper: decoded.isSuper || false,
+          permissions: perms,
+        });
+      } catch (e) {
+        console.error("Invalid token");
+      }
     }
+  }, []);
+
+  const { data, isLoading: dataLoading } = useQuery({
+    queryKey: ['admin-dashboard-unified-stats', timeframe],
+    queryFn: async () => {
+      const res = await adminApiFetch(`/admin/dashboard?timeframe=${timeframe}`);
+      if (!res.ok) throw new Error('Failed to fetch dashboard data');
+      return res.json();
+    },
+    enabled: !!admin
   });
+
+  const hasPermission = (permission: string) => {
+    if (!admin) return false;
+    return admin.isSuper || admin.permissions.includes(permission);
+  };
+
+  const isLoading = dataLoading || !admin;
 
   if (isLoading) {
     return (
-      <div className="space-y-8 animate-pulse">
-        <div>
-          <div className="h-8 w-64 bg-gray-200 rounded-lg mb-2" />
-          <div className="h-4 w-48 bg-gray-100 rounded-lg" />
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1,2,3,4].map(i => (
-            <div key={i} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-32" />
-          ))}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-[380px]" />
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-[380px]" />
-        </div>
+      <div className="h-[70vh] flex flex-col items-center justify-center space-y-4">
+        <Loader2 className="w-12 h-12 text-indigo-600 animate-spin" />
+        <p className="text-gray-500 font-medium animate-pulse uppercase tracking-widest text-xs">Assembling Your Business Intelligence...</p>
       </div>
     );
   }
 
+  const kpis = data.kpis || {};
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-500 slide-in-bottom">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Platform Overview</h1>
-        <p className="text-gray-500 mt-1">Metrics, analytics, and ecosystem controls.</p>
+    <div className="space-y-8 animate-in fade-in duration-700 slide-in-from-bottom-4 pb-12">
+      {/* Header with Timeframe Switcher */}
+      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
+        <div>
+          <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
+            <LayoutDashboard size={32} className="text-indigo-600" /> Platform Command
+          </h1>
+          <p className="text-gray-500 font-medium mt-1">Real-time ecosystem intelligence and command controls.</p>
+        </div>
+
+        <div className="flex flex-wrap p-1.5 bg-white border border-gray-100 rounded-3xl shadow-sm w-fit shrink-0 gap-1">
+          {[
+            { id: '1d', label: '1D' },
+            { id: '1w', label: '1W' },
+            { id: '1m', label: '1M' },
+            { id: '6m', label: '6M' },
+            { id: '1y', label: '1Y' },
+            { id: 'all', label: 'ALL' },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setTimeframe(tab.id as any)}
+              className={`px-5 py-2.5 rounded-2xl text-xs font-black tracking-tighter transition-all duration-300 ${
+                timeframe === tab.id
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105'
+                  : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+          <div className="flex items-center px-3 border-l border-gray-50 ml-1">
+             <Calendar className="w-3.5 h-3.5 text-gray-300" />
+          </div>
+        </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* Time-Filtered Global KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <MetricCard
-          title="Total Revenue"
-          value={`₹${(data?.totalRevenue || 0).toLocaleString('en-IN')}`}
+          title="Revenue"
+          value={`₹${(kpis.totalRevenue || 0).toLocaleString('en-IN')}`}
           icon={IndianRupee}
           trend={0}
-          trendLabel="from paid orders"
+          trendLabel={`in the last ${timeframe.toUpperCase()}`}
         />
         <MetricCard
-          title="Fulfillment Queue"
-          value={String(data?.pipelineItems || 0)}
+          title="Fulfillment"
+          value={String(kpis.pipelineItems || 0)}
           icon={Clock}
           trend={0}
           trendLabel="items awaiting action"
         />
         <MetricCard
-          title="Total Customers"
-          value={String(data?.totalCustomers || 0)}
+          title="User Base"
+          value={String(kpis.totalCustomers || 0)}
           icon={Users}
           trend={0}
-          trendLabel="registered accounts"
+          trendLabel="acquired in timeframe"
         />
         <MetricCard
-          title="Completed Items"
-          value={String(data?.completedItems || 0)}
+          title="Successful Sales"
+          value={String(kpis.completedItems || 0)}
           icon={Package}
           trend={0}
-          trendLabel="delivered & published"
+          trendLabel="completed deliveries"
         />
       </div>
 
-      {/* Revenue Chart */}
+      {/* Analytics Tiles */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {hasPermission('view:products') && (
+          <BestsellerTile products={data.bestsellers} />
+        )}
+        {hasPermission('view:coupons') && (
+          <CouponTile data={data.coupons} />
+        )}
+        {hasPermission('view:customers') && (
+          <CustomersTile count={data.newCustomers} />
+        )}
+      </div>
+
+      {/* Unified Revenue Chart */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2 mb-6">
-          <span className="w-2 h-6 bg-black rounded-sm inline-block" />
-          Revenue — Last 6 Months
-        </h3>
-        <div className="h-[300px] w-full">
+        <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-black tracking-tighter text-gray-900 flex items-center gap-3">
+              <span className="w-2.5 h-7 bg-indigo-600 rounded-sm inline-block" />
+              REVENUE TRAJECTORY
+            </h3>
+            <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                Units: Indian Rupee (INR)
+            </span>
+        </div>
+        <div className="h-[340px] w-full">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data?.revenueChart || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <AreaChart data={data.revenueChart || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
               <defs>
-                <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#0f172a" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#0f172a" stopOpacity={0.05} />
+                <linearGradient id="colorTotalUnified" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#4f46e5" stopOpacity={0.12} />
+                  <stop offset="95%" stopColor="#4f46e5" stopOpacity={0.01} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} dy={10} />
-              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748b' }} tickFormatter={(v) => `₹${v / 1000}k`} dx={-10} />
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
+              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 'bold' }} dy={10} />
+              <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: '#94a3b8', fontWeight: 'bold' }} tickFormatter={(v) => `₹${v >= 1000 ? (v / 1000).toFixed(0) + 'k' : v}`} dx={-5} />
+              <CartesianGrid strokeDasharray="6 6" vertical={false} stroke="#f1f5f9" />
               <RechartsTooltip
-                contentStyle={{ borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                contentStyle={{ borderRadius: '16px', border: 'none', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)', padding: '12px' }}
+                itemStyle={{ color: '#4f46e5', fontWeight: 'bold' }}
+                labelStyle={{ color: '#94a3b8', fontSize: '10px', textTransform: 'uppercase', marginBottom: '4px' }}
                 formatter={(value: any) => [`₹${Number(value).toLocaleString('en-IN')}`, 'Revenue']}
               />
-              <Area type="monotone" name="Revenue" dataKey="total" stroke="#0f172a" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
+              <Area type="monotone" name="Revenue" dataKey="total" stroke="#4f46e5" strokeWidth={4} fillOpacity={1} fill="url(#colorTotalUnified)" animationDuration={1500} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Recent Activity */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-8">
-          <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <span className="w-2 h-6 bg-gray-900 rounded-sm inline-block" />
-            Recent Orders
-          </h3>
-        </div>
-
-        {!data?.recentActivity?.length ? (
-          <div className="text-center py-12 text-gray-400">
-            <Clock className="w-10 h-10 mx-auto mb-3 text-gray-200" />
-            <p className="font-medium text-sm">No recent activity yet.</p>
-          </div>
-        ) : (
-          <div className="space-y-5 pl-2">
-            {data.recentActivity.map((order: any, index: number) => {
-              const isLast = index === data.recentActivity.length - 1;
-              const productTitle = (order.items || []).map((item: any) => 
-                `${item.quantity}x ${item.product?.title || 'Unknown Product'}`
-              ).join(', ') || 'Custom Order';
-              const customerName = order.user?.name || order.user?.email || 'Customer';
-              const timeAgo = formatTimeAgo(new Date(order.createdAt));
-
-              return (
-                <div key={order.id} className="flex gap-5 group">
-                  <div className="relative flex flex-col items-center">
-                    {!isLast && (
-                      <div className="absolute top-10 bottom-[-20px] w-px bg-gray-200 group-hover:bg-gray-300 transition-colors" />
-                    )}
-                    <div className="w-[42px] h-[42px] rounded-full bg-white border-2 border-gray-100 flex items-center justify-center text-gray-500 z-10 group-hover:border-black group-hover:text-black transition-all shadow-sm">
-                      <ShoppingCart className="w-[18px] h-[18px]" />
-                    </div>
-                  </div>
-                  <div className="pt-2 pb-4 flex-1">
-                    <p className="text-[15px] font-medium text-gray-900 tracking-tight line-clamp-1">
-                      New order by <span className="font-bold">{customerName}</span> — {productTitle}
-                    </p>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <p className="text-sm text-gray-400">{timeAgo}</p>
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider
-                        ${order.status === 'PAID' ? 'bg-green-100 text-green-700' :
-                          order.status === 'PENDING' ? 'bg-amber-100 text-amber-700' :
-                          'bg-gray-100 text-gray-600'}`}>
-                        {order.status}
-                      </span>
-                      <span className="text-sm font-semibold text-gray-700">
-                        ₹{order.totalAmount?.toLocaleString('en-IN')}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
+         {/* Reviews (Time-Filtered) */}
+        {hasPermission('view:reviews') && (
+          <ReviewsTile reviews={data.reviews} />
         )}
+
+        {/* Unified Recent Activity */}
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-xl font-black tracking-tighter text-gray-900 flex items-center gap-3">
+              <span className="w-2.5 h-7 bg-black rounded-sm inline-block" />
+              SYSTEM ACTIVITY
+            </h3>
+            <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                Live Log
+            </span>
+          </div>
+
+          {!data.recentActivity?.length ? (
+            <div className="text-center py-16 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
+              <Clock className="w-12 h-12 mx-auto mb-4 text-gray-200" />
+              <p className="font-bold text-gray-400 uppercase tracking-widest text-xs">No records for this timeframe.</p>
+            </div>
+          ) : (
+            <div className="space-y-6 pl-2 max-h-[440px] overflow-y-auto scrollbar-hide pr-2">
+              {data.recentActivity.map((order: any, index: number) => {
+                const isLast = index === data.recentActivity.length - 1;
+                const productTitle = (order.items || []).map((item: any) => 
+                  `${item.quantity}x ${item.product?.title || 'Unknown Product'}`
+                ).join(', ') || 'Custom Order';
+                const customerName = order.user?.name || order.user?.email || 'Customer';
+                const timeAgo = formatTimeAgo(new Date(order.createdAt));
+
+                return (
+                  <div key={order.id} className="flex gap-5 group">
+                    <div className="relative flex flex-col items-center shrink-0">
+                      {!isLast && (
+                        <div className="absolute top-10 bottom-[-24px] w-px bg-gray-100 group-hover:bg-gray-200 transition-colors" />
+                      )}
+                      <div className="w-[48px] h-[48px] rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 z-10 group-hover:border-indigo-600 group-hover:text-indigo-600 transition-all shadow-sm group-hover:shadow-indigo-100">
+                        <ShoppingCart className="w-5 h-5" />
+                      </div>
+                    </div>
+                    <div className="pt-1.5 pb-6 flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2">
+                         <p className="text-sm font-bold text-gray-900 truncate">
+                           New order: <span className="text-indigo-600">{customerName}</span>
+                         </p>
+                         <span className="text-sm font-black text-gray-900 shrink-0">
+                           ₹{order.totalAmount?.toLocaleString('en-IN')}
+                         </span>
+                      </div>
+                      <p className="text-[11px] text-gray-400 font-medium truncate mt-1">{productTitle}</p>
+                      
+                      <div className="flex items-center gap-3 mt-3">
+                         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100">{timeAgo}</span>
+                         <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border
+                          ${order.status === 'PAID' ? 'bg-green-50 text-green-700 border-green-100' :
+                            order.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                            'bg-gray-50 text-gray-600 border-gray-100'}`}>
+                           {order.status}
+                         </span>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

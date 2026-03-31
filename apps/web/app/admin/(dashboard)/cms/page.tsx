@@ -180,7 +180,9 @@ export default function CMSPage() {
         <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in h-[calc(100vh-120px)] flex flex-col p-8">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-gray-900 flex items-center gap-2"><Settings className="w-6 h-6 text-indigo-600" /> CMS & Data Store Policies</h1>
+                  <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
+                    <FileText size={28} className="text-cyan-600" /> Policy Management
+                  </h1>
                   <p className="text-gray-500 text-sm mt-1">Manage core institutional assets spanning Legal constructs and FAQs globally.</p>
                 </div>
             </div>

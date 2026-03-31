@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { adminApiFetch } from '@/lib/admin-api';
 import { toast } from 'sonner';
-import { Mail, Phone, MessageCircle, Truck, MapPin, Instagram, Facebook, Save, Anchor } from 'lucide-react';
+import { Mail, Phone, MessageCircle, Truck, MapPin, Instagram, Facebook, Save, Anchor, Settings } from 'lucide-react';
 
 export default function AdminSettingsPage() {
     const [settings, setSettings] = useState<Record<string, string>>({});
@@ -58,7 +58,9 @@ export default function AdminSettingsPage() {
         <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in pb-12 overflow-x-hidden">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900">Global Settings</h1>
+                    <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
+                        <Settings size={28} className="text-gray-600" /> Global Settings
+                    </h1>
                     <p className="text-gray-500 text-sm mt-1">Configure your active e-commerce storefront parameters efficiently.</p>
                 </div>
                 <button

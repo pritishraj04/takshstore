@@ -74,7 +74,9 @@ export default function TagsPage() {
     return (
         <div className="space-y-8 animate-in slide-in-bottom duration-500 fade-in">
             <div>
-                <h1 className="text-2xl font-bold tracking-tight text-gray-900 border-l-4 border-orange-500 pl-3">Universal Tag Classification</h1>
+                <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
+                    <Tag size={28} className="text-violet-600" /> Tag Classification
+                </h1>
                 <p className="text-gray-500 text-sm mt-1">Manage custom product categories and supervise automated system-level engagement badges.</p>
             </div>
 

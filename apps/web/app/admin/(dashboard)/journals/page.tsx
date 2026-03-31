@@ -311,8 +311,8 @@ export default function JournalsAdminPage() {
         <div className="space-y-6 animate-in slide-in-bottom duration-500 pb-12">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900 flex items-center gap-2">
-                        <BookOpen size={24} className="text-indigo-600" /> Journal Management
+                    <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
+                        <BookOpen size={28} className="text-teal-600" /> Journal Management
                     </h1>
                     <p className="text-gray-500 text-sm mt-1">Curate stories, announcements, and featured projects.</p>
                 </div>

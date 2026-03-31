@@ -34,7 +34,9 @@ export default function CustomersPage() {
         <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                  <h1 className="text-2xl font-bold tracking-tight text-gray-900">Customer Repository</h1>
+                  <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
+                    <Users size={28} className="text-orange-500" /> Customer Repository
+                  </h1>
                   <p className="text-gray-500 text-sm mt-1">Aggregated profiles, lifetime spending, and behavioral analytics.</p>
                 </div>
                 

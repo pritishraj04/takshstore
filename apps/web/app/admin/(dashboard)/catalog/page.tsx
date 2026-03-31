@@ -60,7 +60,9 @@ function CatalogContent() {
         <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in flex flex-col h-[calc(100vh-140px)]">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-gray-900 border-l-4 border-indigo-500 pl-3">Global Matrix Catalog</h1>
+                    <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
+                        <Package size={28} className="text-emerald-600" /> Catalog Management
+                    </h1>
                     <p className="text-gray-500 text-sm mt-1">Supervise, price, and align dynamic interactive canvases across public endpoints.</p>
                 </div>
                 <button onClick={handleAddNew} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 group">

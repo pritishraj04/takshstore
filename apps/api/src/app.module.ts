@@ -22,6 +22,7 @@ import { MailModule } from './mail/mail.module';
 import { AdminUploadModule } from './admin-upload/admin-upload.module';
 import { AdminSettingsModule } from './admin-settings/admin-settings.module';
 import { AdminDashboardModule } from './admin-dashboard/admin-dashboard.module';
+import { AdminModule } from './admin/admin.module';
 
 import { CheckoutModule } from './checkout/checkout.module';
 
@@ -53,6 +54,7 @@ import { TagsModule } from './tags/tags.module';
     AdminUploadModule,
     AdminSettingsModule,
     AdminDashboardModule,
+    AdminModule,
     JournalModule,
     ReviewModule,
     TagsModule,
