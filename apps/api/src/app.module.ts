@@ -27,6 +27,7 @@ import { CheckoutModule } from './checkout/checkout.module';
 
 import { JournalModule } from './journal/journal.module';
 import { ReviewModule } from './review/review.module';
+import { TagsModule } from './tags/tags.module';
 
 @Module({
   imports: [
@@ -54,6 +55,7 @@ import { ReviewModule } from './review/review.module';
     AdminDashboardModule,
     JournalModule,
     ReviewModule,
+    TagsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

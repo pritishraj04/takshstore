@@ -98,8 +98,25 @@ model Product {
 
   orderItems      OrderItem[]
   reviews         Review[]
+  tags            Tag[]         @relation("ProductToTag")
+
+  // Statistics for Automated Tags
+  salesCount      Int           @default(0)
+  viewCount       Int           @default(0)
+  averageRating   Float         @default(0)
+
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+}
+
+model Tag {
+  id        String    @id @default(uuid())
+  name      String
+  slug      String    @unique
+  isSystem  Boolean   @default(false)
+  products  Product[] @relation("ProductToTag")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Order {
@@ -229,6 +246,7 @@ model AdminPermissions {
   reviews    PermissionLevel @default(NONE)
   media      PermissionLevel @default(NONE)
   settings   PermissionLevel @default(NONE)
+  tags       PermissionLevel @default(NONE)
 }
 
 model AdminAuditLog {

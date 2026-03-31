@@ -1,5 +1,12 @@
 export type ProductType = 'PHYSICAL' | 'DIGITAL';
 
+export interface Tag {
+    id: string;
+    name: string;
+    slug: string;
+    isSystem: boolean;
+}
+
 export interface Product {
     id: string;
     title: string;
@@ -15,6 +22,10 @@ export interface Product {
     width?: number;
     height?: number;
     stockCount?: number;
+    tags?: Tag[];
+    salesCount?: number;
+    viewCount?: number;
+    averageRating?: number;
 }
 
 export interface CollectionItem extends Product {

@@ -2,15 +2,16 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, ShoppingCart, Mail, Palette, Users, Tag, Image as ImageIcon, Shield, Package, Settings, FileText, BookOpen, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, ShoppingCart, Mail, Palette, Users, Tag, Image as ImageIcon, Shield, Package, Settings, FileText, BookOpen, MessageSquare, Ticket } from 'lucide-react';
 
 const navItems = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Products / Catalog', href: '/admin/catalog', icon: Package },
+  { name: 'Product Tags', href: '/admin/tags', icon: Tag },
   { name: 'Reviews', href: '/admin/reviews', icon: MessageSquare },
   { name: 'Customers', href: '/admin/customers', icon: Users },
-  { name: 'Coupons', href: '/admin/coupons', icon: Tag },
+  { name: 'Coupons', href: '/admin/coupons', icon: Ticket },
   { name: 'Journals', href: '/admin/journals', icon: BookOpen },
   { name: 'CMS & Policies', href: '/admin/cms', icon: FileText },
   { name: 'S3 Media', href: '/admin/media', icon: ImageIcon },

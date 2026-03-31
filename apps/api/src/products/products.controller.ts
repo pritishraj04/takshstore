@@ -9,14 +9,11 @@ export class ProductsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all public products' })
-  @ApiQuery({
-    name: 'q',
-    required: false,
-    type: String,
-    description: 'Search query for products',
-  })
-  async findAll(@Query('q') query?: string) {
-    return this.productsService.findAll(query);
+  @ApiQuery({ name: 'q', required: false, type: String, description: 'Search term' })
+  @ApiQuery({ name: 'tags', required: false, type: String, description: 'Comma-separated tag slugs' })
+  async findAll(@Query('q') query?: string, @Query('tags') tags?: string) {
+    const tagsArray = tags ? tags.split(',') : [];
+    return this.productsService.findAll(query, tagsArray);
   }
 
   @Post('seed')

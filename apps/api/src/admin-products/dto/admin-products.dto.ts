@@ -33,4 +33,9 @@ export class CreateProductDto {
   @IsNumber() @IsOptional() eternityAddonPrice?: number;
 }
 
-export class UpdateProductDto extends CreateProductDto {}
+export class UpdateProductDto extends CreateProductDto {
+  @IsArray()
+  @IsString({ each: true })
+  @IsOptional()
+  tagIds?: string[];
+}

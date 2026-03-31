@@ -44,13 +44,27 @@ export default function ProductCard({ product }: ProductCardProps) {
                     alt={product.title}
                     className={`absolute inset-0 w-full h-full object-cover transform scale-100 transition-transform duration-700 ease-out group-hover:scale-105 ${isOutOfStock ? 'opacity-60 grayscale-30' : ''}`}
                 />
-                {isOutOfStock && (
-                    <div className="absolute top-4 left-4 bg-red-600/90 backdrop-blur-sm text-white text-[9px] uppercase tracking-[0.2em] px-3 py-1.5 font-medium"
-                        style={{ fontFamily: 'var(--font-inter)' }}
-                    >
-                        Out of Stock
-                    </div>
-                )}
+
+                {/* Tags Layer - Positioned at bottom of image for better alignment */}
+                <div className="absolute bottom-4 left-4 flex flex-wrap gap-1.5 z-10 pointer-events-none">
+                    {product.tags?.map(tag => (
+                        <div key={tag.id} className={`px-2 py-0.5 text-[7px] uppercase tracking-widest font-bold border backdrop-blur-md shadow-sm ${
+                            tag.slug === 'bestseller' ? 'bg-[#D4AF37]/80 text-white border-[#B8860B]' :
+                            tag.slug === 'popular' ? 'bg-[#4682B4]/80 text-white border-[#2E5A88]' :
+                            tag.slug === 'highly-rated' ? 'bg-[#2E8B57]/80 text-white border-[#1E6B3B]' :
+                            'bg-white/80 text-[#1A1A1A] border-[#E5E4DF]'
+                        }`} style={{ fontFamily: 'var(--font-inter)' }}>
+                            {tag.name}
+                        </div>
+                    ))}
+                    {isOutOfStock && (
+                        <div className="bg-red-600/80 text-white text-[7px] uppercase tracking-[0.2em] px-2 py-0.5 font-bold border border-red-700"
+                            style={{ fontFamily: 'var(--font-inter)' }}
+                        >
+                            Sold Out
+                        </div>
+                    )}
+                </div>
             </Link>
 
 

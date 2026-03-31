@@ -17,18 +17,7 @@ interface CollectionGridProps {
 type FilterType = 'ALL' | 'PHYSICAL' | 'DIGITAL';
 
 export default function CollectionGrid({ products }: CollectionGridProps) {
-    const [filter, setFilter] = useState<FilterType>('ALL');
-    const [filteredProducts, setFilteredProducts] = useState(products);
     const gridRef = useRef<HTMLDivElement>(null);
-
-    // Handle Filtering
-    useEffect(() => {
-        if (filter === 'ALL') {
-            setFilteredProducts(products);
-        } else {
-            setFilteredProducts(products.filter(p => p.type === filter));
-        }
-    }, [filter, products]);
 
     // GSAP Reveal on mount and filter change
     useGSAP(() => {
@@ -50,56 +39,21 @@ export default function CollectionGrid({ products }: CollectionGridProps) {
         }, gridRef);
 
         return () => ctx.revert();
-    }, [filteredProducts]);
+    }, [products]);
 
     return (
-        <section className="w-full min-h-screen bg-[#FBFBF9] text-[#1A1A1A]">
-
-            {/* Filter Header */}
-            <div className="w-full flex flex-col items-center justify-center pt-32 pb-16">
-                <h1
-                    className="text-5xl md:text-7xl tracking-tight text-[#1A1A1A] mb-12 text-center"
-                    style={{ fontFamily: 'var(--font-playfair)' }}
-                >
-                    The Collection
-                </h1>
-
-                {/* Filter Toggles */}
-                <div
-                    className="flex flex-wrap justify-center gap-8 mb-24 px-6 text-xs tracking-widest uppercase transition-colors"
-                    style={{ fontFamily: 'var(--font-inter)' }}
-                >
-                    <button
-                        onClick={() => setFilter('ALL')}
-                        className={`pb-2 border-b transition-colors ${filter === 'ALL' ? 'text-[#1A1A1A] border-[#1A1A1A]' : 'text-[#5A5A5A] border-transparent hover:text-[#1A1A1A]'}`}
-                    >
-                        ALL WORKS
-                    </button>
-                    <button
-                        onClick={() => setFilter('PHYSICAL')}
-                        className={`pb-2 border-b transition-colors ${filter === 'PHYSICAL' ? 'text-[#1A1A1A] border-[#1A1A1A]' : 'text-[#5A5A5A] border-transparent hover:text-[#1A1A1A]'}`}
-                    >
-                        CANVAS
-                    </button>
-                    <button
-                        onClick={() => setFilter('DIGITAL')}
-                        className={`pb-2 border-b transition-colors ${filter === 'DIGITAL' ? 'text-[#1A1A1A] border-[#1A1A1A]' : 'text-[#5A5A5A] border-transparent hover:text-[#1A1A1A]'}`}
-                    >
-                        DIGITAL INVITES
-                    </button>
+        <div
+            ref={gridRef}
+            className="w-full grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-x-12 gap-y-24 pb-40"
+        >
+            {products.map((product) => (
+                <ProductCard key={product.id} product={product} />
+            ))}
+            {products.length === 0 && (
+                <div className="col-span-full py-20 text-center">
+                    <p className="text-xs uppercase tracking-widest text-gray-400 font-medium">No archived works match your current filter matrix.</p>
                 </div>
-            </div>
-
-            {/* The Grid */}
-            <div
-                ref={gridRef}
-                className="w-full max-w-[1600px] mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-24 px-6 md:px-16 pb-40"
-            >
-                {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                ))}
-            </div>
-
-        </section>
+            )}
+        </div>
     );
 }

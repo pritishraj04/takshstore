@@ -45,11 +45,23 @@ export function ProductFormModal({
     const [isCustomizable, setIsCustomizable] = useState(true);
     const [eternityAddonPrice, setEternityAddonPrice] = useState('');
 
+    const [allTags, setAllTags] = useState<any[]>([]);
+    const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+
+    const fetchTags = async () => {
+        try {
+            const res = await adminApiFetch('/admin/tags');
+            if (res.ok) setAllTags(await res.json());
+        } catch (e) {
+            console.error('Failed to fetch tags', e);
+        }
+    };
+
     const handleTemplateChange = async (slug: string) => {
         setTemplateSlug(slug);
         setTemplateWarning(null);
         if (!slug) return;
-        
+
         try {
             const res = await adminApiFetch(`admin/products/check-template/${slug}`);
             if (res.ok) {
@@ -64,6 +76,9 @@ export function ProductFormModal({
     };
 
     useEffect(() => {
+        if (isOpen) {
+            fetchTags();
+        }
         if (isOpen && initialData) {
             setType(initialData.type || 'PHYSICAL');
             setTitle(initialData.title || '');
@@ -85,6 +100,7 @@ export function ProductFormModal({
             setTemplateWarning(null);
             setSelectedFile(null);
             setPreviewUrl(initialData.imageUrl || null);
+            setSelectedTagIds(initialData.tags?.map((t: any) => t.id) || []);
         } else if (isOpen) {
             // Reset state for new entry
             setTitle(''); setDescription(''); setPrice(''); setDiscountedPrice('');
@@ -94,6 +110,7 @@ export function ProductFormModal({
             setTemplateWarning(null);
             setSelectedFile(null);
             setPreviewUrl(null);
+            setSelectedTagIds([]);
         }
     }, [isOpen, initialData]);
 
@@ -109,6 +126,13 @@ export function ProductFormModal({
         const newImgs = [...images];
         newImgs.splice(index, 1);
         setImages(newImgs);
+    };
+
+    const toggleTag = (tagId: string, isSystem: boolean) => {
+        if (isSystem) return; // Prevent manual system tag toggle
+        setSelectedTagIds(prev =>
+            prev.includes(tagId) ? prev.filter(id => id !== tagId) : [...prev, tagId]
+        );
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -143,7 +167,8 @@ export function ProductFormModal({
             discountedPrice: discountedPrice ? parseFloat(discountedPrice) : undefined,
             type,
             imageUrl: finalImageUrl,
-            images: images.filter(i => i.trim() !== '') // Clean empty frames natively
+            images: images.filter(i => i.trim() !== ''), // Clean empty frames natively
+            tagIds: selectedTagIds,
         };
 
         if (type === 'PHYSICAL') {
@@ -248,6 +273,35 @@ export function ProductFormModal({
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        {/* Tag Classification */}
+                        <div>
+                            <h4 className="text-[10px] font-extrabold text-orange-500 uppercase tracking-widest flex items-center gap-3 mb-4">
+                                <span className="h-px bg-orange-100 w-6 block"></span> Tag Classification
+                            </h4>
+                            <div className="flex flex-wrap gap-2">
+                                {allTags.map(tag => (
+                                    <button
+                                        key={tag.id}
+                                        type="button"
+                                        onClick={() => toggleTag(tag.id, tag.isSystem)}
+                                        disabled={tag.isSystem}
+                                        className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all border ${
+                                            selectedTagIds.includes(tag.id)
+                                                ? tag.isSystem
+                                                    ? 'bg-amber-100 text-amber-700 border-amber-200 cursor-not-allowed'
+                                                    : 'bg-indigo-600 text-white border-indigo-600 shadow-md scale-105'
+                                                : 'bg-white text-gray-500 border-gray-200 hover:border-gray-300'
+                                        }`}
+                                    >
+                                        {tag.name}
+                                        {tag.isSystem && <span className="ml-1 text-[8px] uppercase opacity-60">(System)</span>}
+                                    </button>
+                                ))}
+                                {allTags.length === 0 && <p className="text-xs text-gray-400 font-medium">No universal tags established in the global index.</p>}
+                            </div>
+                            <p className="text-[10px] text-gray-400 mt-2">Custom tags can be assigned to categorize products. System tags (Bestseller, Popular, Highly Rated) are automated based on engagement metrics.</p>
                         </div>
 
                         {/* Media Delivery */}

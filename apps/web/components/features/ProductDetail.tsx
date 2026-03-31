@@ -137,11 +137,32 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
                         <Link
                             href="/collection"
-                            className="text-[10px] uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors mb-8 inline-flex items-center gap-2"
+                            className="text-[10px] uppercase tracking-widest text-[#5A5A5A] hover:text-[#1A1A1A] transition-colors mb-6 inline-flex items-center gap-2"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
                             <span>←</span> COLLECTION / {product.type === 'PHYSICAL' ? 'Physical Print' : 'Digital Invite'}
                         </Link>
+
+                        {/* Product Tags */}
+                        <div className="flex flex-wrap gap-2 mb-4">
+                            {product.tags?.map(tag => (
+                                <span key={tag.id} className={`px-3 py-1 text-[9px] uppercase tracking-widest font-bold border ${
+                                    tag.slug === 'bestseller' ? 'bg-[#D4AF37]/10 text-[#B8860B] border-[#B8860B]/20' :
+                                    tag.slug === 'popular' ? 'bg-[#4682B4]/10 text-[#2E5A88] border-[#2E5A88]/20' :
+                                    tag.slug === 'highly-rated' ? 'bg-[#2E8B57]/10 text-[#1E6B3B] border-[#1E6B3B]/20' :
+                                    'bg-gray-100 text-[#5A5A5A] border-gray-200'
+                                }`} style={{ fontFamily: 'var(--font-inter)' }}>
+                                    {tag.name}
+                                </span>
+                            ))}
+                            {isOutOfStock && (
+                                <span className="bg-red-50 text-red-600 border border-red-100 px-3 py-1 text-[9px] uppercase tracking-widest font-bold"
+                                    style={{ fontFamily: 'var(--font-inter)' }}
+                                >
+                                    Sold Out
+                                </span>
+                            )}
+                        </div>
 
                         <h1
                             className="text-5xl md:text-6xl text-[#1A1A1A] tracking-tight leading-tight mb-4"
