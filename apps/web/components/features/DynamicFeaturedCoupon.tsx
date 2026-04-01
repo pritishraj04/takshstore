@@ -18,9 +18,13 @@ export default function DynamicFeaturedCoupon() {
             try {
                 const res = await fetch(`${API_URL}/coupons/featured`);
                 if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.isActive) {
-                        setCoupon(data);
+                    const text = await res.text();
+                    // Only parse if the response is valid JSON (non-empty)
+                    if (text && text.trim().length > 0) {
+                        const data = JSON.parse(text);
+                        if (data && data.isActive) {
+                            setCoupon(data);
+                        }
                     }
                 }
             } catch (error) {

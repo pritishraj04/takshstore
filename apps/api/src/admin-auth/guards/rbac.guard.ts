@@ -4,6 +4,7 @@ import {
   ForbiddenException,
   Injectable,
   SetMetadata,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
@@ -27,7 +28,7 @@ export class AdminPermissionsGuard implements CanActivate {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      throw new ForbiddenException('Missing or invalid Authorization header');
+      throw new UnauthorizedException('Missing or invalid Authorization header');
     }
 
     const token = authHeader.split(' ')[1];
@@ -38,14 +39,16 @@ export class AdminPermissionsGuard implements CanActivate {
           process.env.ADMIN_JWT_SECRET || 'tmp_dev_secret_change_me_in_prod',
       });
     } catch (e) {
-      throw new ForbiddenException('Invalid or expired token');
+      throw new UnauthorizedException('Invalid or expired token');
     }
 
     if (user.type !== 'SESSION') {
-      throw new ForbiddenException('Invalid token type');
+      throw new UnauthorizedException('Invalid token type');
     }
 
+    // Populate both for compatibility
     request.adminUser = user;
+    request.user = { ...user, sub: user.id || user.sub };
 
     if (user.isSuper === true) {
       return true;
@@ -92,3 +95,4 @@ export class AdminPermissionsGuard implements CanActivate {
     return true;
   }
 }
+

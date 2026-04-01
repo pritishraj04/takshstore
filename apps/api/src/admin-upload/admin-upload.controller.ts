@@ -9,10 +9,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from '../storage/storage.service';
-import {
-  AdminPermissionsGuard,
-  RequirePermission,
-} from '../admin-auth/guards/rbac.guard';
+import { AdminPermissionsGuard, RequirePermission } from '../admin-auth/guards/rbac.guard';
 
 @Controller('admin/upload')
 @UseGuards(AdminPermissionsGuard)
@@ -31,10 +28,13 @@ export class AdminUploadController {
     const allowedAdminFolders = ['catalog', 'journals', 'team', 'marketing'];
     const targetFolder = allowedAdminFolders.includes(folder) ? folder : 'catalog'; // Default to catalog if missing or invalid
 
+    // Because of the guard, req.user now safely exists!
+    const userId = req.user.sub || req.user.id;
+
     const url = await this.storageService.uploadFile(
       file,
       targetFolder,
-      req.user.sub,
+      userId,
       true,
     );
     return { url };
