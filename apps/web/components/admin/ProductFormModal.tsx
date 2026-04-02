@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { adminApiFetch } from '@/lib/admin-api';
 import { toast } from 'sonner';
-import { X, Package, RadioReceiver, UploadCloud, Link as LinkIcon, Trash2, Plus, AlertTriangle } from 'lucide-react';
+import { X, Package, RadioReceiver, UploadCloud, Link as LinkIcon, Trash2, Plus, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { AVAILABLE_TEMPLATES } from '@/config/templates';
 
 export function ProductFormModal({
@@ -31,6 +31,7 @@ export function ProductFormModal({
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [images, setImages] = useState<string[]>([]);
+    const [isUploadingExtra, setIsUploadingExtra] = useState<number | null>(null);
 
     // Physical specifics
     const [stockCount, setStockCount] = useState('');
@@ -123,6 +124,9 @@ export function ProductFormModal({
         setImages(newImgs);
     };
     const handleRemoveImage = (index: number) => {
+        const urlToDelete = images[index];
+        if (urlToDelete) deleteFromS3(urlToDelete); // Async cleanup fire and forget
+        
         const newImgs = [...images];
         newImgs.splice(index, 1);
         setImages(newImgs);
@@ -135,26 +139,65 @@ export function ProductFormModal({
         );
     };
 
+    // Helper for S3 uploads
+    const uploadToS3 = async (file: File) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        const res = await adminApiFetch('admin/upload', {
+            method: 'POST',
+            body: formData,
+        });
+        if (!res.ok) throw new Error('Upload failed');
+        const data = await res.json();
+        return data.url;
+    };
+
+    const deleteFromS3 = async (url: string) => {
+        if (!url || !url.includes('takshstore.com')) return; // Safety check
+        try {
+            await adminApiFetch('admin/upload', {
+                method: 'DELETE',
+                body: JSON.stringify({ url }),
+            });
+        } catch (e) {
+            console.error('Failed to purge from S3', e);
+        }
+    };
+
+    const handleUploadExtra = async (index: number, file: File) => {
+        const prevUrl = images[index];
+        setIsUploadingExtra(index);
+        try {
+            const url = await uploadToS3(file);
+            handleUpdateImage(index, url);
+            toast.success('Gallery frame uploaded.');
+            
+            // Cleanup previous artifact if it existed
+            if (prevUrl) await deleteFromS3(prevUrl);
+        } catch (err) {
+            toast.error('Frame upload failed.');
+        } finally {
+            setIsUploadingExtra(null);
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
 
         let finalImageUrl = imageUrl;
         if (selectedFile) {
-            toast.loading('Uploading image...', { id: 'upload-toast' });
+            toast.loading('Uploading primary thumbnail...', { id: 'upload-toast' });
             try {
-                const formData = new FormData();
-                formData.append('file', selectedFile);
-                const uploadRes = await adminApiFetch('admin/upload', {
-                    method: 'POST',
-                    body: formData,
-                });
-                if (!uploadRes.ok) throw new Error('Image upload failed');
-                const uploadData = await uploadRes.json();
-                finalImageUrl = uploadData.url;
-                toast.success('Image uploaded successfully', { id: 'upload-toast' });
+                // If we're replacing an existing thumbnail, we should ideally delete the old one.
+                // But imageUrl might be a remote URL we don't own. 
+                // We only delete if it's our own domain.
+                if (imageUrl) await deleteFromS3(imageUrl);
+
+                finalImageUrl = await uploadToS3(selectedFile);
+                toast.success('Thumbnail uploaded successfully', { id: 'upload-toast' });
             } catch (err) {
-                toast.error('Image upload failed. Cannot save product.', { id: 'upload-toast' });
+                toast.error('Thumbnail upload failed.', { id: 'upload-toast' });
                 setIsSubmitting(false);
                 return;
             }
@@ -167,7 +210,7 @@ export function ProductFormModal({
             discountedPrice: discountedPrice ? parseFloat(discountedPrice) : undefined,
             type,
             imageUrl: finalImageUrl,
-            images: images.filter(i => i.trim() !== ''), // Clean empty frames natively
+            images: images.filter(i => i.trim() !== ''),
             tagIds: selectedTagIds,
         };
 
@@ -341,12 +384,61 @@ export function ProductFormModal({
                                     <label className="text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">Secondary Gallery Sequence
                                         <button type="button" onClick={handleAddImage} className="text-[10px] bg-white border border-gray-200 px-2.5 py-1 rounded font-bold hover:bg-gray-100 transition-colors flex items-center gap-1"><Plus className="w-3 h-3" /> Inject Frame</button>
                                     </label>
-                                    <div className="space-y-2">
+                                    <div className="space-y-4">
                                         {images.map((img, i) => (
-                                            <div key={i} className="flex items-center gap-2 group">
-                                                <LinkIcon className="w-4 h-4 text-gray-300 shrink-0" />
-                                                <input type="url" value={img} onChange={e => handleUpdateImage(i, e.target.value)} className="w-full px-3 py-2 bg-white border border-gray-200 rounded-lg outline-none focus:border-pink-400 text-sm" placeholder={`Gallery frame ${i + 1}`} />
-                                                <button type="button" onClick={() => handleRemoveImage(i)} className="p-2 text-red-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors border border-transparent opacity-0 group-hover:opacity-100"><Trash2 className="w-4 h-4" /></button>
+                                            <div key={i} className="space-y-2 p-3 border border-gray-100 rounded-lg bg-white relative group">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">Gallery Frame {i+1}</span>
+                                                    <button type="button" onClick={() => handleRemoveImage(i)} className="text-red-400 hover:text-red-600 p-1"><Trash2 className="w-3.5 h-3.5" /></button>
+                                                </div>
+                                                <div className="flex gap-3">
+                                                    <div className="w-20 h-20 border rounded-lg bg-gray-50 flex items-center justify-center shrink-0 overflow-hidden relative group/thumb">
+                                                        {img ? (
+                                                            <img src={img} alt="" className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <ImageIcon className="w-5 h-5 text-gray-300" />
+                                                        )}
+                                                        <input 
+                                                            type="file" 
+                                                            accept="image/*" 
+                                                            className="absolute inset-0 opacity-0 cursor-pointer" 
+                                                            onChange={(e) => {
+                                                                const file = e.target.files?.[0];
+                                                                if (file) handleUploadExtra(i, file);
+                                                            }}
+                                                        />
+                                                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover/thumb:opacity-100 transition-opacity">
+                                                            <UploadCloud className="w-4 h-4 text-white" />
+                                                        </div>
+                                                        {isUploadingExtra === i && (
+                                                            <div className="absolute inset-0 bg-white/80 flex items-center justify-center">
+                                                                <div className="w-4 h-4 border-2 border-pink-500 border-t-transparent rounded-full animate-spin"></div>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 space-y-2">
+                                                        <div className="flex items-center gap-2">
+                                                            <LinkIcon className="w-3.5 h-3.5 text-gray-300 shrink-0" />
+                                                            <input type="url" value={img} onChange={e => handleUpdateImage(i, e.target.value)} className="w-full px-3 py-2 bg-gray-50/50 border border-gray-200 rounded-lg outline-none focus:border-pink-400 text-xs" placeholder="Source URI" />
+                                                        </div>
+                                                        <button 
+                                                            type="button" 
+                                                            className="text-[10px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors w-max"
+                                                            onClick={() => {
+                                                                const input = document.createElement('input');
+                                                                input.type = 'file';
+                                                                input.accept = 'image/*';
+                                                                input.onchange = (e) => {
+                                                                    const file = (e.target as HTMLInputElement).files?.[0];
+                                                                    if (file) handleUploadExtra(i, file);
+                                                                };
+                                                                input.click();
+                                                            }}
+                                                        >
+                                                            {img ? 'Replace with S3' : 'Upload to S3'}
+                                                        </button>
+                                                    </div>
+                                                </div>
                                             </div>
                                         ))}
                                         {images.length === 0 && <p className="text-xs text-gray-400 font-medium italic">No deep-view gallery imagery allocated for detail pages currently.</p>}

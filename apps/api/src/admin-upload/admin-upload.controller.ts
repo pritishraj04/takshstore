@@ -1,11 +1,14 @@
-import {
+  import {
   Controller,
   Post,
+  Delete,
   UseInterceptors,
   UploadedFile,
   UseGuards,
   Request,
   Body,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { StorageService } from '../storage/storage.service';
@@ -38,5 +41,20 @@ export class AdminUploadController {
       true,
     );
     return { url };
+  }
+
+  @Delete()
+  @RequirePermission('products', 'WRITE')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async deleteImage(@Body('url') url: string) {
+    if (!url) return;
+    
+    // Only allow deleting files from our own domain to prevent SSRF/Abuse
+    const publicDomain = process.env.R2_PUBLIC_DOMAIN || '';
+    if (publicDomain && !url.startsWith(publicDomain)) {
+      return;
+    }
+
+    await this.storageService.deleteFile(url);
   }
 }

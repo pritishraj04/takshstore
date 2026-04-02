@@ -123,9 +123,9 @@ export default function InquiryInbox() {
   }
 
   return (
-    <div className="max-w-[1600px] mx-auto p-8">
+    <div className="space-y-6">
       {/* Header with Title and Alert Toggle */}
-      <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6 mb-12">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
         <div>
           <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
             <Mail size={32} className="text-emerald-600" /> Customer Inquiries

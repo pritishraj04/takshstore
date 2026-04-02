@@ -57,7 +57,7 @@ function CatalogContent() {
     };
 
     return (
-        <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in flex flex-col h-[calc(100vh-140px)]">
+        <div className="space-y-6 flex flex-col h-[calc(100vh-140px)]">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
                 <div>
                     <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">

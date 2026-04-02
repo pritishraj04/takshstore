@@ -52,13 +52,13 @@ export default function AdminTeamPage() {
     };
 
     return (
-        <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-gray-200/50 pb-6">
+        <div className="space-y-6">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
-                  <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
-                    <Shield size={28} className="text-indigo-900" /> Team & Access
+                  <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
+                    <Shield size={32} className="text-indigo-900" /> Team & Access
                   </h1>
-                  <p className="text-gray-500 text-sm mt-1">Manage RBAC Sub-Admin policies across internal ecosystem verticals.</p>
+                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Manage RBAC Sub-Admin policies across internal ecosystem verticals.</p>
                 </div>
                 
                 <button

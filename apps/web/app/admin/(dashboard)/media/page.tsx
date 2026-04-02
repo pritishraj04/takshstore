@@ -39,9 +39,7 @@ export default function AdminMediaGalleryPage() {
             return;
         }
 
-        const updatedDeleting = new Set(deletingIds);
-        updatedDeleting.add(mediaId);
-        setDeletingIds(updatedDeleting);
+        setDeletingIds(prev => new Set(prev).add(mediaId));
 
         try {
             const res = await adminApiFetch(`/admin/media/${mediaId}`, {
@@ -55,25 +53,32 @@ export default function AdminMediaGalleryPage() {
 
             toast.success("Asset permanently terminated.");
             setAssets(prev => prev.filter(a => a.id !== mediaId));
+            
+            // Optional: Hard re-fetch to ensure sync
+            // await fetchMedia(); 
         } catch (error: any) {
             toast.error(error.message);
         } finally {
-            const newDeleting = new Set(deletingIds);
-            newDeleting.delete(mediaId);
-            setDeletingIds(newDeleting);
+            setDeletingIds(prev => {
+                const next = new Set(prev);
+                next.delete(mediaId);
+                return next;
+            });
         }
     };
 
     const filteredAssets = assets.filter(a => a.type === activeTab);
 
     return (
-        <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in">
+        <div className="space-y-6">
             {/* Header */}
-            <div>
-              <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
-                <ImageIcon size={28} className="text-fuchsia-600" /> Media Moderation
-              </h1>
-              <p className="text-gray-500 text-sm mt-1">Review and manage raw files uploaded to S3 by your customers.</p>
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div>
+                  <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
+                    <ImageIcon size={32} className="text-fuchsia-600" /> Media Moderation
+                  </h1>
+                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Review and manage raw files uploaded to S3 by your customers.</p>
+                </div>
             </div>
 
             {/* Tab Navigation */}
@@ -117,10 +122,10 @@ export default function AdminMediaGalleryPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-6 mt-4">
                         {filteredAssets.map(asset => (
                             <MediaAssetCard 
-                                key={`${asset.inviteId}-${asset.type}`}
+                                key={asset.id}
                                 asset={asset}
                                 onDelete={handleDelete}
-                                isDeleting={deletingIds.has(`${asset.inviteId}-${asset.type}`)}
+                                isDeleting={deletingIds.has(asset.id)}
                             />
                         ))}
                     </div>

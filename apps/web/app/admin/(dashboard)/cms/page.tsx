@@ -177,13 +177,13 @@ export default function CMSPage() {
     );
 
     return (
-        <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in h-[calc(100vh-120px)] flex flex-col p-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+        <div className="space-y-6 h-[calc(100vh-120px)] flex flex-col">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shrink-0">
                 <div>
-                  <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
-                    <FileText size={28} className="text-cyan-600" /> Policy Management
+                  <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
+                    <FileText size={32} className="text-cyan-600" /> Policy Management
                   </h1>
-                  <p className="text-gray-500 text-sm mt-1">Manage core institutional assets spanning Legal constructs and FAQs globally.</p>
+                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Manage core institutional assets spanning Legal constructs and FAQs globally.</p>
                 </div>
             </div>
 

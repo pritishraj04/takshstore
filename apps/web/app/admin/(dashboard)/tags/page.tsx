@@ -72,12 +72,14 @@ export default function TagsPage() {
     };
 
     return (
-        <div className="space-y-8 animate-in slide-in-bottom duration-500 fade-in">
-            <div>
-                <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
-                    <Tag size={28} className="text-violet-600" /> Tag Classification
-                </h1>
-                <p className="text-gray-500 text-sm mt-1">Manage custom product categories and supervise automated system-level engagement badges.</p>
+        <div className="space-y-6">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+                <div>
+                  <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
+                      <Tag size={32} className="text-violet-600" /> Tag Classification
+                  </h1>
+                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Manage custom product categories and supervise automated system-level engagement badges.</p>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

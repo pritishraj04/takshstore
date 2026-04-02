@@ -517,8 +517,11 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
         <div className="h-[calc(100vh-64px)] w-full flex flex-col md:flex-row overflow-hidden bg-white text-black">
             {/* Real Sidebar Controller */}
             <div className={`${activeMobileView === 'editor' ? 'flex' : 'hidden'} md:flex w-full md:w-1/3 md:min-w-[350px] md:max-w-[450px] flex-col h-full bg-white border-r border-gray-200 pb-16 md:pb-0`}>
-                <div className="p-6 shrink-0">
-                    <h3 className="font-playfair text-2xl text-[#1A1A1A] tracking-wide">Editor</h3>
+                <div className="p-6 shrink-0 border-b border-[#E5E4DF]">
+                    <h3 className="font-playfair text-2xl text-[#1A1A1A] tracking-wide mb-1">Editor</h3>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-[#A5A5A5]/80 flex items-center gap-1.5" style={{ fontFamily: 'var(--font-inter)' }}>
+                        <span className="text-red-500 text-xs mt-0.5">*</span> Compulsory for Purchase
+                    </p>
                 </div>
                 <div className="flex-1 overflow-y-auto p-6 scrollbar-hide">
 
@@ -529,7 +532,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                             className="w-full flex items-center justify-between p-6 text-xs uppercase tracking-widest text-[#1A1A1A]"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            <span className="flex items-center gap-3"><LinkIcon size={16} strokeWidth={1} className="text-[#5A5A5A]" /> Claim Your URL</span>
+                            <span className="flex items-center gap-3"><LinkIcon size={16} strokeWidth={1} className="text-[#5A5A5A]" /> Claim Your URL <span className="text-red-500">*</span></span>
                             <span className="text-lg font-light leading-none">{openSection === 'url' ? '−' : '+'}</span>
                         </button>
                         <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'url' ? 'max-h-[800px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
@@ -590,7 +593,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                             className="w-full flex items-center justify-between p-6 text-xs uppercase tracking-widest text-[#1A1A1A]"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            <span className="flex items-center gap-3"><User size={16} strokeWidth={1} className="text-[#5A5A5A]" /> The Couple</span>
+                            <span className="flex items-center gap-3"><User size={16} strokeWidth={1} className="text-[#5A5A5A]" /> The Couple <span className="text-red-500">*</span></span>
                             <span className="text-lg font-light leading-none">{openSection === 'couple' ? '−' : '+'}</span>
                         </button>
                         <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'couple' ? 'max-h-[800px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
@@ -614,13 +617,13 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                         <ChevronDown size={14} className="absolute right-0 top-1/2 -translate-y-1/2 text-[#5A5A5A] pointer-events-none -mt-1" />
                                     </div>
                                 </div>
-                                <input
-                                    type="text" value={currentDraft?.couple?.bride?.name || ''} onChange={(e) => updatePersonName('bride', e.target.value)} placeholder="Bride Name"
+                                 <input
+                                    type="text" value={currentDraft?.couple?.bride?.name || ''} onChange={(e) => updatePersonName('bride', e.target.value)} placeholder="Bride Name *"
                                     className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                                     style={{ fontFamily: 'var(--font-inter)' }}
                                 />
                                 <input
-                                    type="text" value={currentDraft?.couple?.groom?.name || ''} onChange={(e) => updatePersonName('groom', e.target.value)} placeholder="Groom Name"
+                                    type="text" value={currentDraft?.couple?.groom?.name || ''} onChange={(e) => updatePersonName('groom', e.target.value)} placeholder="Groom Name *"
                                     className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
                                     style={{ fontFamily: 'var(--font-inter)' }}
                                 />
@@ -745,7 +748,7 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                             className="w-full flex items-center justify-between p-6 text-xs uppercase tracking-widest text-[#1A1A1A]"
                             style={{ fontFamily: 'var(--font-inter)' }}
                         >
-                            <span className="flex items-center gap-3"><CalendarHeart size={16} strokeWidth={1} className="text-[#5A5A5A]" /> Celebrations</span>
+                            <span className="flex items-center gap-3"><CalendarHeart size={16} strokeWidth={1} className="text-[#5A5A5A]" /> Celebrations <span className="text-red-500">*</span></span>
                             <span className="text-lg font-light leading-none">{openSection === 'events' ? '−' : '+'}</span>
                         </button>
                         <div className={`overflow-hidden transition-all duration-500 ease-in-out px-6 ${openSection === 'events' ? 'max-h-[2000px] opacity-100 pb-6' : 'max-h-0 opacity-0'}`}>
@@ -800,8 +803,8 @@ export default function CustomizerEditor({ inviteId }: CustomizerEditorProps) {
                                             <div className="flex items-center gap-2">
                                                 <CalendarHeart size={12} strokeWidth={1} className="text-[#C5B39A]" />
                                                 <input
-                                                    type="date" value={ev.date || ''} onChange={(e) => updateEvent(ev.id, 'date', e.target.value)} placeholder="Date"
-                                                    className="w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors"
+                                                    type="date" value={ev.date || ''} onChange={(e) => updateEvent(ev.id, 'date', e.target.value)} placeholder={ev.isPrimary ? "Wedding Date *" : "Date"}
+                                                    className={`w-full bg-transparent border-b border-[#E5E4DF] pb-2 text-sm text-[#1A1A1A] focus:outline-none focus:border-[#1A1A1A] transition-colors ${ev.isPrimary && !ev.date ? 'border-amber-200' : ''}`}
                                                     style={{ fontFamily: 'var(--font-inter)' }}
                                                 />
                                             </div>

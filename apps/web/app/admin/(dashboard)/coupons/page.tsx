@@ -51,13 +51,13 @@ export default function CouponsPage() {
     };
 
     return (
-        <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in flex flex-col h-[calc(100vh-140px)]">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
+        <div className="space-y-6 flex flex-col h-[calc(100vh-140px)]">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shrink-0">
                 <div>
-                  <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
-                    <Ticket size={28} className="text-rose-500" /> Coupon Engineering
+                  <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
+                    <Ticket size={32} className="text-rose-500" /> Coupon Engineering
                   </h1>
-                  <p className="text-gray-500 text-sm mt-1">Supervise code networks manipulating valuation logic passively natively over customer checkouts.</p>
+                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Supervise code networks manipulating valuation logic passively natively over customer checkouts.</p>
                 </div>
                 <button onClick={() => { setEditingCoupon(null); setIsModalOpen(true); }} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 group">
                    <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" /> Deploy New Vector

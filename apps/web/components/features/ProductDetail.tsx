@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
@@ -21,10 +21,21 @@ export default function ProductDetail({ product }: ProductDetailProps) {
     const rightColRef = useRef<HTMLDivElement>(null);
     const { addItem, setIsOpen } = useCollectionStore();
     const [openAccordion, setOpenAccordion] = useState<string | null>(null);
-    const [activeImage, setActiveImage] = useState(product.imageUrl);
+    const [activeImage, setActiveImage] = useState(product.imageUrl || (product.images && product.images.length > 0 ? product.images[0] : ''));
     const router = useRouter();
 
-    const allImages = Array.from(new Set([product.imageUrl, ...(product.images || [])]));
+    const { mutate: createDraft, isPending: isCreatingDraft } = useCreateDraft();
+
+    useEffect(() => {
+        if (!activeImage && product.imageUrl) {
+            setActiveImage(product.imageUrl);
+        }
+    }, [product.imageUrl]);
+
+    const allImages = Array.from(new Set([
+        product.imageUrl, 
+        ...(product.images || []).filter(img => img && img.trim() !== '')
+    ].filter(Boolean) as string[]));
     const isOutOfStock = product.stockCount !== undefined && product.stockCount !== null && product.stockCount <= 0;
     const isLowStock = !isOutOfStock && product.stockCount !== undefined && product.stockCount !== null && product.stockCount <= 5;
 
@@ -67,8 +78,6 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
     }, { scope: containerRef });
 
-    const { mutate: createDraft, isPending: isCreatingDraft } = useCreateDraft();
-
     const handlePrimaryAction = () => {
         if (isOutOfStock) return;
 
@@ -97,7 +106,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
                 {/* Left Column (The Art - Spanning 7 columns) */}
                 <div ref={leftColRef} className="col-span-1 lg:col-span-7">
-                    <div className="flex flex-col-reverse lg:flex-row gap-4 invisible">
+                    <div className="flex flex-col-reverse lg:flex-row gap-4">
                         {/* Thumbnail Column (Left on Desktop, Bottom on Mobile) */}
                         {allImages.length > 1 && (
                             <div className="flex lg:flex-col gap-3 overflow-x-auto lg:overflow-visible snap-x scrollbar-hide py-2 lg:py-0">
@@ -133,7 +142,7 @@ export default function ProductDetail({ product }: ProductDetailProps) {
 
                 {/* Right Column (The Details - Spanning 5 columns) */}
                 <div className="col-span-1 lg:col-span-5 relative">
-                    <div ref={rightColRef} className="lg:sticky top-40 h-fit flex flex-col invisible">
+                    <div ref={rightColRef} className="lg:sticky top-40 h-fit flex flex-col">
 
                         <Link
                             href="/collection"

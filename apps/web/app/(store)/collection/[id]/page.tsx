@@ -9,7 +9,7 @@ type Props = {
 async function getProduct(id: string) {
     try {
         const res = await fetch(getApiUrl(`/products/${id}`), {
-            next: { revalidate: 3600 }
+            next: { revalidate: 0 }
         });
         if (res.ok) return await res.json();
     } catch (e) {}

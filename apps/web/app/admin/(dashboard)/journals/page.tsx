@@ -51,6 +51,18 @@ export default function JournalsAdminPage() {
         }
     };
 
+    const deleteFromS3 = async (url: string) => {
+        if (!url || !url.includes('takshstore.com')) return;
+        try {
+            await adminApiFetch('admin/upload', {
+                method: 'DELETE',
+                body: JSON.stringify({ url }),
+            });
+        } catch (e) {
+            console.error('Failed to purge from S3', e);
+        }
+    };
+
     const handleSave = async () => {
         if (!title.trim() || !slug.trim() || !content.trim()) {
             toast.error("Title, slug, and content are required.");
@@ -63,6 +75,10 @@ export default function JournalsAdminPage() {
             
             if (selectedFile) {
                 toast.loading('Uploading cover image...', { id: 'upload-img' });
+                
+                // Cleanup previous image if it was on our domain
+                if (coverImage) await deleteFromS3(coverImage);
+
                 const formData = new FormData();
                 formData.append('file', selectedFile);
                 
@@ -111,9 +127,17 @@ export default function JournalsAdminPage() {
 
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this journal?")) return;
+        
+        const journalToDelete = journals.find(j => j.id === id);
+        
         try {
             const res = await adminApiFetch(`/admin/journals/${id}`, { method: "DELETE" });
             if (res.ok) {
+                // If deletion successful, cleanup storage
+                if (journalToDelete?.coverImage) {
+                    await deleteFromS3(journalToDelete.coverImage);
+                }
+                
                 toast.success("Journal deleted");
                 fetchJournals();
             } else {
@@ -308,13 +332,13 @@ export default function JournalsAdminPage() {
     }
 
     return (
-        <div className="space-y-6 animate-in slide-in-bottom duration-500 pb-12">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-6 pb-12">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
-                        <BookOpen size={28} className="text-teal-600" /> Journal Management
+                    <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
+                        <BookOpen size={32} className="text-teal-600" /> Journal Management
                     </h1>
-                    <p className="text-gray-500 text-sm mt-1">Curate stories, announcements, and featured projects.</p>
+                    <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Curate stories, announcements, and featured projects.</p>
                 </div>
                 <button
                     onClick={openCreateForm}

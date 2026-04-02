@@ -76,13 +76,13 @@ export default function AdminSettingsPage() {
     }
 
     return (
-        <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in pb-12 overflow-x-hidden">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-6 pb-12 overflow-x-hidden">
+            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
-                    <h1 className="text-2xl font-black tracking-tight text-gray-900 flex items-center gap-2 uppercase">
-                        <Settings size={28} className="text-gray-600" /> Admin Settings
+                    <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
+                        <Settings size={32} className="text-gray-600" /> Admin Settings
                     </h1>
-                    <p className="text-gray-500 text-sm mt-1">Manage global store parameters and your personal preferences.</p>
+                    <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Manage global store parameters and your personal preferences.</p>
                 </div>
                 {hasSettingsWrite && (
                     <button

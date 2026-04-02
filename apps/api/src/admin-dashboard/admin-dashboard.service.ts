@@ -44,6 +44,14 @@ export class AdminDashboardService {
       this.prisma.user.count(),
       // Fetch the 5 most recent Order creations
       this.prisma.order.findMany({
+        where: {
+          NOT: {
+            AND: [
+              { status: 'PENDING' },
+              { totalAmount: 0 }
+            ]
+          }
+        },
         take: 5,
         orderBy: { createdAt: 'desc' },
         include: {

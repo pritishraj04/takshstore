@@ -35,7 +35,7 @@ export default function AdminOrdersPage() {
     }, [searchQuery, statusFilter]);
 
     return (
-        <div className="space-y-6 animate-in slide-in-bottom duration-500 fade-in">
+        <div className="space-y-6">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
                 <div>
                   <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">

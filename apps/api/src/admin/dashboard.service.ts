@@ -186,6 +186,12 @@ export class DashboardService {
     return this.prisma.order.findMany({
       where: {
         createdAt: startDate ? { gte: startDate, lte: endDate } : { lte: endDate },
+        NOT: {
+          AND: [
+            { status: 'PENDING' },
+            { totalAmount: 0 }
+          ]
+        }
       },
       take: 8,
       orderBy: { createdAt: 'desc' },
