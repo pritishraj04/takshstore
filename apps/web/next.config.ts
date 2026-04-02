@@ -7,7 +7,7 @@ const nextConfig: NextConfig = {
   },
   // @ts-ignore
   turbopack: {
-    root: path.resolve("../../"),
+    root: path.resolve(__dirname, "../../"),
   },
 };
 
