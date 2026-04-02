@@ -5,9 +5,12 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
-  // @ts-ignore
+  // In Next.js 15, this is a top-level property
+  outputFileTracingRoot: path.join(__dirname, "../../"),
+
   turbopack: {
-    root: path.resolve(__dirname, "../../"),
+    // This tells Turbopack where the monorepo root (and node_modules) is
+    root: path.join(__dirname, "../../"),
   },
 };
 
