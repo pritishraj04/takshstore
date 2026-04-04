@@ -27,6 +27,12 @@ export class AdminProductsController {
     return this.service.getProducts(category);
   }
 
+  @Get('templates')
+  @RequirePermission('products', 'READ')
+  async getTemplates() {
+    return this.service.getTemplates();
+  }
+
   @Post()
   @RequirePermission('products', 'WRITE')
   async createProduct(@Body() dto: CreateProductDto) {
@@ -49,5 +55,11 @@ export class AdminProductsController {
   @RequirePermission('products', 'READ')
   async checkTemplate(@Param('slug') slug: string) {
     return this.service.checkTemplate(slug);
+  }
+
+  @Post('sync-templates')
+  @RequirePermission('products', 'WRITE')
+  async syncTemplates(@Body('keys') keys: string[]) {
+    return this.service.syncTemplates(keys);
   }
 }

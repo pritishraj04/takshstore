@@ -137,7 +137,7 @@ export default async function LiveInvitePage({ params }: InvitePageProps) {
     }
 
     const { inviteData, orderItem } = invite;
-    const templateId = orderItem?.product?.templateId || 'the-royal-invitation';
+    const templateId = orderItem?.product?.templateSlug || 'the-royal-invitation';
     const ActiveTemplate = getTemplate(templateId);
 
     return <ActiveTemplate data={inviteData} isPreviewMode={false} />;

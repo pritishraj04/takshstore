@@ -13,6 +13,11 @@ export interface MyInvite {
             id: string;
             status: string;
         };
+        product?: {
+            id: string;
+            title: string;
+            templateSlug: string;
+        };
     };
     isEternity?: boolean;
     marriageDate?: string;

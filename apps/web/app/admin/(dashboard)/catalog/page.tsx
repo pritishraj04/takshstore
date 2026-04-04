@@ -15,9 +15,22 @@ function CatalogContent() {
     const [products, setProducts] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Modal State
+    const [isSyncing, setIsSyncing] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingProduct, setEditingProduct] = useState<any>(null);
+
+    const handleSyncTemplates = async () => {
+        setIsSyncing(true);
+        try {
+            const res = await fetch('/api/admin/sync-templates', { method: 'POST' });
+            if (!res.ok) throw new Error();
+            toast.success('Template registry synchronized successfully.');
+        } catch (error) {
+            toast.error('Template synchronization failed.');
+        } finally {
+            setIsSyncing(false);
+        }
+    };
 
     const fetchProducts = async () => {
         setIsLoading(true);
@@ -65,9 +78,21 @@ function CatalogContent() {
                     </h1>
                     <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Supervise, price, and align dynamic interactive canvases across public endpoints.</p>
                 </div>
-                <button onClick={handleAddNew} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 group">
-                    <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" /> Bind New Blueprint
-                </button>
+                <div className="flex items-center gap-3">
+                    {activeTab === 'DIGITAL' && (
+                        <button
+                            onClick={handleSyncTemplates}
+                            disabled={isSyncing}
+                            className={`flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-emerald-100 transition-all active:scale-95 disabled:opacity-50 ${isSyncing ? 'cursor-not-allowed' : ''}`}
+                        >
+                            <Zap className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
+                            {isSyncing ? 'SYNCHRONIZING...' : 'SYNC REGISTRY'}
+                        </button>
+                    )}
+                    <button onClick={handleAddNew} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 group">
+                        <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" /> Bind New Blueprint
+                    </button>
+                </div>
             </div>
 
             <div className="flex gap-2 border-b border-gray-200 shrink-0 mt-8">

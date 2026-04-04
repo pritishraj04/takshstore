@@ -11,6 +11,9 @@ export interface OrderItemPayload {
     type: ProductType;
     inviteData?: InviteData;
     draftId?: string;
+    templateKey?: string;
+    isEternity?: boolean;
+    marriageDate?: string;
 }
 
 export interface CreateOrderPayload {

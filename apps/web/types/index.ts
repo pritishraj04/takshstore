@@ -23,6 +23,7 @@ export interface Product {
     height?: number;
     stockCount?: number;
     tags?: Tag[];
+    templateSlug?: string;
     salesCount?: number;
     viewCount?: number;
     averageRating?: number;
@@ -34,4 +35,5 @@ export interface CollectionItem extends Product {
     draftId?: string;
     isEternity?: boolean;
     marriageDate?: string;
+    templateKey?: string;
 }

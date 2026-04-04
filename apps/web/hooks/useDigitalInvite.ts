@@ -12,8 +12,8 @@ export function useDigitalInvite(id: string) {
             const { data } = await apiClient.get(`/digital-invites/draft/${id}`);
             return data;
         },
-        enabled: id !== 'new' && !!id, // Only run the query if we have an ID and it's not 'new'
-        staleTime: 5 * 60 * 1000, // 5 minutes (prevents aggressive background refetches while editing)
+        enabled: id !== 'new' && !!id,
+        staleTime: 0,
     });
 }
 

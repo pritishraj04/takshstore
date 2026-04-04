@@ -203,6 +203,13 @@ export default function OrderDetails({ orderId }: { orderId: string }) {
                                 <div className="flex flex-col md:w-2/3">
                                     <h4 className="font-playfair text-2xl text-primary tracking-wide mb-2">
                                         {item.product.title}
+                                        {item.product.type === "DIGITAL" && (item.digitalInvite as any)?.inviteData?.couple && (
+                                            <span className="text-secondary opacity-60 ml-2 text-lg">
+                                                // {(item.digitalInvite as any).inviteData.couple.bride?.name && (item.digitalInvite as any).inviteData.couple.groom?.name 
+                                                    ? `${(item.digitalInvite as any).inviteData.couple.bride.name} & ${(item.digitalInvite as any).inviteData.couple.groom.name}`
+                                                    : (item.digitalInvite as any).inviteData.couple.partner1 || "The Couple"}
+                                            </span>
+                                        )}
                                     </h4>
                                     <div className="flex gap-4 font-inter text-xs tracking-widest uppercase text-secondary">
                                         <span>Type: {item.product.type}</span>

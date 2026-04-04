@@ -169,6 +169,7 @@ model DigitalInvite {
   marriageDate      DateTime?
   isEternity        Boolean      @default(false)
   inviteUrl         String?
+  templateKey       String?
   createdAt         DateTime     @default(now())
   updatedAt         DateTime     @updatedAt
 }
@@ -365,4 +366,13 @@ model ContactMessage {
   message   String
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+}
+
+model Template {
+  id           String   @id @default(uuid())
+  key          String   @unique
+  name         String?
+  thumbnailUrl String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { adminApiFetch } from '@/lib/admin-api';
 import { toast } from 'sonner';
 import { X, Package, RadioReceiver, UploadCloud, Link as LinkIcon, Trash2, Plus, AlertTriangle, Image as ImageIcon } from 'lucide-react';
-import { AVAILABLE_TEMPLATES } from '@/config/templates';
 
 export function ProductFormModal({
     isOpen,
@@ -47,6 +46,7 @@ export function ProductFormModal({
     const [eternityAddonPrice, setEternityAddonPrice] = useState('');
 
     const [allTags, setAllTags] = useState<any[]>([]);
+    const [templates, setTemplates] = useState<any[]>([]);
     const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
     const fetchTags = async () => {
@@ -55,6 +55,15 @@ export function ProductFormModal({
             if (res.ok) setAllTags(await res.json());
         } catch (e) {
             console.error('Failed to fetch tags', e);
+        }
+    };
+
+    const fetchTemplates = async () => {
+        try {
+            const res = await adminApiFetch('/admin/products/templates');
+            if (res.ok) setTemplates(await res.json());
+        } catch (e) {
+            console.error('Failed to fetch templates', e);
         }
     };
 
@@ -79,6 +88,7 @@ export function ProductFormModal({
     useEffect(() => {
         if (isOpen) {
             fetchTags();
+            fetchTemplates();
         }
         if (isOpen && initialData) {
             setType(initialData.type || 'PHYSICAL');
@@ -485,8 +495,8 @@ export function ProductFormModal({
                                         <label className="block text-xs font-bold text-gray-700 mb-1.5">React Component Wrapper Slug</label>
                                         <select value={templateSlug} onChange={e => handleTemplateChange(e.target.value)} required className="w-full px-4 py-3 bg-white border border-emerald-200 rounded-xl outline-none focus:border-emerald-500 text-sm font-mono text-emerald-800">
                                             <option value="">Select a template...</option>
-                                            {AVAILABLE_TEMPLATES.map(t => (
-                                                <option key={t.id} value={t.id}>{t.name} ({t.id})</option>
+                                            {templates.map(t => (
+                                                <option key={t.id} value={t.key}>{t.name} ({t.key})</option>
                                             ))}
                                         </select>
                                         <p className="text-[10px] font-medium text-gray-500 mt-1.5 uppercase tracking-wide">Must explicitly map identical string values tracking NextJS file blocks natively.</p>

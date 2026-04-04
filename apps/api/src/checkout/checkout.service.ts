@@ -7,6 +7,8 @@ import { PrismaService } from '../prisma/prisma.service';
 import { RazorpayService } from '../payments/razorpay.service';
 import { PaymentsService } from '../payments/payments.service';
 
+import { CouponsService } from '../coupons/coupons.service';
+
 @Injectable()
 export class CheckoutService {
   // Default fallbacks if keys missing from DB
@@ -17,6 +19,7 @@ export class CheckoutService {
     private readonly prisma: PrismaService,
     private readonly razorpayService: RazorpayService,
     private readonly paymentsService: PaymentsService,
+    private readonly couponsService: CouponsService,
   ) {}
 
   async calculateCartTotals(userId: string, items: { productId: string, quantity: number }[]) {
@@ -97,12 +100,28 @@ export class CheckoutService {
       quantity: i.quantity
     })));
 
+    // 2. Secure Coupon Validation & Discount Deductions
+    let discountAmountValue = 0;
+    
+    if (payload.couponCode) {
+        try {
+            const coupon = await this.couponsService.validateCoupon(payload.couponCode);
+            if (coupon.discountType === 'PERCENTAGE') {
+                discountAmountValue = Math.round((subtotal * coupon.discountValue) / 100);
+            } else {
+                discountAmountValue = coupon.discountValue;
+            }
+        } catch (error) {
+            console.warn(`Attempted invalid coupon: ${payload.couponCode}`);
+        }
+    }
+
     // For safety, we use our calculated total for the actual payment intent
-    const finalAmountToPay = totalAmount;
+    const finalAmountToPay = Math.max(0, totalAmount - discountAmountValue);
 
     // Optional: Log if frontend sent discrepant totals
-    if (Math.abs(requestedTotal - totalAmount) > 1) {
-      console.warn(`Price Discrepancy! Frontend sent: ${requestedTotal}, Backend calculated: ${totalAmount}. Forcing backend total.`);
+    if (Math.abs(requestedTotal - finalAmountToPay) > 1) {
+      console.warn(`Price Discrepancy! Frontend sent: ${requestedTotal}, Backend calculated: ${finalAmountToPay}. Forcing backend total.`);
     }
 
     // Reuse the existing validation logic from previous check
@@ -154,7 +173,7 @@ export class CheckoutService {
         status: 'PENDING',
         totalAmount: finalAmountToPay,
         subtotal: subtotal,
-        discountAmount: payload.discountAmount || 0,
+        discountAmount: discountAmountValue,
         couponCode: payload.couponCode || null,
         shippingCost: shippingCharge,
         shippingAddress,
@@ -190,6 +209,7 @@ export class CheckoutService {
                     status: 'DRAFT',
                     isEternity: item.isEternity === true,
                     marriageDate: validMarriageDate,
+                    templateKey: item.templateKey || null,
                   },
                 };
               }
@@ -214,9 +234,10 @@ export class CheckoutService {
         await this.prisma.digitalInvite.update({
           where: { id: item.draftId },
           data: {
-            inviteData: item.inviteData || {},
+            inviteData: item.inviteData || undefined,
             isEternity: item.isEternity === true,
             marriageDate: validMarriageDate,
+            templateKey: item.templateKey || undefined,
             // Status remains DRAFT until payment is verified via Webhook
           },
         });

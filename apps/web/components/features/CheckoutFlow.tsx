@@ -10,6 +10,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "../../lib/apiClient";
 import { toast } from "sonner";
 import CartTotals from "../checkout/CartTotals";
+import TemplateRenderer from "../templates/TemplateRenderer";
 
 export default function CheckoutFlow() {
     const { items, clearCollection } = useCollectionStore();
@@ -137,8 +138,9 @@ export default function CheckoutFlow() {
                                 type: item.type,
                                 inviteData: item.type === 'DIGITAL' ? item.inviteData : undefined,
                                 draftId: item.draftId,
-                                isEternity: item.isEternity === true, // <--- THIS WAS MISSING
-                                marriageDate: item.marriageDate       // <--- AND THIS WAS MISSING
+                                isEternity: item.isEternity === true,
+                                marriageDate: item.marriageDate,
+                                templateKey: item.templateKey
                             })),
                             totalAmount: total,
                             subtotal: subtotal,
@@ -357,12 +359,18 @@ export default function CheckoutFlow() {
                 <div className="flex flex-col gap-8 flex-1 overflow-y-auto max-h-[50vh] pr-4">
                     {items.map(item => (
                         <div key={item.id} className="flex gap-6 items-center">
-                            <div className="relative w-16 aspect-4/5 shrink-0 bg-[#FBFBF9] border border-[#E5E4DF]">
-                                <img
-                                    src={item.imageUrl || '/assets/images/placeholder-product.jpg'}
-                                    alt={item.title}
-                                    className="absolute inset-0 w-full h-full object-cover"
-                                />
+                            <div className="relative w-16 aspect-4/5 shrink-0 bg-[#FBFBF9] border border-[#E5E4DF] overflow-hidden">
+                                {item.type === 'DIGITAL' && item.templateKey ? (
+                                     <div className="scale-[0.1] origin-top-left w-[1000%] h-[1000%] pointer-events-none">
+                                         <TemplateRenderer templateId={item.templateKey} data={item.inviteData} />
+                                     </div>
+                                ) : (
+                                    <img
+                                        src={item.imageUrl || '/assets/images/placeholder-product.jpg'}
+                                        alt={item.title}
+                                        className="absolute inset-0 w-full h-full object-cover"
+                                    />
+                                )}
                             </div>
                             <div className="flex flex-col flex-1">
                                 <h4

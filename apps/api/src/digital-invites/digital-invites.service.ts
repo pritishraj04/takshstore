@@ -51,7 +51,16 @@ export class DigitalInvitesService {
       },
       include: {
         orderItem: {
-          include: { order: true },
+          include: { 
+            order: true,
+            product: {
+              select: {
+                id: true,
+                title: true,
+                templateSlug: true,
+              }
+            }
+          },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -80,6 +89,13 @@ export class DigitalInvitesService {
             order: {
               select: { status: true },
             },
+            product: {
+              select: {
+                id: true,
+                title: true,
+                templateSlug: true,
+              }
+            }
           },
         },
       },
@@ -115,6 +131,13 @@ export class DigitalInvitesService {
                 status: true,
               },
             },
+            product: {
+              select: {
+                id: true,
+                title: true,
+                templateSlug: true,
+              }
+            }
           },
         },
       },
@@ -222,6 +245,10 @@ export class DigitalInvitesService {
     if (normalizedSlug) {
       data.slug = normalizedSlug;
     }
+    
+    if (inviteData?.templateKey) {
+        data.templateKey = inviteData.templateKey;
+    }
 
     if (status) {
       // INTERCEPT: 'PUBLISHED' is no longer a valid status for DigitalInvite. 
@@ -325,6 +352,7 @@ export class DigitalInvitesService {
           orderItemId: orderItem.id,
           inviteData: defaultInviteData,
           status: 'DRAFT',
+          templateKey: product.templateSlug,
         },
       });
 

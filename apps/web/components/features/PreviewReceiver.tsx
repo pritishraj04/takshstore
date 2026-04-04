@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { LiveInviteTemplate } from '../templates/LiveInviteTemplate';
 import { InviteData } from '@taksh/types';
+import { getTemplate } from '../templates/TemplateRegistry';
 
 export default function PreviewReceiver() {
     // Start with empty/null data
     const [previewData, setPreviewData] = useState<InviteData | null>(null);
+    const [templateId, setTemplateId] = useState<string>('the-royal-invitation');
 
     useEffect(() => {
         const handleMessage = (event: MessageEvent) => {
@@ -15,6 +16,9 @@ export default function PreviewReceiver() {
 
             if (event.data?.type === 'UPDATE_DRAFT') {
                 setPreviewData(event.data.payload);
+                if (event.data.templateId) {
+                    setTemplateId(event.data.templateId);
+                }
             }
         };
 
@@ -37,7 +41,15 @@ export default function PreviewReceiver() {
         );
     }
 
+    const ActiveTemplate = getTemplate(templateId);
+
+    // console.log('[PreviewReceiver] Rendering template:', templateId);
+
     return (
-        <LiveInviteTemplate data={previewData} isPreviewMode={true} />
+        <ActiveTemplate 
+            key={templateId}
+            data={previewData} 
+            isPreviewMode={true} 
+        />
     );
 }

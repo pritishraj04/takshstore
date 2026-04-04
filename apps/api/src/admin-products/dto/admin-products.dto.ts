@@ -31,11 +31,7 @@ export class CreateProductDto {
   @IsBoolean() @IsOptional() isCustomizable?: boolean;
   @IsBoolean() @IsOptional() isDigital?: boolean;
   @IsNumber() @IsOptional() eternityAddonPrice?: number;
+  @IsArray() @IsString({ each: true }) @IsOptional() tagIds?: string[];
 }
 
-export class UpdateProductDto extends CreateProductDto {
-  @IsArray()
-  @IsString({ each: true })
-  @IsOptional()
-  tagIds?: string[];
-}
+export class UpdateProductDto extends CreateProductDto {}

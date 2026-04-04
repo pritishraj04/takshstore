@@ -24,9 +24,24 @@ export class AdminProductsService {
     });
   }
 
+  async getTemplates() {
+    return this.prisma.template.findMany({
+      orderBy: { name: 'asc' },
+    });
+  }
+
   async createProduct(dto: CreateProductDto) {
+    const { tagIds, ...rest } = dto;
+
+    const data: any = rest;
+    if (tagIds && tagIds.length > 0) {
+      data.tags = {
+        connect: tagIds.map((id) => ({ id })),
+      };
+    }
+
     return this.prisma.product.create({
-      data: dto,
+      data,
     });
   }
 
@@ -122,5 +137,24 @@ export class AdminProductsService {
       isUsed: !!existingProduct,
       productName: existingProduct?.title || null,
     };
+  }
+
+  async syncTemplates(keys: string[]) {
+    const results: any[] = [];
+    for (const key of keys) {
+      const template = await this.prisma.template.upsert({
+        where: { key: key },
+        update: {},
+        create: {
+          key: key,
+          name: key
+            .split('-')
+            .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
+            .join(' '),
+        },
+      });
+      results.push(template);
+    }
+    return results;
   }
 }

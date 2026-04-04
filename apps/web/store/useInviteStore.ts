@@ -32,11 +32,33 @@ export const defaultInviteData: InviteData = {
 };
 
 interface InviteState {
+    activeInviteId: string | null; // <-- NEW: Tracks exactly which draft is loaded
+    activeTemplateSlug: string | null;
     inviteData: InviteData | null;
     setAllData: (data: InviteData) => void;
+    initInvite: (inviteId: string, templateSlug: string, initialData: InviteData) => void;
+    updateData: (path: string, value: any) => void;
+    clearInvite: () => void; // <-- NEW: Wipes state between navigations
 }
 
 export const useInviteStore = create<InviteState>((set) => ({
-    inviteData: defaultInviteData,
+    activeInviteId: null,
+    activeTemplateSlug: null,
+    inviteData: null,
     setAllData: (data) => set({ inviteData: data }),
+    initInvite: (id, slug, data) => set({
+        activeInviteId: id,
+        activeTemplateSlug: slug,
+        // Deep copy prevents React Query cache mutation bleed
+        inviteData: JSON.parse(JSON.stringify(data))
+    }),
+    updateData: (path, value) => set((state) => {
+        if (!state.inviteData) return state;
+        return { inviteData: { ...state.inviteData, [path]: value } };
+    }),
+    clearInvite: () => set({
+        activeInviteId: null,
+        activeTemplateSlug: null,
+        inviteData: null
+    })
 }));

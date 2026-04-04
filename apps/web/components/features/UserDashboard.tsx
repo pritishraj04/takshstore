@@ -161,16 +161,21 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                     <div className="dashboard-animate mb-32">
                         <h2 className="font-playfair text-3xl text-primary mb-12 flex items-center">
                             <Code size={24} className="mr-6 text-secondary" strokeWidth={1} />
-                            Digital Commissions
+                            Digital Orders
                         </h2>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                             {digitalItems.map((invite) => {
                                 const coupleNames =
-                                    invite.inviteData?.couple?.partner1 &&
-                                        invite.inviteData?.couple?.partner2
-                                        ? `${invite.inviteData.couple.partner1} & ${invite.inviteData.couple.partner2}`
-                                        : "The Couple";
+                                    invite.inviteData?.couple?.bride?.name &&
+                                        invite.inviteData?.couple?.groom?.name
+                                        ? `${invite.inviteData.couple.bride.name} & ${invite.inviteData.couple.groom.name}`
+                                        : invite.inviteData?.couple?.partner1 && invite.inviteData?.couple?.partner2
+                                            ? `${invite.inviteData.couple.partner1} & ${invite.inviteData.couple.partner2}`
+                                            : "The Couple";
+
+                                const displayDate = invite.inviteData?.wedding?.displayDate || invite.marriageDate || "Date TBD";
+                                const coupleImage = invite.inviteData?.couple?.image;
 
                                 const itemStatus = invite.orderItem?.status || 'PENDING';
                                 const orderStatus = invite.orderItem?.order?.status || 'UNPAID';
@@ -200,12 +205,29 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                                 </div>
                                             </div>
 
-                                            <h3 className="font-playfair text-3xl mb-2 text-primary tracking-wide">
-                                                {coupleNames} Celebration
-                                            </h3>
-                                            <p className="font-inter text-sm text-secondary font-light">
-                                                Digital Suite
-                                            </p>
+                                            <div className="flex flex-col md:flex-row gap-6">
+                                                {coupleImage && (
+                                                    <div className="shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-[#E5E4DF] bg-white hidden sm:block">
+                                                        <img src={coupleImage} alt="Couple" className="w-full h-full object-cover" />
+                                                    </div>
+                                                )}
+                                                <div>
+                                                    <h3 className="font-playfair text-3xl mb-2 text-primary tracking-wide">
+                                                        {invite.orderItem?.product?.title || "Digital Invitation"}
+                                                    </h3>
+                                                    <p className="font-inter text-[11px] uppercase tracking-widest text-[#C5B39A] font-bold mb-3">
+                                                        {coupleNames}
+                                                    </p>
+                                                    <p className="font-inter text-sm text-secondary font-light tracking-wide flex items-center gap-2">
+                                                        <span className="opacity-50">Date //</span> {displayDate}
+                                                    </p>
+                                                    {invite.slug && (
+                                                        <p className="font-inter text-[10px] text-amber-600 mt-2 tracking-widest uppercase font-bold">
+                                                            Live URL: {invite.slug}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
                                         </div>
 
                                         {/* Action Row */}
@@ -264,7 +286,7 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                                                     </button>
                                                 </>
                                             )}
-                                            
+
                                             {invite.status === 'DRAFT' && (
                                                 <button
                                                     onClick={() => handleDeleteDraft(invite.id)}
