@@ -77,18 +77,18 @@ export default function AdminSettingsPage() {
 
     return (
         <div className="space-y-6 pb-12 overflow-x-hidden">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
-                        <Settings size={32} className="text-gray-600" /> Admin Settings
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-2 sm:gap-3 uppercase">
+                        <Settings className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 text-gray-600" /> Admin Settings
                     </h1>
-                    <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Manage global store parameters and your personal preferences.</p>
+                    <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest  text-sm sm:text-base">Manage global store parameters and your personal preferences.</p>
                 </div>
                 {hasSettingsWrite && (
                     <button
                         onClick={handleSave}
                         disabled={isSaving}
-                        className="flex items-center gap-2 px-5 py-2.5 bg-black text-white hover:bg-gray-900 rounded-lg shadow-sm font-semibold text-sm transition-colors disabled:opacity-50"
+                        className="flex items-center gap-2 px-5 py-2.5 bg-black text-white hover:bg-gray-900 rounded-lg shadow-sm font-semibold text-sm transition-colors disabled:opacity-50 bg-gray whitespace-nowrap justify-center w-full sm:w-auto"
                     >
                         <Save className="w-4 h-4" />
                         {isSaving ? 'Encrypting...' : 'Save Configuration'}

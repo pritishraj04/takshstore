@@ -75,13 +75,13 @@ export default function AdminDashboardPage() {
       {/* Header with Timeframe Switcher */}
       <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
-            <LayoutDashboard size={32} className="text-indigo-600" /> Platform Command
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-2 sm:gap-3 uppercase">
+            <LayoutDashboard className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-600 shrink-0" /> Platform Command
           </h1>
-          <p className="text-gray-500 font-medium mt-1">Real-time ecosystem intelligence and command controls.</p>
+          <p className="text-gray-500 font-medium mt-1 text-sm sm:text-base">Real-time ecosystem intelligence and command controls.</p>
         </div>
 
-        <div className="flex flex-wrap p-1.5 bg-white border border-gray-100 rounded-3xl shadow-sm w-fit shrink-0 gap-1">
+        <div className="flex overflow-x-auto whitespace-nowrap p-1.5 bg-white border border-gray-100 rounded-3xl shadow-sm w-full xl:w-fit shrink-0 gap-1 scrollbar-hide">
           {[
             { id: '1d', label: '1D' },
             { id: '1w', label: '1W' },
@@ -93,17 +93,16 @@ export default function AdminDashboardPage() {
             <button
               key={tab.id}
               onClick={() => setTimeframe(tab.id as any)}
-              className={`px-5 py-2.5 rounded-2xl text-xs font-black tracking-tighter transition-all duration-300 ${
-                timeframe === tab.id
+              className={`px-5 py-2.5 rounded-2xl text-xs font-black tracking-tighter transition-all duration-300 ${timeframe === tab.id
                   ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105'
                   : 'text-gray-400 hover:text-gray-900 hover:bg-gray-50'
-              }`}
+                }`}
             >
               {tab.label}
             </button>
           ))}
           <div className="flex items-center px-3 border-l border-gray-50 ml-1">
-             <Calendar className="w-3.5 h-3.5 text-gray-300" />
+            <Calendar className="w-3.5 h-3.5 text-gray-300" />
           </div>
         </div>
       </div>
@@ -155,14 +154,14 @@ export default function AdminDashboardPage() {
 
       {/* Unified Revenue Chart */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-        <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-black tracking-tighter text-gray-900 flex items-center gap-3">
-              <span className="w-2.5 h-7 bg-indigo-600 rounded-sm inline-block" />
-              REVENUE TRAJECTORY
-            </h3>
-            <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                Units: Indian Rupee (INR)
-            </span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-8">
+          <h3 className="text-lg sm:text-xl font-black tracking-tighter text-gray-900 flex items-center gap-2 sm:gap-3">
+            <span className="w-2 sm:w-2.5 h-6 sm:h-7 bg-indigo-600 rounded-sm inline-block shrink-0" />
+            REVENUE TRAJECTORY
+          </h3>
+          <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+            Units: Indian Rupee (INR)
+          </span>
         </div>
         <div className="h-[340px] w-full">
           <ResponsiveContainer width="100%" height="100%">
@@ -189,20 +188,20 @@ export default function AdminDashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-6">
-         {/* Reviews (Time-Filtered) */}
+        {/* Reviews (Time-Filtered) */}
         {hasPermission('view:reviews') && (
           <ReviewsTile reviews={data.reviews} />
         )}
 
         {/* Unified Recent Activity */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-xl font-black tracking-tighter text-gray-900 flex items-center gap-3">
-              <span className="w-2.5 h-7 bg-black rounded-sm inline-block" />
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-8">
+            <h3 className="text-lg sm:text-xl font-black tracking-tighter text-gray-900 flex items-center gap-2 sm:gap-3">
+              <span className="w-2 sm:w-2.5 h-6 sm:h-7 bg-black rounded-sm inline-block shrink-0" />
               SYSTEM ACTIVITY
             </h3>
             <span className="text-[10px] uppercase font-bold text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
-                Live Log
+              Live Log
             </span>
           </div>
 
@@ -215,7 +214,7 @@ export default function AdminDashboardPage() {
             <div className="space-y-6 pl-2 max-h-[440px] overflow-y-auto scrollbar-hide pr-2">
               {data.recentActivity.map((order: any, index: number) => {
                 const isLast = index === data.recentActivity.length - 1;
-                const productTitle = (order.items || []).map((item: any) => 
+                const productTitle = (order.items || []).map((item: any) =>
                   `${item.quantity}x ${item.product?.title || 'Unknown Product'}`
                 ).join(', ') || 'Custom Order';
                 const customerName = order.user?.name || order.user?.email || 'Customer';
@@ -232,24 +231,24 @@ export default function AdminDashboardPage() {
                       </div>
                     </div>
                     <div className="pt-1.5 pb-6 flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2">
-                         <p className="text-sm font-bold text-gray-900 truncate">
-                           New order: <span className="text-indigo-600">{customerName}</span>
-                         </p>
-                         <span className="text-sm font-black text-gray-900 shrink-0">
-                           ₹{order.totalAmount?.toLocaleString('en-IN')}
-                         </span>
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between sm:gap-0 gap-2">
+                        <p className="text-sm font-bold text-gray-900 truncate">
+                          New order: <span className="text-indigo-600">{customerName}</span>
+                        </p>
+                        <span className="text-sm font-black text-gray-900 shrink-0">
+                          ₹{order.totalAmount?.toLocaleString('en-IN')}
+                        </span>
                       </div>
                       <p className="text-[11px] text-gray-400 font-medium truncate mt-1">{productTitle}</p>
-                      
+
                       <div className="flex items-center gap-3 mt-3">
-                         <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100">{timeAgo}</span>
-                         <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100">{timeAgo}</span>
+                        <span className={`inline-flex px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest border
                           ${order.status === 'PAID' ? 'bg-green-50 text-green-700 border-green-100' :
                             order.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-100' :
-                            'bg-gray-50 text-gray-600 border-gray-100'}`}>
-                           {order.status}
-                         </span>
+                              'bg-gray-50 text-gray-600 border-gray-100'}`}>
+                          {order.status}
+                        </span>
                       </div>
                     </div>
                   </div>

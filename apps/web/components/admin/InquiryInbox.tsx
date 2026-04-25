@@ -125,18 +125,18 @@ export default function InquiryInbox() {
   return (
     <div className="space-y-6">
       {/* Header with Title and Alert Toggle */}
-      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
         <div>
-          <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
-            <Mail size={32} className="text-emerald-600" /> Customer Inquiries
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-2 sm:gap-3 uppercase">
+            <Mail className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 text-emerald-600" /> Customer Inquiries
           </h1>
-          <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Manage messages & leads efficiently</p>
+          <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px] sm:text-xs">Manage messages & leads efficiently</p>
         </div>
 
         <button
           onClick={toggleAlerts}
           disabled={togglingAlerts}
-          className={`flex items-center gap-3 px-6 py-3 rounded-xl border transition-all duration-300 font-bold uppercase tracking-widest text-xs ${receivesAlerts
+          className={`flex items-center justify-center whitespace-nowrap w-full sm:w-auto gap-3 px-6 py-3 rounded-xl border transition-all duration-300 font-bold uppercase tracking-widest text-xs ${receivesAlerts
               ? 'bg-emerald-50 border-emerald-200 text-emerald-700 shadow-sm'
               : 'bg-white border-gray-200 text-gray-600 hover:border-gray-400'
             }`}
@@ -242,7 +242,7 @@ export default function InquiryInbox() {
                   </div>
                   <a
                     href={`mailto:${selectedInquiry.email}`}
-                    className="inline-flex items-center gap-3 px-8 py-4 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-gray-900 transition-all shadow-xl hover:scale-[1.02] active:scale-95"
+                    className="inline-flex items-center justify-center whitespace-nowrap w-full sm:w-auto gap-3 px-8 py-4 bg-black text-white text-xs font-bold uppercase tracking-widest rounded-2xl hover:bg-gray-900 transition-all shadow-xl hover:scale-[1.02] active:scale-95"
                   >
                     <Mail className="w-4 h-4" />
                     Direct Reply

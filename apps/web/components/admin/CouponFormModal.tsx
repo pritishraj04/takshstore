@@ -158,7 +158,7 @@ export function CouponFormModal({
                                 <label className="block text-xs font-bold text-gray-700 mb-1.5 ">Secret Voucher Syntax</label>
                                 <div className="flex items-center gap-2">
                                     <input type="text" value={code} onChange={e => setCode(e.target.value.toUpperCase())} required className="w-full px-4 py-3 bg-gray-50/50 border border-gray-200 rounded-xl outline-none focus:border-indigo-500 font-bold tracking-wider text-sm uppercase text-gray-900" placeholder="e.g. WEDDING20" />
-                                    <button type="button" onClick={generateCode} className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors shrink-0 font-bold text-xs flex items-center gap-2 border border-gray-200"><Sparkles className="w-4 h-4 text-amber-500" /> Generate</button>
+                                    <button type="button" onClick={generateCode} className="px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors shrink-0 font-bold text-xs flex items-center gap-2 border border-gray-200 whitespace-nowrap"><Sparkles className="w-4 h-4 text-amber-500" /> Generate</button>
                                 </div>
                                 <p className="text-[10px] font-medium text-gray-500 mt-1.5 uppercase tracking-wide">Must explicitly map identical string values protecting logic cleanly. Code auto-formats strictly uppercase.</p>
                             </div>
@@ -242,8 +242,8 @@ export function CouponFormModal({
                 </form>
 
                 <div className="p-5 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-end gap-3 shrink-0">
-                    <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 shadow-sm border border-transparent hover:border-gray-200 transition-colors bg-white rounded-xl">Hold Deploy</button>
-                    <button type="button" onClick={handleSubmit} disabled={isSubmitting} className="px-8 py-2.5 text-sm font-bold text-white bg-black hover:bg-gray-800 shadow-xl transition-all rounded-xl hover:scale-105 active:scale-95 disabled:opacity-50 min-w-[140px] flex items-center justify-center">
+                    <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 shadow-sm border border-transparent hover:border-gray-200 transition-colors bg-white rounded-xl whitespace-nowrap">Hold Deploy</button>
+                    <button type="button" onClick={handleSubmit} disabled={isSubmitting} className="px-8 py-2.5 text-sm font-bold text-white bg-black hover:bg-gray-800 shadow-xl transition-all rounded-xl hover:scale-105 active:scale-95 disabled:opacity-50 min-w-[140px] flex items-center justify-center whitespace-nowrap">
                         {isSubmitting ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         ) : 'Execute Override'}

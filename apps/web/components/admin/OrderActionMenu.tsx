@@ -152,7 +152,7 @@ export function OrderActionMenu({ order, digitalInvite, onUpdate }: { order: any
                                 <button
                                     type="submit"
                                     disabled={isUpdating}
-                                    className="px-4 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700 rounded-lg shadow-sm transition-colors disabled:opacity-50"
+                                    className="px-4 py-2 text-sm font-medium bg-red-600 text-white hover:bg-red-700 rounded-lg shadow-sm transition-colors disabled:opacity-50 whitespace-nowrap"
                                 >
                                     {isUpdating ? 'Executing...' : 'Force Commit Update'}
                                 </button>

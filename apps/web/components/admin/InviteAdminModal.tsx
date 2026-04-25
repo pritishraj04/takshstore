@@ -158,8 +158,8 @@ export function InviteAdminModal({ isOpen, onClose, onSuccess }: { isOpen: boole
 
           {/* Footer Actions */}
           <div className="px-8 py-5 border-t border-gray-100 bg-gray-50/80 flex justify-end gap-3 shrink-0 rounded-b-2xl">
-            <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-colors border border-gray-200 shadow-sm bg-white/50 w-full sm:w-auto text-center">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="flex flex-1 sm:flex-none justify-center items-center gap-2 px-6 py-2.5 text-sm font-bold bg-black text-white hover:bg-gray-900 rounded-xl shadow-md transition-colors disabled:opacity-50">
+            <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 hover:bg-white rounded-xl transition-colors border border-gray-200 shadow-sm bg-white/50 w-full sm:w-auto text-center whitespace-nowrap">Cancel</button>
+            <button type="submit" disabled={isSubmitting} className="flex flex-1 sm:flex-none justify-center items-center gap-2 px-6 py-2.5 text-sm font-bold bg-black text-white hover:bg-gray-900 rounded-xl shadow-md transition-colors disabled:opacity-50 whitespace-nowrap">
               {isSubmitting ? 'Dispatching Protocol...' : <><UserPlus className="w-4 h-4" /> Dispatch Setup Email</>}
             </button>
           </div>

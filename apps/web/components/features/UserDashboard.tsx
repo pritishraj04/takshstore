@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useCollectionStore } from "../../store/useCollectionStore";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiClient } from "../../lib/apiClient";
@@ -13,40 +14,65 @@ import { InviteData, ProductType } from "@taksh/types";
 import { useMyInvites } from "../../hooks/useMyInvites";
 
 // Types matching the Prisma backend
-enum InviteStatus {
-    DRAFT = "DRAFT",
-    DEVELOPMENT = "DEVELOPMENT",
-    PUBLISHED = "PUBLISHED",
-}
+type InviteStatus = "DRAFT" | "DEVELOPMENT" | "PUBLISHED";
 
-enum OrderStatus {
-    PENDING = "PENDING",
-    PAID = "PAID",
-    PROCESSING = "PROCESSING",
-    SHIPPED = "SHIPPED",
-    COMPLETED = "COMPLETED",
-}
+type OrderStatus =
+    | "PENDING"
+    | "PAID"
+    | "PROCESSING"
+    | "SHIPPED"
+    | "COMPLETED"
+    | "PUBLISHED"
+    | "DEVELOPMENT";
 
 interface DigitalInvite {
     id: string;
     inviteData: InviteData;
     status: InviteStatus;
-    websiteUrl: string | null;
+    websiteUrl?: string | null;
     isEternity?: boolean;
     marriageDate?: string;
-    orderItem?: any;
-    slug?: string;
+    orderItem?: {
+        orderId?: string;
+        status?: string;
+        order?: {
+            id?: string;
+            status?: any;
+        };
+        product?: {
+            title?: string;
+            type?: any;
+            templateSlug?: string;
+        };
+    };
+    slug?: string | null;
 }
 
 interface OrderItem {
-    id: string;
-    quantity: number;
-    status: string;
+    id?: string;
+    quantity?: number;
+    status?: string;
     product: {
         title: string;
         type: ProductType;
     };
-    digitalInvite: DigitalInvite | null;
+    digitalInvite?: DigitalInvite | null;
+    orderId?: string;
+    order?: {
+        id: string;
+        status: OrderStatus;
+    };
+}
+
+
+
+
+interface EnrichedOrderItem extends OrderItem {
+    orderId: string;
+    orderDate: string;
+    orderStatus: OrderStatus;
+    itemStatus?: string;
+    totalAmount: number;
 }
 
 interface Order {
@@ -62,11 +88,13 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ name }: UserDashboardProps) {
+    const router = useRouter();
     const container = useRef<HTMLDivElement>(null);
     const searchParams = useSearchParams();
     const queryClient = useQueryClient();
 
     const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+    const [activeTab, setActiveTab] = useState<"ORDERS" | "DRAFTS">("ORDERS");
 
     const deleteDraftMutation = useMutation({
         mutationFn: async (id: string) => {
@@ -119,11 +147,11 @@ export default function UserDashboard({ name }: UserDashboardProps) {
         if (!isLoading && orders && !isInvitesLoading && myInvites) {
             gsap.fromTo(
                 ".dashboard-animate",
-                { y: 30, opacity: 0 },
-                { y: 0, opacity: 1, stagger: 0.1, duration: 1.2, ease: "power2.out" }
+                { y: 20, opacity: 0 },
+                { y: 0, opacity: 1, stagger: 0.05, duration: 0.8, ease: "power2.out", clearProps: "all" }
             );
         }
-    }, [isLoading, orders, isInvitesLoading, myInvites]);
+    }, [isLoading, orders, isInvitesLoading, myInvites, activeTab]);
 
     if (isLoading || isInvitesLoading) {
         return (
@@ -133,11 +161,14 @@ export default function UserDashboard({ name }: UserDashboardProps) {
         );
     }
 
-    const allItems = orders?.flatMap((order) => order.items.map(item => ({ ...item, orderId: order.id, orderDate: order.createdAt, orderStatus: order.status, itemStatus: item.status, totalAmount: order.totalAmount }))) || [];
+    const allItems: EnrichedOrderItem[] = orders?.flatMap((order) => order.items.map(item => ({ ...item, orderId: order.id, orderDate: order.createdAt, orderStatus: order.status, itemStatus: item.status || 'PENDING', totalAmount: order.totalAmount }))) || [];
 
     // Separate into SaaS invites vs Physical items
     const digitalItems = myInvites || [];
     const physicalItems = allItems.filter((item) => item.product.type === "PHYSICAL");
+
+    const draftItems = digitalItems.filter(invite => invite.status === "DRAFT");
+    const orderDigitalItems = digitalItems.filter(invite => invite.status !== "DRAFT");
 
     const handleCopyLink = (slug: string) => {
         const url = `${window.location.origin}/invites/${slug}`;
@@ -145,10 +176,198 @@ export default function UserDashboard({ name }: UserDashboardProps) {
         alert(`Link copied to clipboard: ${url}`);
     };
 
+    const getStatusStyles = (status: string) => {
+        const s = status?.toUpperCase();
+        if (["PUBLISHED", "PAID", "SUCCESS", "COMPLETED", "DELIVERED"].includes(s)) {
+            return "bg-green-50 border-green-100/50 text-green-700";
+        }
+        if (["PENDING", "DRAFT", "PROCESSING", "SHIPPED", "IN_TRANSIT"].includes(s)) {
+            return "bg-amber-50 border-amber-100/50 text-amber-700";
+        }
+        if (["FAILED", "UNPAID", "CANCELLED", "REJECTED"].includes(s)) {
+            return "bg-red-50 border-red-100/50 text-red-700";
+        }
+        return "bg-gray-50 border-gray-100 text-gray-500";
+    };
+
+    const renderDigitalItems = (items: DigitalInvite[], title: string) => {
+        if (items.length === 0) return null;
+
+        return (
+            <div className="dashboard-animate mb-32">
+                <h2 className="font-playfair text-3xl text-primary mb-12 flex items-center">
+                    <Code size={24} className="mr-6 text-secondary" strokeWidth={1} />
+                    {title}
+                </h2>
+
+                <div className="flex flex-col w-full">
+                    {/* Header Row - Unified 5-column grid */}
+                    <div className="hidden xl:grid xl:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-8 px-4 py-4 border-b border-light/30 items-center">
+                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold">Item Details</span>
+                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold">Event Date</span>
+                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold">Current Status</span>
+                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold"></span>
+                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold text-right pr-6">Actions</span>
+                    </div>
+
+                    {items.map((invite) => {
+                        const coupleNames =
+                            invite.inviteData?.couple?.bride?.name &&
+                                invite.inviteData?.couple?.groom?.name
+                                ? `${invite.inviteData.couple.bride.name} & ${invite.inviteData.couple.groom.name}`
+                                : invite.inviteData?.couple?.partner1 && invite.inviteData?.couple?.partner2
+                                    ? `${invite.inviteData.couple.partner1} & ${invite.inviteData.couple.partner2}`
+                                    : "The Couple";
+
+                        const displayDate = invite.inviteData?.wedding?.displayDate || invite.marriageDate || "Date TBD";
+                        const coupleImage = invite.inviteData?.couple?.image;
+
+                        const itemStatus = invite.orderItem?.status || 'PENDING';
+                        const orderStatus = invite.orderItem?.order?.status || 'UNPAID';
+                        const isPaid = orderStatus === 'PAID' || orderStatus === 'PUBLISHED';
+                        const isDraft = invite.status === 'DRAFT';
+
+                        const handleRowClick = () => {
+                            if (invite.orderItem?.orderId) {
+                                router.push(`/dashboard/orders/${invite.orderItem.orderId}`);
+                            }
+                        };
+
+                        return (
+                            <div
+                                key={invite.id}
+                                onClick={handleRowClick}
+                                className={`border-b border-light/50 py-8 grid grid-cols-1 xl:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-y-6 xl:gap-8 items-start xl:items-center group hover:bg-secondary/30 transition-all px-4 -mx-4 ${invite.orderItem?.orderId ? 'cursor-pointer' : ''}`}
+                            >
+                                {/* Column 1: Identity */}
+                                <div className="flex items-center gap-6">
+                                    {coupleImage && (
+                                        <div className="shrink-0 w-16 h-16 rounded overflow-hidden border border-light/50 bg-white">
+                                            <img src={coupleImage} alt="Couple" className="w-full h-full object-cover" />
+                                        </div>
+                                    )}
+                                    <div className="flex flex-col">
+                                        <h3 className="font-playfair text-2xl text-primary tracking-wide">
+                                            {invite.orderItem?.product?.title || (isDraft ? "Draft Invitation" : "Digital Invitation")}
+                                        </h3>
+                                        <div className="flex items-center gap-3 mt-1">
+                                            <span className="font-inter text-[9px] uppercase tracking-[0.2em] text-[#C5B39A] font-bold">
+                                                {coupleNames}
+                                            </span>
+                                            {invite.slug && (
+                                                <span className="font-inter text-[9px] text-amber-600 tracking-widest uppercase font-bold px-2 py-0.5 border border-amber-100 bg-amber-50 rounded-full">
+                                                    Live: {invite.slug}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Column 2: Date */}
+                                <div className="flex flex-col">
+                                    <span className="xl:hidden font-inter text-[9px] uppercase tracking-widest text-secondary/40 font-bold mb-1">Event Date</span>
+                                    <span className="font-inter text-sm text-secondary font-light">
+                                        {displayDate}
+                                    </span>
+                                </div>
+
+                                {/* Column 3: Status */}
+                                <div className="flex flex-col">
+                                    <span className="xl:hidden font-inter text-[9px] uppercase tracking-widest text-secondary/40 font-bold mb-1">Status</span>
+                                    {isDraft ? (
+                                        <span className={`font-inter text-[8px] tracking-widest uppercase px-3 py-1 rounded-full w-full min-w-[100px] text-center font-bold ${getStatusStyles(invite.status)}`}>
+                                            {invite.status}
+                                        </span>
+                                    ) : (
+                                        <div className="flex flex-col gap-1.5">
+                                            {/* Invite Status */}
+                                            <div className={`flex items-center justify-center border px-3 py-1 rounded-full w-full min-w-[100px] ${getStatusStyles(invite.status)}`}>
+                                                <span className="font-inter text-[8px] tracking-widest uppercase font-bold">
+                                                    {invite.status}
+                                                </span>
+                                            </div>
+                                            {/* Payment/Item Status indicator - only show if different or specifically relevant */}
+                                            {itemStatus !== invite.status && (
+                                                <div className={`flex items-center justify-center border px-3 py-1 rounded-full w-full min-w-[100px] ${getStatusStyles(itemStatus)}`}>
+                                                    <span className="font-inter text-[8px] tracking-widest uppercase font-bold">
+                                                        {itemStatus === 'PENDING' ? 'PENDING PUBLISH' : itemStatus}
+                                                    </span>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Column 4: Empty (for alignment with physical) */}
+                                <div className="hidden xl:block"></div>
+
+                                {/* Column 5: Actions */}
+                                <div className="flex flex-col gap-2 xl:items-end" onClick={(e) => e.stopPropagation()}>
+                                    {(() => {
+                                        const isExpired = invite.marriageDate && new Date() > new Date(invite.marriageDate) && !invite.isEternity;
+                                        return isExpired ? (
+                                            <div className="bg-gray-100 text-gray-500 font-inter text-[10px] tracking-widest uppercase py-2 px-6 flex items-center cursor-not-allowed border border-light opacity-60">
+                                                🔒 Locked
+                                            </div>
+                                        ) : (
+                                            <Link
+                                                href={`/customizer/${invite.id}`}
+                                                className="bg-[#1A1A1A] text-white font-inter text-[10px] tracking-widest uppercase py-2 px-6 hover:bg-black transition-colors flex items-center justify-center group shadow-sm w-full min-w-[120px]"
+                                            >
+                                                Edit
+                                                <ArrowRight size={12} className="ml-2 transition-transform group-hover:translate-x-1" strokeWidth={2} />
+                                            </Link>
+                                        );
+                                    })()}
+
+                                    {invite.slug && (
+                                        <>
+                                            <a
+                                                href={`/invites/${invite.slug}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="font-inter text-[10px] tracking-widest uppercase py-2 px-4 border border-light bg-white hover:bg-[#FAF9F6] transition-colors flex items-center justify-center gap-2 text-secondary w-full min-w-[120px]"
+                                            >
+                                                <Globe size={13} strokeWidth={1.5} />
+                                                View Live
+                                            </a>
+                                            <button
+                                                onClick={() => {
+                                                    const url = `${window.location.origin}/invites/${invite.slug}`;
+                                                    navigator.clipboard.writeText(url);
+                                                    import("sonner").then(m => m.toast.success('Link copied!'));
+                                                }}
+                                                className="font-inter text-[10px] tracking-widest uppercase py-2 px-4 border border-light bg-white hover:bg-[#FAF9F6] transition-colors flex items-center justify-center gap-2 text-secondary w-full min-w-[120px]"
+                                            >
+                                                <Link2 size={13} strokeWidth={1.5} />
+                                                Copy Link
+                                            </button>
+                                        </>
+                                    )}
+
+                                    {isDraft && (
+                                        <button
+                                            onClick={() => handleDeleteDraft(invite.id)}
+                                            disabled={deleteDraftMutation.isPending && deleteDraftMutation.variables === invite.id}
+                                            className="font-inter text-[10px] tracking-widest uppercase py-2 px-4 border border-transparent hover:border-red-100 bg-red-50 text-red-600 transition-colors flex items-center justify-center gap-2 w-full min-w-[120px]"
+                                        >
+                                            <Trash2 size={13} strokeWidth={1.5} />
+                                            Delete
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        );
+    };
+
     return (
         <div ref={container} className="pt-40 pb-32 px-6 md:px-16 lg:px-32 bg-primary min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <div className="dashboard-animate mb-16 md:mb-24 wrap-break-word">
+                <div className="dashboard-animate mb-12 md:mb-16 wrap-break-word">
                     <h4 className="font-inter text-xs tracking-widest uppercase text-secondary mb-2 md:mb-4">
                         Private Atelier
                     </h4>
@@ -157,203 +376,125 @@ export default function UserDashboard({ name }: UserDashboardProps) {
                     </h1>
                 </div>
 
-                {digitalItems.length > 0 && (
-                    <div className="dashboard-animate mb-32">
-                        <h2 className="font-playfair text-3xl text-primary mb-12 flex items-center">
-                            <Code size={24} className="mr-6 text-secondary" strokeWidth={1} />
-                            Digital Orders
-                        </h2>
+                <div className="dashboard-animate mb-12 flex gap-8 border-b border-[#E5E4DF]">
+                    <button
+                        onClick={(e) => { e.preventDefault(); setActiveTab("ORDERS"); }}
+                        className={`pb-4 font-inter text-sm tracking-widest uppercase transition-colors relative ${activeTab === "ORDERS" ? "text-primary font-bold" : "text-secondary hover:text-primary"}`}
+                    >
+                        Orders
+                        {activeTab === "ORDERS" && <span className="absolute -bottom-px left-0 w-full h-[2px] bg-primary"></span>}
+                    </button>
+                    <button
+                        onClick={(e) => { e.preventDefault(); setActiveTab("DRAFTS"); }}
+                        className={`pb-4 font-inter text-sm tracking-widest uppercase transition-colors relative ${activeTab === "DRAFTS" ? "text-primary font-bold" : "text-secondary hover:text-primary"}`}
+                    >
+                        Drafts
+                        {activeTab === "DRAFTS" && <span className="absolute -bottom-px left-0 w-full h-[2px] bg-primary"></span>}
+                    </button>
+                </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                            {digitalItems.map((invite) => {
-                                const coupleNames =
-                                    invite.inviteData?.couple?.bride?.name &&
-                                        invite.inviteData?.couple?.groom?.name
-                                        ? `${invite.inviteData.couple.bride.name} & ${invite.inviteData.couple.groom.name}`
-                                        : invite.inviteData?.couple?.partner1 && invite.inviteData?.couple?.partner2
-                                            ? `${invite.inviteData.couple.partner1} & ${invite.inviteData.couple.partner2}`
-                                            : "The Couple";
+                {activeTab === "ORDERS" && (
+                    <>
+                        {renderDigitalItems(orderDigitalItems, "Digital Orders")}
 
-                                const displayDate = invite.inviteData?.wedding?.displayDate || invite.marriageDate || "Date TBD";
-                                const coupleImage = invite.inviteData?.couple?.image;
+                        {physicalItems.length > 0 && (
+                            <div className="dashboard-animate mb-32">
+                                <h2 className="font-playfair text-3xl text-primary mb-12 flex items-center">
+                                    <Brush size={24} className="mr-6 text-secondary" strokeWidth={1} />
+                                    Physical Collection
+                                </h2>
 
-                                const itemStatus = invite.orderItem?.status || 'PENDING';
-                                const orderStatus = invite.orderItem?.order?.status || 'UNPAID';
-                                const isPaid = orderStatus === 'PAID' || orderStatus === 'PUBLISHED';
-
-                                return (
-                                    <div
-                                        key={invite.id}
-                                        className="bg-secondary p-8 border border-light/50 flex flex-col justify-between h-full min-h-[300px]"
-                                    >
-                                        <div>
-                                            {/* Pills Row */}
-                                            <div className="flex flex-wrap items-center gap-3 md:gap-4 mb-6 md:mb-8">
-                                                {/* Invite Status */}
-                                                <div className="flex items-center gap-2 border border-[#E5E4DF] px-3 py-1 bg-white rounded-full">
-                                                    <span className={`h-1.5 w-1.5 rounded-full ${invite.status === "PUBLISHED" ? "bg-green-500" : "bg-gray-400"}`} />
-                                                    <span className="font-inter text-[9px] tracking-widest uppercase text-secondary font-medium">
-                                                        {invite.status}
-                                                    </span>
-                                                </div>
-                                                {/* Payment Status */}
-                                                <div className="flex items-center gap-2 border border-[#E5E4DF] px-3 py-1 bg-white rounded-full">
-                                                    <span className={`h-1.5 w-1.5 rounded-full ${isPaid ? "bg-green-500" : "bg-red-500"}`} />
-                                                    <span className={`font-inter text-[9px] tracking-widest uppercase font-medium ${itemStatus === 'PUBLISHED' ? "text-green-700" : "text-amber-600"}`}>
-                                                        {itemStatus}
-                                                    </span>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex flex-col md:flex-row gap-6">
-                                                {coupleImage && (
-                                                    <div className="shrink-0 w-24 h-24 rounded-lg overflow-hidden border border-[#E5E4DF] bg-white hidden sm:block">
-                                                        <img src={coupleImage} alt="Couple" className="w-full h-full object-cover" />
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <h3 className="font-playfair text-3xl mb-2 text-primary tracking-wide">
-                                                        {invite.orderItem?.product?.title || "Digital Invitation"}
-                                                    </h3>
-                                                    <p className="font-inter text-[11px] uppercase tracking-widest text-[#C5B39A] font-bold mb-3">
-                                                        {coupleNames}
-                                                    </p>
-                                                    <p className="font-inter text-sm text-secondary font-light tracking-wide flex items-center gap-2">
-                                                        <span className="opacity-50">Date //</span> {displayDate}
-                                                    </p>
-                                                    {invite.slug && (
-                                                        <p className="font-inter text-[10px] text-amber-600 mt-2 tracking-widest uppercase font-bold">
-                                                            Live URL: {invite.slug}
-                                                        </p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* Action Row */}
-                                        <div className="mt-8 md:mt-12 flex flex-wrap gap-3 md:gap-4 items-center pt-4 border-t border-[#E5E4DF]">
-                                            {(() => {
-                                                const isExpired = invite.marriageDate && new Date() > new Date(invite.marriageDate) && !invite.isEternity;
-                                                return isExpired ? (
-                                                    <div className="bg-gray-300 text-gray-500 font-inter text-xs tracking-widest uppercase py-2 px-6 flex items-center group w-fit cursor-not-allowed">
-                                                        <span className="mr-2">🔒</span>
-                                                        Locked (Date Passed)
-                                                    </div>
-                                                ) : (
-                                                    <Link
-                                                        href={`/customizer/${invite.id}`}
-                                                        className="bg-[#1A1A1A] text-white font-inter text-xs tracking-widest uppercase py-2 px-6 hover:bg-black transition-colors flex items-center group w-fit"
-                                                    >
-                                                        <span className="mr-2 transition-transform group-hover:translate-x-1">
-                                                            <ArrowRight size={14} strokeWidth={1.5} />
-                                                        </span>
-                                                        Edit
-                                                    </Link>
-                                                );
-                                            })()}
-
-                                            {invite.orderItem?.orderId && (
-                                                <Link
-                                                    href={`/dashboard/orders/${invite.orderItem.orderId}`}
-                                                    className="bg-transparent text-[#1A1A1A] font-inter text-xs tracking-widest uppercase py-2 px-4 hover:bg-[#F2F1EC] border border-transparent hover:border-[#E5E4DF] transition-colors flex items-center gap-2"
-                                                >
-                                                    Order Details
-                                                </Link>
-                                            )}
-
-                                            {invite.slug && (
-                                                <>
-                                                    <a
-                                                        href={`/invites/${invite.slug}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        className="bg-transparent text-[#1A1A1A] font-inter text-xs tracking-widest uppercase py-2 px-4 hover:bg-[#F2F1EC] border border-transparent hover:border-[#E5E4DF] transition-colors flex items-center gap-2"
-                                                    >
-                                                        <Globe size={14} strokeWidth={1.5} />
-                                                        View Live
-                                                    </a>
-
-                                                    <button
-                                                        onClick={() => {
-                                                            const url = `${window.location.origin}/invites/${invite.slug}`;
-                                                            navigator.clipboard.writeText(url);
-                                                            import("sonner").then(m => m.toast.success('Link copied to clipboard!'));
-                                                        }}
-                                                        className="bg-transparent text-[#1A1A1A] font-inter text-xs tracking-widest uppercase py-2 px-4 hover:bg-[#F2F1EC] border border-transparent hover:border-[#E5E4DF] transition-colors flex items-center gap-2"
-                                                    >
-                                                        <Link2 size={14} strokeWidth={1.5} />
-                                                        Copy Link
-                                                    </button>
-                                                </>
-                                            )}
-
-                                            {invite.status === 'DRAFT' && (
-                                                <button
-                                                    onClick={() => handleDeleteDraft(invite.id)}
-                                                    disabled={deleteDraftMutation.isPending && deleteDraftMutation.variables === invite.id}
-                                                    className="bg-transparent text-red-600 font-inter text-xs tracking-widest uppercase py-2 px-4 hover:bg-red-50 border border-transparent hover:border-red-200 transition-colors flex items-center gap-2 ml-auto mt-2 sm:mt-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                                                >
-                                                    <Trash2 size={14} strokeWidth={1.5} />
-                                                    {deleteDraftMutation.isPending && deleteDraftMutation.variables === invite.id ? "Deleting..." : "Delete"}
-                                                </button>
-                                            )}
-                                        </div>
+                                <div className="flex flex-col w-full">
+                                    {/* Header Row - Only visible on XL */}
+                                    <div className="hidden xl:grid xl:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-8 px-4 py-4 border-b border-light/30 items-center">
+                                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold">Item Details</span>
+                                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold">Ordered On</span>
+                                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold">Status</span>
+                                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold">Total Amount</span>
+                                        <span className="font-inter text-[10px] uppercase tracking-[0.2em] text-secondary/50 font-bold text-right pr-12">Actions</span>
                                     </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
 
-                {physicalItems.length > 0 && (
-                    <div className="dashboard-animate">
-                        <h2 className="font-playfair text-3xl text-primary mb-12 flex items-center">
-                            <Brush size={24} className="mr-6 text-secondary" strokeWidth={1} />
-                            Physical Collection
-                        </h2>
+                                    {physicalItems.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            onClick={() => router.push(`/dashboard/orders/${item.orderId}`)}
+                                            className="border-b border-light/50 py-8 grid grid-cols-1 xl:grid-cols-[2fr_1fr_1fr_1fr_auto] gap-y-6 xl:gap-8 items-start xl:items-center group hover:bg-secondary/30 transition-all px-4 -mx-4 cursor-pointer"
+                                        >
+                                            <div className="flex flex-col">
+                                                <h3 className="font-playfair text-2xl text-primary tracking-wide">
+                                                    {item.product.title}
+                                                </h3>
+                                                <span className="font-inter text-[9px] uppercase tracking-[0.2em] text-[#C5B39A] font-bold mt-1">
+                                                    Physical Keepsake
+                                                </span>
+                                            </div>
 
-                        <div className="flex flex-col w-full">
-                            {physicalItems.map((item) => (
+                                            <div className="flex flex-col">
+                                                <span className="xl:hidden font-inter text-[9px] uppercase tracking-widest text-secondary/40 font-bold mb-1">Ordered On</span>
+                                                <span className="font-inter text-sm text-secondary font-light">
+                                                    {new Date(item.orderDate).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col">
+                                                <span className="xl:hidden font-inter text-[9px] uppercase tracking-widest text-secondary/40 font-bold mb-1">Status</span>
+                                                <span className={`font-inter text-[8px] uppercase tracking-widest font-bold px-3 py-1 border rounded-full w-full min-w-[100px] text-center ${getStatusStyles(item.itemStatus || item.orderStatus)}`}>
+                                                    {(item.itemStatus || item.orderStatus) === 'PENDING' ? 'PENDING PUBLISH' : (item.itemStatus || item.orderStatus)}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col">
+                                                <span className="xl:hidden font-inter text-[9px] uppercase tracking-widest text-secondary/40 font-bold mb-1">Total</span>
+                                                <span className="font-inter text-sm text-secondary font-semibold">
+                                                    ₹{item.totalAmount.toLocaleString()}
+                                                </span>
+                                            </div>
+
+                                            <div className="flex flex-col gap-2 xl:items-end w-full xl:w-auto" onClick={(e) => e.stopPropagation()}>
+                                                <div className="font-inter text-[10px] tracking-widest uppercase py-2 px-6 border border-light bg-white group-hover:bg-[#1A1A1A] group-hover:text-white transition-all shadow-sm w-full min-w-[120px] text-center">
+                                                    View Details
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {orderDigitalItems.length === 0 && physicalItems.length === 0 && (
+                            <div className="dashboard-animate mt-16 text-center">
+                                <p className="font-inter text-sm text-secondary font-light tracking-wide mb-8">
+                                    You have no orders yet.
+                                </p>
                                 <Link
-                                    href={`/dashboard/orders/${item.orderId}`}
-                                    key={item.id}
-                                    className="border-b border-light py-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 group hover:bg-secondary/30 transition-colors px-4 -mx-4 cursor-pointer"
+                                    href="/collection"
+                                    className="font-inter text-xs uppercase tracking-widest text-[#1A1A1A] border-b border-[#1A1A1A] pb-1 hover:text-[#C5B39A] hover:border-[#C5B39A] transition-colors"
                                 >
-                                    <div className="flex flex-col">
-                                        <span className="font-inter text-xs text-secondary mb-2 tracking-wide font-light">
-                                            Order placed {new Date(item.orderDate).toLocaleDateString("en-US", { year: 'numeric', month: 'long', day: 'numeric' })}
-                                        </span>
-                                        <h3 className="font-playfair text-2xl text-primary tracking-wide">
-                                            {item.product.title}
-                                        </h3>
-                                    </div>
-
-                                    <div className="flex flex-col md:items-end w-full md:w-auto mt-4 md:mt-0 pt-4 md:pt-0 border-t md:border-t-0 border-light border-dashed">
-                                        <span className={`font-inter text-[10px] uppercase tracking-widest mb-2 font-medium ${item.itemStatus === 'PUBLISHED' ? 'text-green-700' : 'text-[#1A1A1A]'}`}>
-                                            {item.itemStatus || item.orderStatus}
-                                        </span>
-                                        <span className="font-inter text-sm text-secondary font-light">
-                                            ₹{item.totalAmount.toLocaleString()}
-                                        </span>
-                                    </div>
+                                    Explore the Gallery
                                 </Link>
-                            ))}
-                        </div>
-                    </div>
+                            </div>
+                        )}
+                    </>
                 )}
 
-                {digitalItems.length === 0 && physicalItems.length === 0 && (
-                    <div className="dashboard-animate mt-32 text-center">
-                        <p className="font-inter text-sm text-secondary font-light tracking-wide mb-8">
-                            Your collection is currently empty.
-                        </p>
-                        <Link
-                            href="/collection"
-                            className="font-inter text-xs uppercase tracking-widest text-[#1A1A1A] border-b border-[#1A1A1A] pb-1 hover:text-[#C5B39A] hover:border-[#C5B39A] transition-colors"
-                        >
-                            Explore the Gallery
-                        </Link>
-                    </div>
+                {activeTab === "DRAFTS" && (
+                    <>
+                        {renderDigitalItems(draftItems, "Draft Invites")}
+
+                        {draftItems.length === 0 && (
+                            <div className="dashboard-animate mt-16 text-center">
+                                <p className="font-inter text-sm text-secondary font-light tracking-wide mb-8">
+                                    You have no draft invites.
+                                </p>
+                                <Link
+                                    href="/collection"
+                                    className="font-inter text-xs uppercase tracking-widest text-[#1A1A1A] border-b border-[#1A1A1A] pb-1 hover:text-[#C5B39A] hover:border-[#C5B39A] transition-colors"
+                                >
+                                    Explore the Gallery
+                                </Link>
+                            </div>
+                        )}
+                    </>
                 )}
             </div>
 

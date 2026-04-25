@@ -53,17 +53,17 @@ export default function AdminTeamPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
                 <div>
-                  <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
-                    <Shield size={32} className="text-indigo-900" /> Team & Access
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-2 sm:gap-3 uppercase">
+                    <Shield className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 text-indigo-900" /> Team & Access
                   </h1>
-                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Manage RBAC Sub-Admin policies across internal ecosystem verticals.</p>
+                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest  text-sm sm:text-base">Manage RBAC Sub-Admin policies across internal ecosystem verticals.</p>
                 </div>
                 
                 <button
                     onClick={() => setIsInviteModalOpen(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-all shadow-md active:scale-95"
+                    className="flex items-center justify-center gap-2 px-5 py-2.5 bg-black text-white text-sm font-bold rounded-xl hover:bg-gray-800 transition-all shadow-md active:scale-95 whitespace-nowrap w-full sm:w-auto"
                 >
                     <UserPlus className="w-4 h-4" />
                     Invite Sub-Admin

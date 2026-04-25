@@ -135,7 +135,7 @@ export default function CustomerProfilePage({ params }: { params: Promise<{ id: 
 
                 {/* Right Column - Deep Table Matrix */}
                 <div className="lg:col-span-2 bg-white border border-gray-200 shadow-sm rounded-2xl overflow-hidden flex flex-col h-full min-h-[500px]">
-                     <div className="flex border-b border-gray-100 bg-gray-50/50 shrink-0">
+                     <div className="flex border-b border-gray-100 bg-gray-50/50 shrink-0 overflow-x-auto whitespace-nowrap scrollbar-hide">
                          <button onClick={() => setActiveTab('ORDERS')} className={`flex flex-1 items-center justify-center gap-2 px-6 py-4 font-bold text-sm transition-colors relative ${activeTab === 'ORDERS' ? 'text-indigo-700 bg-white border-b-2 border-indigo-600' : 'text-gray-500 hover:bg-gray-100/50 hover:text-gray-900 border-b-2 border-transparent'}`}>
                              Receipt History ({orders.length})
                          </button>

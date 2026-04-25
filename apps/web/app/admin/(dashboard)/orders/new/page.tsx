@@ -138,7 +138,7 @@ export default function CreateManualOrderPage() {
             </div>
 
             {/* Steps Progress */}
-            <div className="flex items-center justify-between border-b border-gray-100 pb-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 border-b border-gray-100 pb-8">
                 {['Customer', 'Product', 'Summary'].map((label, idx) => (
                     <div key={label} className={`flex items-center gap-2 ${step === idx + 1 ? 'opacity-100' : 'opacity-40'}`}>
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${step >= idx + 1 ? 'bg-indigo-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
@@ -247,7 +247,7 @@ export default function CreateManualOrderPage() {
                         )}
                     </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex justify-between">
+                    <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between">
                         <button onClick={() => setStep(1)} className="px-6 py-2.5 text-gray-600 font-bold hover:bg-gray-50 rounded-lg transition">
                             &larr; Back
                         </button>
@@ -310,7 +310,7 @@ export default function CreateManualOrderPage() {
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex justify-between">
+                    <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row gap-4 sm:gap-0 justify-between">
                         <button onClick={() => setStep(2)} className="px-6 py-2.5 text-gray-600 font-bold hover:bg-gray-50 rounded-lg transition">
                             &larr; Back
                         </button>

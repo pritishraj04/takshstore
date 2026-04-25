@@ -392,7 +392,7 @@ export function ProductFormModal({
                                 </div>
                                 <div>
                                     <label className="text-xs font-bold text-gray-700 mb-2 flex items-center justify-between">Secondary Gallery Sequence
-                                        <button type="button" onClick={handleAddImage} className="text-[10px] bg-white border border-gray-200 px-2.5 py-1 rounded font-bold hover:bg-gray-100 transition-colors flex items-center gap-1"><Plus className="w-3 h-3" /> Inject Frame</button>
+                                        <button type="button" onClick={handleAddImage} className="text-[10px] bg-white border border-gray-200 px-2.5 py-1 rounded font-bold hover:bg-gray-100 transition-colors flex items-center gap-1 whitespace-nowrap"><Plus className="w-3 h-3" /> Inject Frame</button>
                                     </label>
                                     <div className="space-y-4">
                                         {images.map((img, i) => (
@@ -527,8 +527,8 @@ export function ProductFormModal({
                 </form>
 
                 <div className="p-5 border-t border-gray-100 bg-gray-50 rounded-b-2xl flex justify-end gap-3 shrink-0">
-                    <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 shadow-sm border border-transparent hover:border-gray-200 transition-colors bg-white rounded-xl">Cancel Sequence</button>
-                    <button type="button" onClick={handleSubmit} disabled={isSubmitting} className="px-8 py-2.5 text-sm font-bold text-white bg-black hover:bg-gray-800 shadow-xl transition-all rounded-xl hover:scale-105 active:scale-95 disabled:opacity-50 min-w-[140px] flex items-center justify-center">
+                    <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-gray-600 hover:text-gray-900 shadow-sm border border-transparent hover:border-gray-200 transition-colors bg-white rounded-xl whitespace-nowrap">Cancel Sequence</button>
+                    <button type="button" onClick={handleSubmit} disabled={isSubmitting} className="px-8 py-2.5 text-sm font-bold text-white bg-black hover:bg-gray-800 shadow-xl transition-all rounded-xl hover:scale-105 active:scale-95 disabled:opacity-50 min-w-[140px] flex items-center justify-center whitespace-nowrap">
                         {isSubmitting ? (
                             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                         ) : 'Commit Output Deploy'}

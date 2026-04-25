@@ -73,29 +73,29 @@ function CatalogContent() {
         <div className="space-y-6 flex flex-col h-[calc(100vh-140px)]">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shrink-0">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
-                        <Package size={32} className="text-emerald-600" /> Catalog Management
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-2 sm:gap-3 uppercase">
+                        <Package className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 text-emerald-600" /> Catalog Management
                     </h1>
-                    <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Supervise, price, and align dynamic interactive canvases across public endpoints.</p>
+                    <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest  text-sm sm:text-base">Supervise, price, and align dynamic interactive canvases across public endpoints.</p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto">
                     {activeTab === 'DIGITAL' && (
                         <button
                             onClick={handleSyncTemplates}
                             disabled={isSyncing}
-                            className={`flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-emerald-100 transition-all active:scale-95 disabled:opacity-50 ${isSyncing ? 'cursor-not-allowed' : ''}`}
+                            className={`flex items-center justify-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-5 py-2.5 rounded-xl font-bold text-sm shadow-sm hover:bg-emerald-100 transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap w-full sm:w-auto ${isSyncing ? 'cursor-not-allowed' : ''}`}
                         >
                             <Zap className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
                             {isSyncing ? 'SYNCHRONIZING...' : 'SYNC REGISTRY'}
                         </button>
                     )}
-                    <button onClick={handleAddNew} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 group">
+                    <button onClick={handleAddNew} className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md hover:-translate-y-0.5 hover:shadow-lg transition-all active:scale-95 group whitespace-nowrap justify-center w-full sm:w-auto">
                         <Plus className="w-4 h-4 group-hover:rotate-90 transition-transform" /> Bind New Blueprint
                     </button>
                 </div>
             </div>
 
-            <div className="flex gap-2 border-b border-gray-200 shrink-0 mt-8">
+            <div className="flex gap-2 border-b border-gray-200 shrink-0 mt-8 overflow-x-auto whitespace-nowrap scrollbar-hide">
                 <button
                     onClick={() => router.push('/admin/catalog?tab=CANVAS')}
                     className={`flex items-center gap-2 px-6 py-3 font-bold text-sm transition-all border-b-2 ${activeTab === 'CANVAS' ? 'border-indigo-600 text-indigo-700 bg-indigo-50/50 rounded-t-lg' : 'border-transparent text-gray-500 hover:text-gray-900'

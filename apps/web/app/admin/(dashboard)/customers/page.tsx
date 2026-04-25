@@ -32,12 +32,12 @@ export default function CustomersPage() {
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
                 <div>
-                  <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
-                    <Users size={32} className="text-orange-500" /> Customer Repository
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-2 sm:gap-3 uppercase">
+                    <Users className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 text-orange-500" /> Customer Repository
                   </h1>
-                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Aggregated profiles, lifetime spending, and behavioral analytics.</p>
+                  <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest  text-sm sm:text-base">Aggregated profiles, lifetime spending, and behavioral analytics.</p>
                 </div>
                 
                 <div className="flex items-center gap-3 w-full sm:w-auto">

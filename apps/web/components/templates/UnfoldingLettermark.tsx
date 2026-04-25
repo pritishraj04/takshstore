@@ -124,14 +124,14 @@ export default function UnfoldingLettermark({ data, isPreviewMode = false }: Unf
 
             {/* Layer 1: The 3D Envelope Experience (Adapted to Maroon/Gold) */}
             <div ref={overlayRef} className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm transition-opacity duration-300">
-                <div className="relative [perspective:1200px] w-full max-w-[min(85vw,400px)] aspect-[4/3]">
+                <div className="relative perspective-distant w-full max-w-[min(85vw,400px)] aspect-4/3">
 
-                    <div ref={envelopeRef} className="relative w-full h-full bg-[#530A17] shadow-2xl [transform-style:preserve-3d]">
+                    <div ref={envelopeRef} className="relative w-full h-full bg-[#530A17] shadow-2xl transform-3d">
                         {/* Background texture applied to envelope */}
                         <img src="/themes/red-engagement/bg-texture.jpg" className="absolute inset-0 w-full h-full object-cover opacity-20 mix-blend-overlay pointer-events-none" alt="" />
 
                         <div className="absolute inset-0 bg-black/40 overflow-hidden">
-                            <div className="absolute top-0 w-full h-12 bg-gradient-to-b from-black/60 to-transparent"></div>
+                            <div className="absolute top-0 w-full h-12 bg-linear-to-b from-black/60 to-transparent"></div>
                         </div>
 
                         {/* Internal Card */}
@@ -174,7 +174,7 @@ export default function UnfoldingLettermark({ data, isPreviewMode = false }: Unf
                     <div className="absolute inset-0 z-0 pointer-events-none">
                         <img src="/themes/red-engagement/bg-texture.jpg" className="w-full h-full object-cover opacity-30 mix-blend-overlay" alt="Background Texture" />
                         {/* Optional dark gradient overlay to ensure text readability */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#6B0D1E]/40 to-[#6B0D1E]"></div>
+                        <div className="absolute inset-0 bg-linear-to-b from-transparent via-[#6B0D1E]/40 to-[#6B0D1E]"></div>
                     </div>
 
                     {/* ARTIFICATS PLACEHOLDERS (Absolute Positioned) */}

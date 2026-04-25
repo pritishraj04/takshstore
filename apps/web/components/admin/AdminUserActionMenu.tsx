@@ -76,7 +76,7 @@ export function AdminUserActionMenu({ user, onUpdate }: { user: any, onUpdate: (
                             )}
                         </div>
                         <div className="p-1.5 bg-red-50/50">
-                            <button onClick={handleDelete} className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-bold text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-all border border-transparent hover:border-red-200 group">
+                            <button onClick={handleDelete} className="flex w-full items-center gap-2 px-3 py-2.5 text-sm font-bold text-red-600 hover:bg-red-100 hover:text-red-700 rounded-lg transition-all border border-transparent hover:border-red-200 group whitespace-nowrap">
                                 <Trash2 className="w-[18px] h-[18px] group-hover:scale-110 transition-transform" /> Burn Admin Layer
                             </button>
                         </div>

@@ -181,7 +181,7 @@ export default function JournalsAdminPage() {
     if (isFormOpen) {
         return (
             <div className="max-w-4xl mx-auto pb-24">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0 mb-8">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">{editingJournal ? 'Edit Journal Entry' : 'New Journal Entry'}</h1>
                         <p className="text-gray-500 text-sm mt-1">Compose immersive reading experiences.</p>
@@ -309,7 +309,7 @@ export default function JournalsAdminPage() {
                         </div>
                     </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex items-center justify-between">
+                    <div className="pt-6 border-t border-gray-100 flex flex-col sm:flex-row gap-4 sm:gap-0 items-start sm:items-center justify-between">
                         <div className="flex items-center gap-3">
                             <div className={`w-10 h-5 rounded-full relative cursor-pointer transition-colors ${isPublished ? 'bg-emerald-500' : 'bg-gray-300'}`} onClick={() => setIsPublished(!isPublished)}>
                                 <div className={`w-3.5 h-3.5 bg-white rounded-full absolute top-0.5 transition-transform ${isPublished ? 'translate-x-5' : 'translate-x-1'}`} />
@@ -320,7 +320,7 @@ export default function JournalsAdminPage() {
                         <button
                             onClick={handleSave}
                             disabled={isSaving}
-                            className="bg-black text-white px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-gray-900 transition-colors font-semibold tracking-wide disabled:opacity-50"
+                            className="bg-black text-white px-6 py-2.5 rounded-lg flex items-center gap-2 hover:bg-gray-900 transition-colors font-semibold tracking-wide disabled:opacity-50 bg-gray whitespace-nowrap justify-center w-full sm:w-auto"
                         >
                             <PenTool size={16} />
                             {isSaving ? "Saving..." : (editingJournal ? "Update Entry" : "Publish Entry")}
@@ -333,16 +333,16 @@ export default function JournalsAdminPage() {
 
     return (
         <div className="space-y-6 pb-12">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
                 <div>
-                    <h1 className="text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-3 uppercase">
-                        <BookOpen size={32} className="text-teal-600" /> Journal Management
+                    <h1 className="text-2xl sm:text-3xl font-black tracking-tighter text-gray-900 flex items-center gap-2 sm:gap-3 uppercase">
+                        <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 shrink-0 text-teal-600" /> Journal Management
                     </h1>
-                    <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest text-[10px]">Curate stories, announcements, and featured projects.</p>
+                    <p className="text-gray-500 font-medium mt-1 uppercase tracking-widest  text-sm sm:text-base">Curate stories, announcements, and featured projects.</p>
                 </div>
                 <button
                     onClick={openCreateForm}
-                    className="flex items-center gap-2 px-4 py-2 bg-black text-white hover:bg-gray-900 rounded-lg shadow-sm font-semibold text-sm transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 bg-black text-white hover:bg-gray-900 rounded-lg shadow-sm font-semibold text-sm transition-colors bg-gray whitespace-nowrap justify-center w-full sm:w-auto"
                 >
                     <Plus size={16} /> New Journal Entry
                 </button>

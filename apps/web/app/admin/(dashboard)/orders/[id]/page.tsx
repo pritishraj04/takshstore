@@ -135,7 +135,7 @@ export default function AdminOrderDetailsPage() {
                                         
                                         {item.product.type === 'DIGITAL' && item.digitalInvite && (
                                             <div className="mt-4 p-3 bg-blue-50/50 border border-blue-100 rounded-lg text-[13px] text-blue-900 space-y-2">
-                                                <div className="flex items-center justify-between">
+                                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
                                                    <p><strong>Invite Status:</strong> <span className="uppercase font-bold text-[11px] ml-1 bg-blue-100 px-1.5 py-0.5 rounded">{item.digitalInvite.status}</span></p>
                                                    {item.digitalInvite.websiteUrl && (
                                                        <a href={item.digitalInvite.websiteUrl} target="_blank" className="text-blue-600 hover:text-blue-800 underline font-semibold transition-colors flex items-center gap-1">
@@ -238,23 +238,23 @@ export default function AdminOrderDetailsPage() {
                         <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center gap-2">
                             <Anchor className="w-4 h-4 text-emerald-500" /> Financials
                         </h2>
-                        <div className="flex justify-between items-center py-2">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 py-2">
                             <span className="text-sm text-gray-500">Subtotal</span>
                             <span className="text-sm font-medium">₹{(order.subtotal || order.totalAmount).toLocaleString()}</span>
                         </div>
                         {order.shippingCost > 0 && (
-                            <div className="flex justify-between items-center py-2">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 py-2">
                                 <span className="text-sm text-gray-500">Shipping</span>
                                 <span className="text-sm font-medium">₹{order.shippingCost.toLocaleString()}</span>
                             </div>
                         )}
                         {order.discountAmount > 0 && (
-                            <div className="flex justify-between items-center py-2">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 py-2">
                                 <span className="text-sm text-gray-500">Discount {order.couponCode ? `(${order.couponCode})` : ''}</span>
                                 <span className="text-sm font-medium text-emerald-600">-₹{order.discountAmount.toLocaleString()}</span>
                             </div>
                         )}
-                        <div className="flex justify-between items-center py-2 border-t border-gray-100 mt-2 pt-3">
+                        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 py-2 border-t border-gray-100 mt-2 pt-3">
                             <span className="text-sm font-bold text-gray-900">Total Charged</span>
                             <span className="text-lg font-black text-emerald-600">₹{order.totalAmount.toLocaleString()}</span>
                         </div>
